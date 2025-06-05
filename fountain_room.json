@@ -1,0 +1,1871 @@
+{
+  "name": "fountain room",
+  "width": 20,
+  "height": 15,
+  "tiles": [
+    [
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "blue_brick_wall",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "blue_brick_wall",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "blue_brick_wall",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "blue_brick_wall",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "blue_brick_wall",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "blue_brick_wall",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "blue_brick_wall",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "blue_brick_wall",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "blue_brick_wall",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "blue_brick_wall",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "blue_brick_wall",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "down_stairs",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "blue_brick_wall",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "blue_brick_wall",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "blue_brick_wall",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "blue_brick_wall",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "blue_brick_wall",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "blue_brick_wall",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "blue_brick_wall",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "blue_brick_wall",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "blue_brick_wall",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "blue_brick_wall",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "blue_brick_wall",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "door_state": "closed",
+        "properties": {}
+      }
+    ]
+  ],
+  "objects": [
+    {
+      "type": "fountain_object",
+      "x": 7,
+      "y": 4,
+      "properties": {}
+    },
+    {
+      "type": "gargoyle_object",
+      "x": 5,
+      "y": 3,
+      "properties": {}
+    },
+    {
+      "type": "candles_object",
+      "x": 9,
+      "y": 4,
+      "properties": {}
+    },
+    {
+      "type": "frog_npc",
+      "x": 5,
+      "y": 5,
+      "properties": {}
+    },
+    {
+      "type": "oldwoman_npc",
+      "x": 5,
+      "y": 4,
+      "properties": {}
+    }
+  ],
+  "triggers": [],
+  "connections": {}
+}
