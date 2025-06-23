@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Tinker RPG Editor - A no-code game editor for creating 2D adventure games
-Complete version with door connection system and canvas tools
+Simplified version with doors treated as regular tiles
 """
 
 import tkinter as tk
@@ -18,11 +18,6 @@ class Tile:
     """Represents a single tile in the game world"""
     type: str = "empty"
     walkable_override: Optional[bool] = None
-    door_state: str = "closed"
-    door_destination: str = ""
-    door_spawn_point: tuple = (0, 0)
-    door_direction: str = ""
-    door_key_required: str = ""
     properties: Dict[str, Any] = None
     
     def __post_init__(self):
@@ -78,7 +73,6 @@ class Area:
     tiles: List[List[Tile]] = None
     objects: List[GameObject] = None
     triggers: List[Trigger] = None
-    connections: Dict[str, str] = None
     
     def __post_init__(self):
         if self.tiles is None:
@@ -87,8 +81,6 @@ class Area:
             self.objects = []
         if self.triggers is None:
             self.triggers = []
-        if self.connections is None:
-            self.connections = {}
 
 class TileManager:
     """Manages loading tiles from PNG files and their properties"""
@@ -294,11 +286,6 @@ class TinkerEditor:
         tools_menu.add_command(label="Resize Canvas...", command=self.show_resize_dialog)
         tools_menu.add_command(label="Crop Canvas to Room", command=self.crop_canvas_to_room)
         
-        connections_menu = tk.Menu(menubar, tearoff=0)
-        menubar.add_cascade(label="Connections", menu=connections_menu)
-        connections_menu.add_command(label="Manage Doors...", command=self.show_door_dialog)
-        connections_menu.add_command(label="Auto-Connect Doors", command=self.auto_connect_doors)
-        
         # Main container
         main_frame = ttk.Frame(self.root)
         main_frame.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
@@ -403,40 +390,6 @@ class TinkerEditor:
         ttk.Radiobutton(walkable_frame, text="Force blocked", 
                        variable=self.walkable_override_var, value="not_walkable",
                        command=self.on_walkable_change).pack(anchor=tk.W, padx=5)
-        
-        # Door controls
-        self.door_frame = ttk.LabelFrame(props_frame, text="Door Settings")
-        
-        self.door_state_var = tk.StringVar(value="closed")
-        ttk.Radiobutton(self.door_frame, text="Locked", 
-                       variable=self.door_state_var, value="locked",
-                       command=self.on_door_state_change).pack(anchor=tk.W, padx=5)
-        ttk.Radiobutton(self.door_frame, text="Closed", 
-                       variable=self.door_state_var, value="closed",
-                       command=self.on_door_state_change).pack(anchor=tk.W, padx=5)
-        ttk.Radiobutton(self.door_frame, text="Open", 
-                       variable=self.door_state_var, value="open",
-                       command=self.on_door_state_change).pack(anchor=tk.W, padx=5)
-        
-        # Door connections
-        self.door_connection_frame = ttk.LabelFrame(props_frame, text="Door Connection")
-        
-        dest_frame = ttk.Frame(self.door_connection_frame)
-        dest_frame.pack(fill=tk.X, padx=5, pady=2)
-        ttk.Label(dest_frame, text="Destination:").pack(side=tk.LEFT)
-        self.door_dest_var = tk.StringVar()
-        ttk.Entry(dest_frame, textvariable=self.door_dest_var, width=15).pack(side=tk.RIGHT)
-        
-        spawn_frame = ttk.Frame(self.door_connection_frame)
-        spawn_frame.pack(fill=tk.X, padx=5, pady=2)
-        ttk.Label(spawn_frame, text="Spawn X,Y:").pack(side=tk.LEFT)
-        
-        coords_frame = ttk.Frame(spawn_frame)
-        coords_frame.pack(side=tk.RIGHT)
-        self.spawn_x_var = tk.StringVar(value="0")
-        self.spawn_y_var = tk.StringVar(value="0")
-        ttk.Entry(coords_frame, textvariable=self.spawn_x_var, width=4).pack(side=tk.LEFT)
-        ttk.Entry(coords_frame, textvariable=self.spawn_y_var, width=4).pack(side=tk.LEFT, padx=(2,0))
         
         # Properties text
         ttk.Label(props_frame, text="Details:").pack(padx=5, pady=(10,0))
@@ -552,6 +505,26 @@ class TinkerEditor:
             self.update_cursor_display()
             self.update_properties_display()
     
+    def is_tile_blocked(self, x, y):
+        tile = self.current_area.tiles[y][x]
+        if not tile.is_walkable(self.tile_manager):
+            return True
+        
+        # Check if any object on this tile blocks movement
+        for obj in self.current_area.objects:
+            if obj.x == x and obj.y == y:
+                if obj.properties.get("walkable", True) is False:
+                    return True
+        
+        # Check if any NPC blocks movement
+        for obj in self.current_area.objects:
+            if obj.x == x and obj.y == y:
+                npc_names = set(self.tile_manager.get_npc_names())
+                if obj.type in npc_names and obj.properties.get("walkable", False) is False:
+                    return True
+        
+        return False
+
     def draw_area(self):
         self.canvas.delete("all")
         
@@ -570,27 +543,8 @@ class TinkerEditor:
                 self.canvas.create_rectangle(x1, y1, x1 + self.tile_size, y1 + self.tile_size, 
                                            outline="gray", width=1)
                 
-                # Show door connections
-                if tile.get_tile_category() == "door" and tile.door_destination:
-                    center_x, center_y = x1 + 16, y1 + 16
-                    if tile.door_direction == "north":
-                        self.canvas.create_polygon(center_x-4, center_y-8, center_x+4, center_y-8, 
-                                                 center_x, center_y-12, fill="blue", outline="white")
-                    elif tile.door_direction == "south":
-                        self.canvas.create_polygon(center_x-4, center_y+8, center_x+4, center_y+8, 
-                                                 center_x, center_y+12, fill="blue", outline="white")
-                    elif tile.door_direction == "east":
-                        self.canvas.create_polygon(center_x+8, center_y-4, center_x+8, center_y+4, 
-                                                 center_x+12, center_y, fill="blue", outline="white")
-                    elif tile.door_direction == "west":
-                        self.canvas.create_polygon(center_x-8, center_y-4, center_x-8, center_y+4, 
-                                                 center_x-12, center_y, fill="blue", outline="white")
-                    else:
-                        self.canvas.create_oval(center_x-6, center_y-6, center_x+6, center_y+6, 
-                                              fill="blue", outline="white", width=2)
-                
                 # Show non-walkable tiles
-                if not tile.is_walkable(self.tile_manager):
+                if tile.type != "empty" and self.is_tile_blocked(x, y):
                     self.canvas.create_text(x1 + 16, y1 + 16, text="✗", fill="red", 
                                           font=("Arial", 12, "bold"))
         
@@ -734,27 +688,6 @@ class TinkerEditor:
         info += f"Category: {tile_category}\n"
         info += f"Walkable: {tile.is_walkable(self.tile_manager)}\n\n"
         
-        if tile_category == "door":
-            info += f"Door state: {tile.door_state}\n"
-            if tile.door_destination:
-                info += f"→ {tile.door_destination}\n"
-                info += f"Spawn: ({tile.door_spawn_point[0]}, {tile.door_spawn_point[1]})\n"
-                if tile.door_direction:
-                    info += f"Direction: {tile.door_direction}\n"
-            else:
-                info += "No connection\n"
-            info += "\n"
-            
-            self.door_frame.pack(fill=tk.X, padx=5, pady=5)
-            self.door_connection_frame.pack(fill=tk.X, padx=5, pady=5)
-            self.door_state_var.set(tile.door_state)
-            self.door_dest_var.set(tile.door_destination)
-            self.spawn_x_var.set(str(tile.door_spawn_point[0]))
-            self.spawn_y_var.set(str(tile.door_spawn_point[1]))
-        else:
-            self.door_frame.pack_forget()
-            self.door_connection_frame.pack_forget()
-        
         self.global_walkable_label.config(text=f"Default: {global_walkable}")
         if tile.walkable_override is None:
             self.walkable_override_var.set("default")
@@ -791,65 +724,6 @@ class TinkerEditor:
             tile.walkable_override = False
         self.update_properties_display()
         self.draw_area()
-    
-    def on_door_state_change(self):
-        tile = self.current_area.tiles[self.cursor_y][self.cursor_x]
-        tile.door_state = self.door_state_var.get()
-        self.update_properties_display()
-    
-    # Door management methods
-    def show_door_dialog(self):
-        dialog = tk.Toplevel(self.root)
-        dialog.title("Door Connections")
-        dialog.geometry("600x400")
-        dialog.transient(self.root)
-        
-        doors = [(x, y, tile) for y in range(self.current_area.height) 
-                for x in range(self.current_area.width) 
-                if self.current_area.tiles[y][x].get_tile_category() == "door"]
-        
-        if not doors:
-            ttk.Label(dialog, text="No doors found in this area.").pack(padx=20, pady=20)
-            ttk.Button(dialog, text="Close", command=dialog.destroy).pack(pady=10)
-            return
-        
-        frame = ttk.Frame(dialog)
-        frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
-        
-        listbox = tk.Listbox(frame)
-        scrollbar = ttk.Scrollbar(frame, orient=tk.VERTICAL, command=listbox.yview)
-        listbox.configure(yscrollcommand=scrollbar.set)
-        
-        for x, y, tile in doors:
-            conn = f" → {tile.door_destination}" if tile.door_destination else " (no connection)"
-            listbox.insert(tk.END, f"Door at ({x},{y}){conn}")
-        
-        listbox.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-        
-        ttk.Button(dialog, text="Close", command=dialog.destroy).pack(pady=10)
-    
-    def auto_connect_doors(self):
-        if not messagebox.askyesno("Auto-Connect", "Automatically connect doors based on directions?"):
-            return
-        
-        connections_made = 0
-        for y in range(self.current_area.height):
-            for x in range(self.current_area.width):
-                tile = self.current_area.tiles[y][x]
-                if tile.get_tile_category() == "door" and tile.door_direction and not tile.door_destination:
-                    base_name = self.current_area.name.replace(" ", "_").lower()
-                    direction = tile.door_direction.lower()
-                    tile.door_destination = f"{base_name}_{direction}"
-                    tile.door_spawn_point = (x, y)
-                    connections_made += 1
-        
-        if connections_made > 0:
-            self.draw_area()
-            self.update_properties_display()
-            messagebox.showinfo("Auto-Connect", f"Connected {connections_made} doors.")
-        else:
-            messagebox.showinfo("Auto-Connect", "No doors with directions found.")
     
     # Canvas tools
     def show_resize_dialog(self):
