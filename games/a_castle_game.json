@@ -1,0 +1,12 @@
+{
+  "name": "a castle game",
+  "areas": [
+    "gargoyle_room.json",
+    "fountain_room.json"
+  ],
+  "used_tiles": [],
+  "used_npcs": [],
+  "used_objects": [],
+  "used_triggers": [],
+  "properties": {}
+}

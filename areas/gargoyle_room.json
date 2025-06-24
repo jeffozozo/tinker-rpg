@@ -1,0 +1,176 @@
+{
+  "name": "gargoyle room",
+  "width": 7,
+  "height": 4,
+  "tiles": [
+    [
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "gray_brick_door",
+        "walkable_override": true,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ]
+  ],
+  "objects": [
+    {
+      "type": "gargoyle_object",
+      "x": 3,
+      "y": 1,
+      "properties": {}
+    },
+    {
+      "type": "candles_object",
+      "x": 1,
+      "y": 1,
+      "properties": {}
+    },
+    {
+      "type": "candles_object",
+      "x": 5,
+      "y": 1,
+      "properties": {}
+    }
+  ],
+  "triggers": []
+}

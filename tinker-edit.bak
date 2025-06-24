@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
 Tinker RPG Editor - A no-code game editor for creating 2D adventure games
+Simplified version with doors treated as regular tiles
 """
 
 import tkinter as tk
@@ -15,9 +16,8 @@ import glob
 @dataclass
 class Tile:
     """Represents a single tile in the game world"""
-    type: str = "empty"  # The tile type name (matches PNG filename)
-    walkable_override: Optional[bool] = None  # None = use default, True/False = override
-    door_state: str = "closed"  # For doors: "locked", "closed", "open"
+    type: str = "empty"
+    walkable_override: Optional[bool] = None
     properties: Dict[str, Any] = None
     
     def __post_init__(self):
@@ -25,15 +25,11 @@ class Tile:
             self.properties = {}
     
     def is_walkable(self, tile_manager):
-        """Get the effective walkable state (override or default)"""
         if self.walkable_override is not None:
             return self.walkable_override
-        
-        # Use filename-based default
         return tile_manager.get_default_walkable(self.type)
     
     def get_tile_category(self):
-        """Determine tile category from filename"""
         if "_wall" in self.type:
             return "wall"
         elif "_floor" in self.type:
@@ -48,7 +44,7 @@ class Tile:
 @dataclass
 class GameObject:
     """Represents NPCs, items, or interactive objects"""
-    type: str = "npc"  # npc, item, lever, fountain, etc.
+    type: str = "npc"
     x: int = 0
     y: int = 0
     properties: Dict[str, Any] = None
@@ -77,7 +73,6 @@ class Area:
     tiles: List[List[Tile]] = None
     objects: List[GameObject] = None
     triggers: List[Trigger] = None
-    connections: Dict[str, str] = None  # direction -> area_name
     
     def __post_init__(self):
         if self.tiles is None:
@@ -86,64 +81,43 @@ class Area:
             self.objects = []
         if self.triggers is None:
             self.triggers = []
-        if self.connections is None:
-            self.connections = {}
 
 class TileManager:
     """Manages loading tiles from PNG files and their properties"""
     
     def __init__(self):
-        self.tiles = {}  # tile_name -> {"image": PhotoImage, "category": str, "display_name": str}
-        self.npcs = {}   # npc_name -> {"image": PhotoImage, "display_name": str}
-        self.objects = {} # object_name -> {"image": PhotoImage, "display_name": str}
-        self.triggers = {} # trigger_name -> {"code": str, "display_name": str}
+        self.tiles = {}
+        self.npcs = {}
+        self.objects = {}
+        self.triggers = {}
         self.load_all_assets()
     
     def load_all_assets(self):
-        """Load all assets from their respective directories"""
         self.load_tiles()
         self.load_npcs()
         self.load_objects()
         self.load_triggers()
     
     def load_tiles(self):
-        """Load all PNG files from the tiles directory"""
         tiles_dir = "tiles"
         if not os.path.exists(tiles_dir):
-            print(f"Warning: {tiles_dir} directory not found. Creating it...")
             os.makedirs(tiles_dir)
             self._create_default_tile()
             return
         
-        # Find all PNG files
         png_files = glob.glob(os.path.join(tiles_dir, "*.png"))
-        
         if not png_files:
-            print(f"Warning: No PNG files found in {tiles_dir} directory")
             self._create_default_tile()
             return
         
-        print(f"Loading {len(png_files)} tiles from {tiles_dir}...")
-        
         for png_file in png_files:
             try:
-                # Get tile name from filename (without extension)
                 tile_name = os.path.splitext(os.path.basename(png_file))[0]
-                
-                # Load and resize image if needed
                 pil_image = Image.open(png_file)
-                
-                # Ensure it's 32x32
                 if pil_image.size != (32, 32):
                     pil_image = pil_image.resize((32, 32), Image.NEAREST)
-                
-                # Convert to PhotoImage for tkinter
                 photo_image = ImageTk.PhotoImage(pil_image)
-                
-                # Create display name (replace underscores with spaces, title case)
                 display_name = tile_name.replace('_', ' ').title()
-                
-                # Determine category from filename
                 category = self._get_tile_category(tile_name)
                 
                 self.tiles[tile_name] = {
@@ -151,9 +125,6 @@ class TileManager:
                     "display_name": display_name,
                     "category": category
                 }
-                
-                print(f"  Loaded: {tile_name} -> {display_name} ({category})")
-                
             except Exception as e:
                 print(f"Error loading {png_file}: {e}")
         
@@ -161,24 +132,18 @@ class TileManager:
             self._create_default_tile()
     
     def load_npcs(self):
-        """Load NPC assets from npcs directory"""
         npcs_dir = "npcs"
         if not os.path.exists(npcs_dir):
-            print(f"Creating {npcs_dir} directory...")
             os.makedirs(npcs_dir)
             return
         
         png_files = glob.glob(os.path.join(npcs_dir, "*.png"))
-        print(f"Loading {len(png_files)} NPCs from {npcs_dir}...")
-        
         for png_file in png_files:
             try:
                 npc_name = os.path.splitext(os.path.basename(png_file))[0]
                 pil_image = Image.open(png_file)
-                
                 if pil_image.size != (32, 32):
                     pil_image = pil_image.resize((32, 32), Image.NEAREST)
-                
                 photo_image = ImageTk.PhotoImage(pil_image)
                 display_name = npc_name.replace('_', ' ').title()
                 
@@ -186,31 +151,22 @@ class TileManager:
                     "image": photo_image,
                     "display_name": display_name
                 }
-                
-                print(f"  Loaded NPC: {npc_name} -> {display_name}")
-                
             except Exception as e:
                 print(f"Error loading NPC {png_file}: {e}")
     
     def load_objects(self):
-        """Load object assets from objects directory"""
         objects_dir = "objects"
         if not os.path.exists(objects_dir):
-            print(f"Creating {objects_dir} directory...")
             os.makedirs(objects_dir)
             return
         
         png_files = glob.glob(os.path.join(objects_dir, "*.png"))
-        print(f"Loading {len(png_files)} objects from {objects_dir}...")
-        
         for png_file in png_files:
             try:
                 obj_name = os.path.splitext(os.path.basename(png_file))[0]
                 pil_image = Image.open(png_file)
-                
                 if pil_image.size != (32, 32):
                     pil_image = pil_image.resize((32, 32), Image.NEAREST)
-                
                 photo_image = ImageTk.PhotoImage(pil_image)
                 display_name = obj_name.replace('_', ' ').title()
                 
@@ -218,51 +174,21 @@ class TileManager:
                     "image": photo_image,
                     "display_name": display_name
                 }
-                
-                print(f"  Loaded object: {obj_name} -> {display_name}")
-                
             except Exception as e:
                 print(f"Error loading object {png_file}: {e}")
     
     def load_triggers(self):
-        """Load trigger Python files from triggers directory"""
         triggers_dir = "triggers"
         if not os.path.exists(triggers_dir):
-            print(f"Creating {triggers_dir} directory...")
             os.makedirs(triggers_dir)
-            # Create example trigger
-            example_trigger = '''def execute(player, area, trigger_x, trigger_y):
-    """
-    Example trigger function.
-    
-    Args:
-        player: The player object
-        area: The current area object
-        trigger_x, trigger_y: Position of the trigger
-    
-    Returns:
-        str: Message to display (optional)
-    """
-    return "You stepped on a trigger!"
-'''
-            try:
-                with open(os.path.join(triggers_dir, "example_trigger.py"), 'w') as f:
-                    f.write(example_trigger)
-                print("Created example trigger file")
-            except Exception as e:
-                print(f"Error creating example trigger: {e}")
             return
         
         py_files = glob.glob(os.path.join(triggers_dir, "*.py"))
-        print(f"Loading {len(py_files)} triggers from {triggers_dir}...")
-        
         for py_file in py_files:
             try:
                 trigger_name = os.path.splitext(os.path.basename(py_file))[0]
-                
                 with open(py_file, 'r') as f:
                     code = f.read()
-                
                 display_name = trigger_name.replace('_', ' ').title()
                 
                 self.triggers[trigger_name] = {
@@ -270,14 +196,10 @@ class TileManager:
                     "display_name": display_name,
                     "file_path": py_file
                 }
-                
-                print(f"  Loaded trigger: {trigger_name} -> {display_name}")
-                
             except Exception as e:
                 print(f"Error loading trigger {py_file}: {e}")
     
     def _get_tile_category(self, tile_name):
-        """Determine tile category from filename"""
         if "_wall" in tile_name:
             return "wall"
         elif "_floor" in tile_name:
@@ -290,27 +212,12 @@ class TileManager:
             return "unknown"
     
     def get_default_walkable(self, tile_name):
-        """Get default walkable state based on filename"""
         category = self._get_tile_category(tile_name)
-        
-        if category == "wall":
-            return False
-        elif category == "floor":
-            return True
-        elif category == "door":
-            # Doors depend on their state, handled elsewhere
-            return True  # Default assumption
-        elif category == "stairs":
-            return True
-        else:
-            return True  # Unknown tiles default to walkable
+        return category in ["floor", "door", "stairs"]
     
     def _create_default_tile(self):
-        """Create a basic default tile when no tiles are found"""
-        # Create a simple colored square
         pil_image = Image.new('RGB', (32, 32), color=(200, 200, 200))
         photo_image = ImageTk.PhotoImage(pil_image)
-        
         self.tiles["empty"] = {
             "image": photo_image,
             "display_name": "Empty",
@@ -318,35 +225,27 @@ class TileManager:
         }
     
     def get_tile_names(self):
-        """Get list of available tile names"""
         return list(self.tiles.keys())
     
     def get_npc_names(self):
-        """Get list of available NPC names"""
         return list(self.npcs.keys())
     
     def get_object_names(self):
-        """Get list of available object names"""
         return list(self.objects.keys())
     
     def get_trigger_names(self):
-        """Get list of available trigger names"""
         return list(self.triggers.keys())
     
     def get_tile_info(self, tile_name):
-        """Get tile information"""
         return self.tiles.get(tile_name, self.tiles.get("empty", {}))
     
     def get_npc_info(self, npc_name):
-        """Get NPC information"""
         return self.npcs.get(npc_name, {})
     
     def get_object_info(self, obj_name):
-        """Get object information"""
         return self.objects.get(obj_name, {})
     
     def get_trigger_info(self, trigger_name):
-        """Get trigger information"""
         return self.triggers.get(trigger_name, {})
 
 class TinkerEditor:
@@ -355,23 +254,19 @@ class TinkerEditor:
         self.root.title("Tinker RPG Editor")
         self.root.geometry("1400x800")
         
-        # Initialize tile manager
         self.tile_manager = TileManager()
-        
-        # Current state
         self.current_area = Area()
         self.current_file = None
         self.cursor_x = 0
         self.cursor_y = 0
         self.selected_tile = list(self.tile_manager.get_tile_names())[0] if self.tile_manager.get_tile_names() else "empty"
-        self.selected_mode = "tile"  # tile, object, npc, trigger
-        self.tile_size = 32  # pixels per tile in editor (now matches actual tile size)
+        self.selected_mode = "tile"
+        self.tile_size = 32
         
         self.setup_ui()
         self.bind_events()
         
     def setup_ui(self):
-        """Setup the main UI layout"""
         # Menu bar
         menubar = tk.Menu(self.root)
         self.root.config(menu=menubar)
@@ -383,32 +278,23 @@ class TinkerEditor:
         file_menu.add_command(label="Save", command=self.save_area)
         file_menu.add_command(label="Save As", command=self.save_area_as)
         file_menu.add_separator()
-        file_menu.add_command(label="Reload Assets", command=self.reload_assets)
-        file_menu.add_separator()
         file_menu.add_command(label="Exit", command=self.root.quit)
         
         tools_menu = tk.Menu(menubar, tearoff=0)
         menubar.add_cascade(label="Tools", menu=tools_menu)
         tools_menu.add_command(label="Reload Assets", command=self.reload_assets)
-        tools_menu.add_separator()
         tools_menu.add_command(label="Resize Canvas...", command=self.show_resize_dialog)
-        tools_menu.add_command(label="Crop Canvas to Room Boundaries", command=self.crop_canvas_to_room)
+        tools_menu.add_command(label="Crop Canvas to Room", command=self.crop_canvas_to_room)
         
         # Main container
         main_frame = ttk.Frame(self.root)
         main_frame.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
         
-        # Left panel - Tile selector
         self.setup_tile_panel(main_frame)
-        
-        # Center panel - Area editor
         self.setup_area_panel(main_frame)
-        
-        # Right panel - Properties
         self.setup_properties_panel(main_frame)
         
     def setup_tile_panel(self, parent):
-        """Setup the tile selection panel"""
         self.tile_frame = ttk.LabelFrame(parent, text="Toolbox", width=250)
         self.tile_frame.pack(side=tk.LEFT, fill=tk.Y, padx=(0, 5))
         self.tile_frame.pack_propagate(False)
@@ -427,11 +313,10 @@ class TinkerEditor:
         ttk.Radiobutton(mode_frame, text="Triggers", variable=self.mode_var, 
                        value="trigger", command=self.on_mode_change).pack(anchor=tk.W)
         
-        # Tile grid display
+        # Tile canvas
         canvas_frame = ttk.Frame(self.tile_frame)
         canvas_frame.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
         
-        # Scrollable tile canvas
         self.tile_canvas = tk.Canvas(canvas_frame, bg="white", width=200)
         tile_scrollbar = ttk.Scrollbar(canvas_frame, orient=tk.VERTICAL, command=self.tile_canvas.yview)
         self.tile_canvas.configure(yscrollcommand=tile_scrollbar.set)
@@ -439,16 +324,10 @@ class TinkerEditor:
         self.tile_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         tile_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
         
-        # Bind tile canvas clicks and focus events
         self.tile_canvas.bind('<Button-1>', self.on_tile_canvas_click)
-        self.tile_canvas.bind('<FocusIn>', self.on_toolbox_focus_in)
-        self.tile_canvas.bind('<FocusOut>', self.on_toolbox_focus_out)
-        
-        # Make the tile canvas focusable
-        self.tile_canvas.configure(highlightthickness=2, highlightcolor="blue", takefocus=True)
+        self.tile_canvas.configure(takefocus=True)
         
     def setup_area_panel(self, parent):
-        """Setup the main area editing panel"""
         self.area_frame = ttk.LabelFrame(parent, text="Area Editor")
         self.area_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(0, 5))
         
@@ -462,21 +341,19 @@ class TinkerEditor:
         name_entry.pack(side=tk.LEFT, padx=(5, 0))
         name_entry.bind('<KeyRelease>', self.on_area_name_change)
         
-        # Cursor position and selected tile info
         self.cursor_label = ttk.Label(info_frame, text=f"Cursor: ({self.cursor_x}, {self.cursor_y})")
         self.cursor_label.pack(side=tk.RIGHT)
         
         self.selected_tile_label = ttk.Label(info_frame, text=f"Selected: {self.selected_tile}")
         self.selected_tile_label.pack(side=tk.RIGHT, padx=(0, 10))
         
-        # Canvas for area editing
+        # Canvas
         canvas_frame = ttk.Frame(self.area_frame)
         canvas_frame.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
         
         self.canvas = tk.Canvas(canvas_frame, bg="white")
         self.canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         
-        # Scrollbars
         v_scrollbar = ttk.Scrollbar(canvas_frame, orient=tk.VERTICAL, command=self.canvas.yview)
         v_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
         self.canvas.configure(yscrollcommand=v_scrollbar.set)
@@ -485,283 +362,47 @@ class TinkerEditor:
         h_scrollbar.pack(side=tk.BOTTOM, fill=tk.X, padx=5)
         self.canvas.configure(xscrollcommand=h_scrollbar.set)
         
-        # Simple canvas configuration for focus
-        self.canvas.configure(highlightthickness=2, highlightcolor="green", takefocus=True)
-        
-        # Bind canvas events  
+        self.canvas.configure(takefocus=True)
         self.canvas.bind('<Button-1>', self.on_canvas_click)
-        self.canvas.bind('<FocusIn>', self.on_area_focus_in)
-        self.canvas.bind('<FocusOut>', self.on_area_focus_out)
         
         self.draw_area()
-        
-        # Now update tile display after all UI elements are created
         self.update_tile_display()
         
     def setup_properties_panel(self, parent):
-        """Setup the properties panel"""
         props_frame = ttk.LabelFrame(parent, text="Properties", width=300)
         props_frame.pack(side=tk.RIGHT, fill=tk.Y)
         props_frame.pack_propagate(False)
         
-        # Current tile info
-        self.current_tile_label = ttk.Label(props_frame, text="No tile selected")
-        self.current_tile_label.pack(padx=5, pady=5)
-        
-        # Walkable controls for current tile
+        # Walkable controls
         walkable_frame = ttk.LabelFrame(props_frame, text="Walkable Settings")
         walkable_frame.pack(fill=tk.X, padx=5, pady=5)
         
-        # Show global default
         self.global_walkable_label = ttk.Label(walkable_frame, text="Global default: Unknown")
         self.global_walkable_label.pack(padx=5, pady=2)
         
-        # Override options
         self.walkable_override_var = tk.StringVar(value="default")
-        ttk.Radiobutton(walkable_frame, text="Use global default", 
+        ttk.Radiobutton(walkable_frame, text="Use default", 
                        variable=self.walkable_override_var, value="default",
-                       command=self.on_walkable_override_change).pack(anchor=tk.W, padx=5)
+                       command=self.on_walkable_change).pack(anchor=tk.W, padx=5)
         ttk.Radiobutton(walkable_frame, text="Force walkable", 
                        variable=self.walkable_override_var, value="walkable",
-                       command=self.on_walkable_override_change).pack(anchor=tk.W, padx=5)
-        ttk.Radiobutton(walkable_frame, text="Force not walkable", 
+                       command=self.on_walkable_change).pack(anchor=tk.W, padx=5)
+        ttk.Radiobutton(walkable_frame, text="Force blocked", 
                        variable=self.walkable_override_var, value="not_walkable",
-                       command=self.on_walkable_override_change).pack(anchor=tk.W, padx=5)
+                       command=self.on_walkable_change).pack(anchor=tk.W, padx=5)
         
-        # Door state controls (only show for door tiles)
-        self.door_frame = ttk.LabelFrame(props_frame, text="Door State")
-        
-        self.door_state_var = tk.StringVar(value="closed")
-        ttk.Radiobutton(self.door_frame, text="Locked", 
-                       variable=self.door_state_var, value="locked",
-                       command=self.on_door_state_change).pack(anchor=tk.W, padx=5)
-        ttk.Radiobutton(self.door_frame, text="Closed", 
-                       variable=self.door_state_var, value="closed",
-                       command=self.on_door_state_change).pack(anchor=tk.W, padx=5)
-        ttk.Radiobutton(self.door_frame, text="Open", 
-                       variable=self.door_state_var, value="open",
-                       command=self.on_door_state_change).pack(anchor=tk.W, padx=5)
-        
-        # Properties text area (read-only)
-        ttk.Label(props_frame, text="Detailed Properties:").pack(padx=5, pady=(10,0))
-        self.properties_text = tk.Text(props_frame, height=25, width=35, state='disabled')
+        # Properties text
+        ttk.Label(props_frame, text="Details:").pack(padx=5, pady=(10,0))
+        self.properties_text = tk.Text(props_frame, height=15, width=35, state='disabled')
         self.properties_text.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
         
     def bind_events(self):
-        """Bind keyboard and mouse events"""
-        # Bind keys to the root window
         self.root.bind('<Key>', self.on_key_press)
-        self.root.bind('<Tab>', self.on_tab_press)
-        
-        # Start with canvas having focus after a short delay
         self.root.after(100, self.canvas.focus_set)
         
-    def on_tab_press(self, event):
-        """Handle Tab key to switch focus between panels"""
-        focused_widget = self.root.focus_get()
-        if focused_widget == self.canvas:
-            # Area editor has focus, switch to toolbox
-            self.tile_canvas.focus_set()
-        else:
-            # Something else has focus, switch to area editor
-            self.canvas.focus_set()
-        return "break"  # Prevent default Tab behavior
-    
-    def on_toolbox_focus_in(self, event):
-        """Handle focus entering the toolbox"""
-        pass
-        
-    def on_toolbox_focus_out(self, event):
-        """Handle focus leaving the toolbox"""
-        pass
-        
-    def on_area_focus_in(self, event):
-        """Handle focus entering the area editor"""
-        pass
-        
-    def on_area_focus_out(self, event):
-        """Handle focus leaving the area editor"""
-        pass
-        
-    def update_tile_display(self):
-        """Update the tile selection display"""
-        self.tile_canvas.delete("all")
-        
-        if self.selected_mode == "tile":
-            # Show tiles in a grid
-            tiles_per_row = 5
-            tile_names = self.tile_manager.get_tile_names()
-            
-            for i, tile_name in enumerate(tile_names):
-                row = i // tiles_per_row
-                col = i % tiles_per_row
-                x = col * 40 + 10
-                y = row * 40 + 10
-                
-                tile_info = self.tile_manager.get_tile_info(tile_name)
-                
-                # Draw tile image
-                self.tile_canvas.create_image(x, y, image=tile_info["image"], anchor=tk.NW, tags=f"tile_{tile_name}")
-                
-                # Highlight selected tile
-                if tile_name == self.selected_tile:
-                    self.tile_canvas.create_rectangle(x-2, y-2, x+34, y+34, outline="red", width=2, tags="selection")
-                
-                # Show walkable indicator based on default
-                default_walkable = self.tile_manager.get_default_walkable(tile_name)
-                if not default_walkable:
-                    self.tile_canvas.create_text(x+16, y+28, text="X", fill="red", font=("Arial", 8, "bold"))
-        
-        elif self.selected_mode == "npc":
-            # Show NPCs from npcs directory
-            npc_names = self.tile_manager.get_npc_names()
-            
-            if not npc_names:
-                # Fallback to hardcoded list if no NPC files found
-                npc_names = ["guard", "merchant", "villager", "wizard", "knight", "enemy", "boss"]
-            
-            for i, npc_name in enumerate(npc_names):
-                y = i * 40 + 10
-                
-                npc_info = self.tile_manager.get_npc_info(npc_name)
-                if "image" in npc_info:
-                    # Use actual NPC image
-                    self.tile_canvas.create_image(10, y, image=npc_info["image"], anchor=tk.NW, tags=f"npc_{npc_name}")
-                else:
-                    # Fallback to colored circle
-                    npc_colors = {
-                        "guard": "#4169E1", "merchant": "#FFD700", "villager": "#90EE90",
-                        "wizard": "#9370DB", "knight": "#C0C0C0", "enemy": "#DC143C", "boss": "#8B0000"
-                    }
-                    color = npc_colors.get(npc_name, "#FFD700")
-                    self.tile_canvas.create_oval(10, y, 40, y + 30, fill=color, 
-                                               outline="black", tags=f"npc_{npc_name}")
-                
-                display_name = npc_info.get("display_name", npc_name.title())
-                self.tile_canvas.create_text(50, y + 15, text=display_name, anchor=tk.W)
-                
-                # Highlight selected NPC
-                if npc_name == self.selected_tile:
-                    if "image" in npc_info:
-                        self.tile_canvas.create_rectangle(8, y-2, 42, y + 32, outline="red", width=2, tags="selection")
-                    else:
-                        self.tile_canvas.create_oval(8, y-2, 42, y + 32, outline="red", width=2, tags="selection")
-        
-        elif self.selected_mode == "object":
-            # Show objects from objects directory
-            obj_names = self.tile_manager.get_object_names()
-            
-            if not obj_names:
-                # Fallback to hardcoded list if no object files found
-                obj_names = ["item", "lever", "fountain", "chest", "barrel", "table", "door_switch"]
-            
-            for i, obj_name in enumerate(obj_names):
-                y = i * 40 + 10
-                
-                obj_info = self.tile_manager.get_object_info(obj_name)
-                if "image" in obj_info:
-                    # Use actual object image
-                    self.tile_canvas.create_image(10, y, image=obj_info["image"], anchor=tk.NW, tags=f"obj_{obj_name}")
-                else:
-                    # Fallback to colored rectangle
-                    obj_colors = {
-                        "item": "#32CD32", "lever": "#FF4500", "fountain": "#00CED1",
-                        "chest": "#8B4513", "barrel": "#654321", "table": "#DEB887", "door_switch": "#FF6347"
-                    }
-                    color = obj_colors.get(obj_name, "#32CD32")
-                    self.tile_canvas.create_rectangle(10, y, 40, y + 30, fill=color, 
-                                                    outline="black", tags=f"obj_{obj_name}")
-                
-                display_name = obj_info.get("display_name", obj_name.title())
-                self.tile_canvas.create_text(50, y + 15, text=display_name, anchor=tk.W)
-                
-                # Highlight selected object
-                if obj_name == self.selected_tile:
-                    self.tile_canvas.create_rectangle(8, y-2, 42, y + 32, outline="red", width=2, tags="selection")
-        
-        elif self.selected_mode == "trigger":
-            # Show triggers from triggers directory
-            trigger_names = self.tile_manager.get_trigger_names()
-            
-            if not trigger_names:
-                # Show generic trigger option
-                self.tile_canvas.create_polygon(25, 10, 40, 25, 25, 40, 10, 25, 
-                                              fill="red", outline="black", tags="trigger")
-                self.tile_canvas.create_text(50, 25, text="Generic Trigger", anchor=tk.W)
-                
-                # Highlight if selected
-                if self.selected_tile == "trigger":
-                    self.tile_canvas.create_polygon(27, 8, 42, 25, 27, 42, 8, 25, 
-                                                  outline="red", width=2, tags="selection")
-            else:
-                # Show available trigger files
-                for i, trigger_name in enumerate(trigger_names):
-                    y = i * 40 + 10
-                    
-                    trigger_info = self.tile_manager.get_trigger_info(trigger_name)
-                    
-                    # Draw trigger as diamond
-                    self.tile_canvas.create_polygon(25, y + 5, 40, y + 20, 25, y + 35, 10, y + 20, 
-                                                  fill="red", outline="black", tags=f"trigger_{trigger_name}")
-                    
-                    display_name = trigger_info.get("display_name", trigger_name.title())
-                    self.tile_canvas.create_text(50, y + 20, text=display_name, anchor=tk.W)
-                    
-                    # Highlight selected trigger
-                    if trigger_name == self.selected_tile:
-                        self.tile_canvas.create_polygon(27, y + 3, 42, y + 20, 27, y + 37, 8, y + 20, 
-                                                      outline="red", width=2, tags="selection")
-        
-        # Update scroll region
-        self.tile_canvas.configure(scrollregion=self.tile_canvas.bbox("all"))
-        
-        # Update selected tile label
-        if self.selected_mode == "tile" and hasattr(self, 'selected_tile_label'):
-            tile_info = self.tile_manager.get_tile_info(self.selected_tile)
-            self.selected_tile_label.config(text=f"Selected: {tile_info.get('display_name', self.selected_tile)}")
-        elif hasattr(self, 'selected_tile_label'):
-            self.selected_tile_label.config(text=f"Mode: {self.selected_mode.title()} - {self.selected_tile.title()}")
-    
-    def on_tile_canvas_click(self, event):
-        """Handle clicks on the tile selection canvas"""
-        # Set focus to toolbox when clicked
-        self.tile_canvas.focus_set()
-        
-        # Find what was clicked
-        clicked = self.tile_canvas.find_closest(event.x, event.y)[0]
-        tags = self.tile_canvas.gettags(clicked)
-        
-        for tag in tags:
-            if tag.startswith("tile_"):
-                self.selected_tile = tag[5:]  # Remove "tile_" prefix
-                self.update_tile_display()
-                break
-            elif tag.startswith("obj_"):
-                self.selected_tile = tag[4:]  # Remove "obj_" prefix
-                self.update_tile_display()
-                break
-            elif tag.startswith("npc_"):
-                self.selected_tile = tag[4:]  # Remove "npc_" prefix
-                self.update_tile_display()
-                break
-            elif tag.startswith("trigger_"):
-                self.selected_tile = tag[8:]  # Remove "trigger_" prefix
-                self.update_tile_display()
-                break
-            elif tag == "trigger":
-                self.selected_tile = "trigger"
-                self.update_tile_display()
-                break
-    
     def on_key_press(self, event):
-        """Handle keyboard input"""
         key = event.keysym.lower()
-        
-        # Check which widget has focus
-        focused_widget = self.root.focus_get()
-        
-        if focused_widget == self.canvas:
-            # Canvas has focus - handle area editor keys
+        if self.root.focus_get() == self.canvas:
             if key in ['up', 'down', 'left', 'right']:
                 self.move_cursor(key)
                 return "break"
@@ -771,11 +412,8 @@ class TinkerEditor:
             elif key == 'delete' or key == 'backspace':
                 self.remove_tile()
                 return "break"
-        
-        # For all other cases, let default behavior handle it
-            
+    
     def move_cursor(self, direction):
-        """Move the cursor in the specified direction"""
         if direction == 'up' and self.cursor_y > 0:
             self.cursor_y -= 1
         elif direction == 'down' and self.cursor_y < self.current_area.height - 1:
@@ -784,310 +422,273 @@ class TinkerEditor:
             self.cursor_x -= 1
         elif direction == 'right' and self.cursor_x < self.current_area.width - 1:
             self.cursor_x += 1
-            
         self.update_cursor_display()
         self.update_properties_display()
-        
+    
     def place_tile(self):
-        """Place or toggle the selected item at cursor position (mode-aware)"""
         if self.selected_mode == "tile":
             current_tile = self.current_area.tiles[self.cursor_y][self.cursor_x]
-            
             if current_tile.type == self.selected_tile:
-                # Same tile - clear to empty
                 self.current_area.tiles[self.cursor_y][self.cursor_x] = Tile(type="empty")
             else:
-                # Different tile or empty - place/replace with selected tile
-                self.current_area.tiles[self.cursor_y][self.cursor_x] = Tile(
-                    type=self.selected_tile, 
-                    walkable_override=None  # Use global default initially
-                )
-                
+                self.current_area.tiles[self.cursor_y][self.cursor_x] = Tile(type=self.selected_tile)
+        
         elif self.selected_mode == "object":
-            # Check if there's already an object at this position
-            existing_objects = [obj for obj in self.current_area.objects 
-                              if obj.x == self.cursor_x and obj.y == self.cursor_y]
-            
-            if existing_objects and existing_objects[0].type == self.selected_tile:
-                # Same object type - remove it
+            existing = [obj for obj in self.current_area.objects 
+                       if obj.x == self.cursor_x and obj.y == self.cursor_y]
+            if existing and existing[0].type == self.selected_tile:
                 self.current_area.objects = [obj for obj in self.current_area.objects 
                                            if not (obj.x == self.cursor_x and obj.y == self.cursor_y)]
             else:
-                # Different object or no object - remove existing and place new
                 self.current_area.objects = [obj for obj in self.current_area.objects 
                                            if not (obj.x == self.cursor_x and obj.y == self.cursor_y)]
                 self.current_area.objects.append(GameObject(
-                    type=self.selected_tile, x=self.cursor_x, y=self.cursor_y
-                ))
-                
+                    type=self.selected_tile, x=self.cursor_x, y=self.cursor_y))
+        
         elif self.selected_mode == "npc":
-            # Check if there's already an NPC at this position
-            # NPCs are stored as objects, so we need to check for NPC types specifically
-            npc_types = set(self.tile_manager.get_npc_names())
-            if not npc_types:
-                # Fallback to hardcoded NPC types if no files found
-                npc_types = {"guard", "merchant", "villager", "wizard", "knight", "enemy", "boss"}
-            
-            existing_npcs = [obj for obj in self.current_area.objects 
-                           if (obj.x == self.cursor_x and obj.y == self.cursor_y and 
-                               obj.type in npc_types)]
-            
-            if existing_npcs and existing_npcs[0].type == self.selected_tile:
-                # Same NPC type - remove it
+            npc_types = set(self.tile_manager.get_npc_names()) or {"guard", "merchant", "villager"}
+            existing = [obj for obj in self.current_area.objects 
+                       if obj.x == self.cursor_x and obj.y == self.cursor_y and obj.type in npc_types]
+            if existing and existing[0].type == self.selected_tile:
                 self.current_area.objects = [obj for obj in self.current_area.objects 
                                            if not (obj.x == self.cursor_x and obj.y == self.cursor_y and 
                                                   obj.type in npc_types)]
             else:
-                # Different NPC or no NPC - remove existing NPC and place new
                 self.current_area.objects = [obj for obj in self.current_area.objects 
                                            if not (obj.x == self.cursor_x and obj.y == self.cursor_y and 
                                                   obj.type in npc_types)]
                 self.current_area.objects.append(GameObject(
-                    type=self.selected_tile, x=self.cursor_x, y=self.cursor_y
-                ))
-                
+                    type=self.selected_tile, x=self.cursor_x, y=self.cursor_y))
+        
         elif self.selected_mode == "trigger":
-            # Check if there's already a trigger at this position
-            existing_triggers = [trig for trig in self.current_area.triggers 
-                               if trig.x == self.cursor_x and trig.y == self.cursor_y]
-            
-            if existing_triggers:
-                # Same trigger - remove it
+            existing = [trig for trig in self.current_area.triggers 
+                       if trig.x == self.cursor_x and trig.y == self.cursor_y]
+            if existing:
                 self.current_area.triggers = [trig for trig in self.current_area.triggers 
                                             if not (trig.x == self.cursor_x and trig.y == self.cursor_y)]
             else:
-                # No trigger - place new trigger
-                new_trigger = Trigger(x=self.cursor_x, y=self.cursor_y)
-                
-                # If we have a specific trigger selected (from files), store that info
-                if self.selected_tile != "trigger" and self.selected_tile in self.tile_manager.get_trigger_names():
-                    # Store the trigger type in the actions for now
-                    new_trigger.actions = [{"type": "python_script", "script": self.selected_tile}]
-                
-                self.current_area.triggers.append(new_trigger)
-            
+                self.current_area.triggers.append(Trigger(x=self.cursor_x, y=self.cursor_y))
+        
         self.draw_area()
         self.update_properties_display()
-        
+    
     def remove_tile(self):
-        """Remove item at cursor position (mode-aware)"""
         if self.selected_mode == "tile":
-            # Clear tile to empty
             self.current_area.tiles[self.cursor_y][self.cursor_x] = Tile(type="empty")
-            
         elif self.selected_mode == "object":
-            # Remove only objects (not NPCs) at this position
-            npc_types = set(self.tile_manager.get_npc_names())
-            if not npc_types:
-                # Fallback to hardcoded NPC types if no files found
-                npc_types = {"guard", "merchant", "villager", "wizard", "knight", "enemy", "boss"}
-            
+            npc_types = set(self.tile_manager.get_npc_names()) or {"guard", "merchant", "villager"}
             self.current_area.objects = [obj for obj in self.current_area.objects 
                                        if not (obj.x == self.cursor_x and obj.y == self.cursor_y and 
                                               obj.type not in npc_types)]
-                                              
         elif self.selected_mode == "npc":
-            # Remove only NPCs at this position
-            npc_types = set(self.tile_manager.get_npc_names())
-            if not npc_types:
-                # Fallback to hardcoded NPC types if no files found
-                npc_types = {"guard", "merchant", "villager", "wizard", "knight", "enemy", "boss"}
-            
+            npc_types = set(self.tile_manager.get_npc_names()) or {"guard", "merchant", "villager"}
             self.current_area.objects = [obj for obj in self.current_area.objects 
                                        if not (obj.x == self.cursor_x and obj.y == self.cursor_y and 
                                               obj.type in npc_types)]
-                                              
         elif self.selected_mode == "trigger":
-            # Remove triggers at this position
             self.current_area.triggers = [trig for trig in self.current_area.triggers 
                                         if not (trig.x == self.cursor_x and trig.y == self.cursor_y)]
-            
+        
         self.draw_area()
         self.update_properties_display()
-        
+    
     def on_canvas_click(self, event):
-        """Handle canvas clicks"""
-        # Set focus to canvas when clicked
         self.canvas.focus_set()
-        
-        # Convert canvas coordinates to grid coordinates
         canvas_x = self.canvas.canvasx(event.x)
         canvas_y = self.canvas.canvasy(event.y)
-        
         grid_x = int(canvas_x // self.tile_size)
         grid_y = int(canvas_y // self.tile_size)
         
-        if (0 <= grid_x < self.current_area.width and 
-            0 <= grid_y < self.current_area.height):
+        if (0 <= grid_x < self.current_area.width and 0 <= grid_y < self.current_area.height):
             self.cursor_x = grid_x
             self.cursor_y = grid_y
             self.update_cursor_display()
             self.update_properties_display()
-            
+    
+    def is_tile_blocked(self, x, y):
+        tile = self.current_area.tiles[y][x]
+        if not tile.is_walkable(self.tile_manager):
+            return True
+        
+        # Check if any object on this tile blocks movement
+        for obj in self.current_area.objects:
+            if obj.x == x and obj.y == y:
+                if obj.properties.get("walkable", True) is False:
+                    return True
+        
+        # Check if any NPC blocks movement
+        for obj in self.current_area.objects:
+            if obj.x == x and obj.y == y:
+                npc_names = set(self.tile_manager.get_npc_names())
+                if obj.type in npc_names and obj.properties.get("walkable", False) is False:
+                    return True
+        
+        return False
+
     def draw_area(self):
-        """Draw the current area on the canvas"""
         self.canvas.delete("all")
         
-        # Draw grid and tiles
         for y in range(self.current_area.height):
             for x in range(self.current_area.width):
                 x1, y1 = x * self.tile_size, y * self.tile_size
-                
-                # Get tile
                 tile = self.current_area.tiles[y][x]
                 tile_info = self.tile_manager.get_tile_info(tile.type)
                 
-                # Draw tile image
                 if "image" in tile_info:
                     self.canvas.create_image(x1, y1, image=tile_info["image"], anchor=tk.NW)
                 else:
-                    # Fallback to colored rectangle
                     self.canvas.create_rectangle(x1, y1, x1 + self.tile_size, y1 + self.tile_size, 
                                                fill="lightgray", outline="black")
                 
-                # Draw grid lines
                 self.canvas.create_rectangle(x1, y1, x1 + self.tile_size, y1 + self.tile_size, 
                                            outline="gray", width=1)
                 
-                # Show walkable indicator on tiles that are not walkable
-                tile = self.current_area.tiles[y][x]
-                effective_walkable = tile.is_walkable(self.tile_manager)
-                
-                # For doors, check state too
-                if tile.get_tile_category() == "door":
-                    if tile.door_state in ["locked", "closed"] and tile.walkable_override is None:
-                        effective_walkable = False
-                    elif tile.door_state == "open" and tile.walkable_override is None:
-                        effective_walkable = True
-                
-                if not effective_walkable:
+                # Show non-walkable tiles
+                if tile.type != "empty" and self.is_tile_blocked(x, y):
                     self.canvas.create_text(x1 + 16, y1 + 16, text="✗", fill="red", 
                                           font=("Arial", 12, "bold"))
-                
+        
         # Draw objects and NPCs
         for obj in self.current_area.objects:
             x1, y1 = obj.x * self.tile_size, obj.y * self.tile_size
-            
-            # Check if we have an image for this object/NPC
             npc_info = self.tile_manager.get_npc_info(obj.type)
             obj_info = self.tile_manager.get_object_info(obj.type)
             
             if "image" in npc_info:
-                # Use NPC image
                 self.canvas.create_image(x1, y1, image=npc_info["image"], anchor=tk.NW)
             elif "image" in obj_info:
-                # Use object image
                 self.canvas.create_image(x1, y1, image=obj_info["image"], anchor=tk.NW)
             else:
-                # Fallback to colored shapes
                 x2, y2 = x1 + self.tile_size, y1 + self.tile_size
-                
                 if obj.type in ["guard", "merchant", "villager", "wizard", "knight", "enemy", "boss"]:
-                    # NPCs - circles with specific colors
-                    npc_colors = {
-                        "guard": "#4169E1", "merchant": "#FFD700", "villager": "#90EE90",
-                        "wizard": "#9370DB", "knight": "#C0C0C0", "enemy": "#DC143C", "boss": "#8B0000"
-                    }
-                    color = npc_colors.get(obj.type, "#FFD700")
+                    colors = {"guard": "#4169E1", "merchant": "#FFD700", "villager": "#90EE90",
+                             "wizard": "#9370DB", "knight": "#C0C0C0", "enemy": "#DC143C", "boss": "#8B0000"}
+                    color = colors.get(obj.type, "#FFD700")
                     self.canvas.create_oval(x1 + 4, y1 + 4, x2 - 4, y2 - 4, fill=color, outline="black", width=2)
-                    # Add a small "N" to indicate NPC
                     self.canvas.create_text(x1 + 16, y1 + 16, text="N", fill="white", font=("Arial", 8, "bold"))
                 else:
-                    # Objects - rectangles with specific colors
-                    obj_colors = {
-                        "item": "#32CD32", "lever": "#FF4500", "fountain": "#00CED1",
-                        "chest": "#8B4513", "barrel": "#654321", "table": "#DEB887", "door_switch": "#FF6347"
-                    }
-                    color = obj_colors.get(obj.type, "#32CD32")
+                    colors = {"item": "#32CD32", "lever": "#FF4500", "fountain": "#00CED1",
+                             "chest": "#8B4513", "barrel": "#654321", "table": "#DEB887"}
+                    color = colors.get(obj.type, "#32CD32")
                     self.canvas.create_rectangle(x1 + 4, y1 + 4, x2 - 4, y2 - 4, fill=color, outline="black", width=2)
-            
+        
         # Draw triggers
         for trigger in self.current_area.triggers:
             x1, y1 = trigger.x * self.tile_size, trigger.y * self.tile_size
             x2, y2 = x1 + self.tile_size, y1 + self.tile_size
-            
-            # Draw trigger as diamond
             center_x, center_y = (x1 + x2) / 2, (y1 + y2) / 2
-            self.canvas.create_polygon(
-                center_x, y1 + 4,  # top
-                x2 - 4, center_y,  # right
-                center_x, y2 - 4,  # bottom
-                x1 + 4, center_y,  # left
-                fill="#FF6347", outline="black", width=2
-            )
-            
-        # Update canvas scroll region
+            self.canvas.create_polygon(center_x, y1 + 4, x2 - 4, center_y, center_x, y2 - 4, x1 + 4, center_y,
+                                     fill="#FF6347", outline="black", width=2)
+        
         self.canvas.configure(scrollregion=self.canvas.bbox("all"))
-        
         self.update_cursor_display()
-        
+    
     def update_cursor_display(self):
-        """Update the cursor display on the canvas"""
         self.canvas.delete("cursor")
-        
         x1, y1 = self.cursor_x * self.tile_size, self.cursor_y * self.tile_size
         x2, y2 = x1 + self.tile_size, y1 + self.tile_size
-        
-        # Draw cursor as thick border
         self.canvas.create_rectangle(x1, y1, x2, y2, outline="red", width=3, tags="cursor")
-        
-        # Update cursor label
         self.cursor_label.config(text=f"Cursor: ({self.cursor_x}, {self.cursor_y})")
+    
+    def update_tile_display(self):
+        self.tile_canvas.delete("all")
         
+        if self.selected_mode == "tile":
+            tiles_per_row = 5
+            tile_names = self.tile_manager.get_tile_names()
+            for i, tile_name in enumerate(tile_names):
+                row, col = i // tiles_per_row, i % tiles_per_row
+                x, y = col * 40 + 10, row * 40 + 10
+                tile_info = self.tile_manager.get_tile_info(tile_name)
+                self.tile_canvas.create_image(x, y, image=tile_info["image"], anchor=tk.NW, tags=f"tile_{tile_name}")
+                if tile_name == self.selected_tile:
+                    self.tile_canvas.create_rectangle(x-2, y-2, x+34, y+34, outline="red", width=2, tags="selection")
+        
+        elif self.selected_mode == "npc":
+            npc_names = self.tile_manager.get_npc_names() or ["guard", "merchant", "villager", "wizard", "knight"]
+            for i, npc_name in enumerate(npc_names):
+                y = i * 40 + 10
+                npc_info = self.tile_manager.get_npc_info(npc_name)
+                if "image" in npc_info:
+                    self.tile_canvas.create_image(10, y, image=npc_info["image"], anchor=tk.NW, tags=f"npc_{npc_name}")
+                else:
+                    colors = {"guard": "#4169E1", "merchant": "#FFD700", "villager": "#90EE90",
+                             "wizard": "#9370DB", "knight": "#C0C0C0"}
+                    color = colors.get(npc_name, "#FFD700")
+                    self.tile_canvas.create_oval(10, y, 40, y + 30, fill=color, outline="black", tags=f"npc_{npc_name}")
+                self.tile_canvas.create_text(50, y + 15, text=npc_name.title(), anchor=tk.W)
+                if npc_name == self.selected_tile:
+                    self.tile_canvas.create_rectangle(8, y-2, 200, y + 32, outline="red", width=2, tags="selection")
+        
+        elif self.selected_mode == "object":
+            obj_names = self.tile_manager.get_object_names() or ["item", "lever", "fountain", "chest", "barrel"]
+            for i, obj_name in enumerate(obj_names):
+                y = i * 40 + 10
+                obj_info = self.tile_manager.get_object_info(obj_name)
+                if "image" in obj_info:
+                    self.tile_canvas.create_image(10, y, image=obj_info["image"], anchor=tk.NW, tags=f"obj_{obj_name}")
+                else:
+                    colors = {"item": "#32CD32", "lever": "#FF4500", "fountain": "#00CED1",
+                             "chest": "#8B4513", "barrel": "#654321"}
+                    color = colors.get(obj_name, "#32CD32")
+                    self.tile_canvas.create_rectangle(10, y, 40, y + 30, fill=color, outline="black", tags=f"obj_{obj_name}")
+                self.tile_canvas.create_text(50, y + 15, text=obj_name.title(), anchor=tk.W)
+                if obj_name == self.selected_tile:
+                    self.tile_canvas.create_rectangle(8, y-2, 200, y + 32, outline="red", width=2, tags="selection")
+        
+        elif self.selected_mode == "trigger":
+            trigger_names = self.tile_manager.get_trigger_names() or ["trigger"]
+            for i, trigger_name in enumerate(trigger_names):
+                y = i * 40 + 10
+                self.tile_canvas.create_polygon(25, y + 5, 40, y + 20, 25, y + 35, 10, y + 20, 
+                                              fill="red", outline="black", tags=f"trigger_{trigger_name}")
+                self.tile_canvas.create_text(50, y + 20, text=trigger_name.title(), anchor=tk.W)
+                if trigger_name == self.selected_tile:
+                    self.tile_canvas.create_rectangle(8, y-2, 200, y + 32, outline="red", width=2, tags="selection")
+        
+        self.tile_canvas.configure(scrollregion=self.tile_canvas.bbox("all"))
+        if hasattr(self, 'selected_tile_label'):
+            self.selected_tile_label.config(text=f"Selected: {self.selected_tile}")
+    
+    def on_tile_canvas_click(self, event):
+        clicked = self.tile_canvas.find_closest(event.x, event.y)[0]
+        tags = self.tile_canvas.gettags(clicked)
+        for tag in tags:
+            if tag.startswith("tile_"):
+                self.selected_tile = tag[5:]
+                self.update_tile_display()
+                break
+            elif tag.startswith("obj_"):
+                self.selected_tile = tag[4:]
+                self.update_tile_display()
+                break
+            elif tag.startswith("npc_"):
+                self.selected_tile = tag[4:]
+                self.update_tile_display()
+                break
+            elif tag.startswith("trigger_"):
+                self.selected_tile = tag[8:]
+                self.update_tile_display()
+                break
+    
     def update_properties_display(self):
-        """Update the properties panel"""
-        # Enable text widget to clear and update it
         self.properties_text.configure(state='normal')
-        
-        # Clear properties text
         self.properties_text.delete(1.0, tk.END)
         
-        # Get current tile/object/trigger info
         tile = self.current_area.tiles[self.cursor_y][self.cursor_x]
-        objects_here = [obj for obj in self.current_area.objects 
-                       if obj.x == self.cursor_x and obj.y == self.cursor_y]
-        triggers_here = [trig for trig in self.current_area.triggers 
-                        if trig.x == self.cursor_x and trig.y == self.cursor_y]
+        objects_here = [obj for obj in self.current_area.objects if obj.x == self.cursor_x and obj.y == self.cursor_y]
+        triggers_here = [trig for trig in self.current_area.triggers if trig.x == self.cursor_x and trig.y == self.cursor_y]
         
         info = f"Position: ({self.cursor_x}, {self.cursor_y})\n\n"
-        
-        # Tile info
         tile_info = self.tile_manager.get_tile_info(tile.type)
         global_walkable = self.tile_manager.get_default_walkable(tile.type)
-        effective_walkable = tile.is_walkable(self.tile_manager)
         tile_category = tile.get_tile_category()
         
         info += f"Tile: {tile_info.get('display_name', tile.type)}\n"
-        info += f"Type: {tile.type}\n"
         info += f"Category: {tile_category}\n"
-        info += f"Global walkable: {global_walkable}\n"
-        info += f"Effective walkable: {effective_walkable}\n"
+        info += f"Walkable: {tile.is_walkable(self.tile_manager)}\n\n"
         
-        if tile.walkable_override is not None:
-            info += f"Override: {tile.walkable_override}\n"
-        else:
-            info += "Override: None (using global)\n"
-        
-        # Door-specific info
-        if tile_category == "door":
-            info += f"Door state: {tile.door_state}\n"
-            
-            # Door walkability depends on state
-            if tile.door_state == "locked" or tile.door_state == "closed":
-                door_walkable = False
-            else:  # open
-                door_walkable = True
-            
-            if tile.walkable_override is None:
-                effective_walkable = door_walkable
-            
-            info += f"Door walkable: {door_walkable}\n"
-        
-        info += "\n"
-        
-        # Update walkable controls
-        self.global_walkable_label.config(text=f"Global default: {global_walkable}")
-        
+        self.global_walkable_label.config(text=f"Default: {global_walkable}")
         if tile.walkable_override is None:
             self.walkable_override_var.set("default")
         elif tile.walkable_override:
@@ -1095,94 +696,165 @@ class TinkerEditor:
         else:
             self.walkable_override_var.set("not_walkable")
         
-        # Show/hide door controls based on tile category
-        if tile_category == "door":
-            self.door_frame.pack(fill=tk.X, padx=5, pady=5)
-            self.door_state_var.set(tile.door_state)
-        else:
-            self.door_frame.pack_forget()
-        
-        # Object info
         if objects_here:
             for obj in objects_here:
-                info += f"Object: {obj.type.title()}\n"
-                if obj.properties:
-                    info += f"Properties: {obj.properties}\n"
-                info += "\n"
-                
-        # Trigger info
+                info += f"Object: {obj.type}\n"
         if triggers_here:
             for trigger in triggers_here:
                 info += f"Trigger: {len(trigger.actions)} actions\n"
-                for i, action in enumerate(trigger.actions):
-                    info += f"  Action {i+1}: {action}\n"
-                info += "\n"
-                
+        
         self.properties_text.insert(1.0, info)
-        
-        # Re-disable the text widget after updating
         self.properties_text.configure(state='disabled')
-        
-    def on_walkable_override_change(self):
-        """Handle walkable override change"""
-        tile = self.current_area.tiles[self.cursor_y][self.cursor_x]
-        
-        override_value = self.walkable_override_var.get()
-        if override_value == "default":
-            tile.walkable_override = None
-        elif override_value == "walkable":
-            tile.walkable_override = True
-        elif override_value == "not_walkable":
-            tile.walkable_override = False
-            
-        self.update_properties_display()
-        self.draw_area()  # Redraw to show visual changes
     
-    def on_door_state_change(self):
-        """Handle door state change"""
-        tile = self.current_area.tiles[self.cursor_y][self.cursor_x]
-        tile.door_state = self.door_state_var.get()
-        self.update_properties_display()
-        self.draw_area()  # Redraw to show visual changes
-        
     def on_mode_change(self):
-        """Handle mode change (tile/object/trigger)"""
         self.selected_mode = self.mode_var.get()
         self.update_tile_display()
-        
+    
     def on_area_name_change(self, event):
-        """Handle area name change"""
         self.current_area.name = self.area_name_var.get()
+    
+    def on_walkable_change(self):
+        tile = self.current_area.tiles[self.cursor_y][self.cursor_x]
+        value = self.walkable_override_var.get()
+        if value == "default":
+            tile.walkable_override = None
+        elif value == "walkable":
+            tile.walkable_override = True
+        else:
+            tile.walkable_override = False
+        self.update_properties_display()
+        self.draw_area()
+    
+    # Canvas tools
+    def show_resize_dialog(self):
+        dialog = tk.Toplevel(self.root)
+        dialog.title("Resize Canvas")
+        dialog.geometry("300x150")
+        dialog.transient(self.root)
         
+        ttk.Label(dialog, text=f"Current: {self.current_area.width} x {self.current_area.height}").pack(pady=10)
+        
+        frame = ttk.Frame(dialog)
+        frame.pack(pady=10)
+        
+        ttk.Label(frame, text="Width:").grid(row=0, column=0, padx=5)
+        width_var = tk.StringVar(value=str(self.current_area.width))
+        ttk.Entry(frame, textvariable=width_var, width=10).grid(row=0, column=1, padx=5)
+        
+        ttk.Label(frame, text="Height:").grid(row=0, column=2, padx=5)
+        height_var = tk.StringVar(value=str(self.current_area.height))
+        ttk.Entry(frame, textvariable=height_var, width=10).grid(row=0, column=3, padx=5)
+        
+        def apply():
+            try:
+                new_w, new_h = int(width_var.get()), int(height_var.get())
+                if new_w > 0 and new_h > 0:
+                    self.resize_canvas(new_w, new_h)
+                    dialog.destroy()
+            except ValueError:
+                messagebox.showerror("Error", "Please enter valid numbers")
+        
+        ttk.Button(dialog, text="Apply", command=apply).pack(pady=10)
+        ttk.Button(dialog, text="Cancel", command=dialog.destroy).pack()
+    
+    def resize_canvas(self, new_width, new_height):
+        old_w, old_h = self.current_area.width, self.current_area.height
+        new_tiles = [[Tile() for _ in range(new_width)] for _ in range(new_height)]
+        
+        copy_w, copy_h = min(old_w, new_width), min(old_h, new_height)
+        for y in range(copy_h):
+            for x in range(copy_w):
+                new_tiles[y][x] = self.current_area.tiles[y][x]
+        
+        self.current_area.width, self.current_area.height = new_width, new_height
+        self.current_area.tiles = new_tiles
+        self.current_area.objects = [obj for obj in self.current_area.objects 
+                                   if 0 <= obj.x < new_width and 0 <= obj.y < new_height]
+        self.current_area.triggers = [trig for trig in self.current_area.triggers 
+                                    if 0 <= trig.x < new_width and 0 <= trig.y < new_height]
+        
+        self.cursor_x = min(self.cursor_x, new_width - 1)
+        self.cursor_y = min(self.cursor_y, new_height - 1)
+        
+        self.draw_area()
+        self.update_properties_display()
+        messagebox.showinfo("Resize", f"Canvas resized to {new_width}x{new_height}")
+    
+    def crop_canvas_to_room(self):
+        min_x = min_y = float('inf')
+        max_x = max_y = float('-inf')
+        found_content = False
+        
+        for y in range(self.current_area.height):
+            for x in range(self.current_area.width):
+                if self.current_area.tiles[y][x].type != "empty":
+                    min_x, max_x = min(min_x, x), max(max_x, x)
+                    min_y, max_y = min(min_y, y), max(max_y, y)
+                    found_content = True
+        
+        for obj in self.current_area.objects:
+            min_x, max_x = min(min_x, obj.x), max(max_x, obj.x)
+            min_y, max_y = min(min_y, obj.y), max(max_y, obj.y)
+            found_content = True
+        
+        for trig in self.current_area.triggers:
+            min_x, max_x = min(min_x, trig.x), max(max_x, trig.x)
+            min_y, max_y = min(min_y, trig.y), max(max_y, trig.y)
+            found_content = True
+        
+        if not found_content:
+            messagebox.showinfo("Crop", "No content found to crop to.")
+            return
+        
+        new_width, new_height = int(max_x - min_x + 1), int(max_y - min_y + 1)
+        new_tiles = [[Tile() for _ in range(new_width)] for _ in range(new_height)]
+        
+        for y in range(int(min_y), int(max_y + 1)):
+            for x in range(int(min_x), int(max_x + 1)):
+                new_tiles[y - int(min_y)][x - int(min_x)] = self.current_area.tiles[y][x]
+        
+        for obj in self.current_area.objects:
+            obj.x -= int(min_x)
+            obj.y -= int(min_y)
+        
+        for trig in self.current_area.triggers:
+            trig.x -= int(min_x)
+            trig.y -= int(min_y)
+        
+        self.current_area.width, self.current_area.height = new_width, new_height
+        self.current_area.tiles = new_tiles
+        self.cursor_x = max(0, self.cursor_x - int(min_x))
+        self.cursor_y = max(0, self.cursor_y - int(min_y))
+        
+        self.draw_area()
+        self.update_properties_display()
+        messagebox.showinfo("Crop", f"Canvas cropped to {new_width}x{new_height}")
+    
+    # File operations
     def reload_assets(self):
-        """Reload all assets from directories"""
         self.tile_manager = TileManager()
         if self.tile_manager.get_tile_names():
             self.selected_tile = self.tile_manager.get_tile_names()[0]
         self.update_tile_display()
         self.draw_area()
-        messagebox.showinfo("Reload", "All assets reloaded successfully!")
-        
+        messagebox.showinfo("Reload", "Assets reloaded!")
+    
     def new_area(self):
-        """Create a new area"""
-        if messagebox.askyesno("New Area", "Create a new area? Unsaved changes will be lost."):
+        if messagebox.askyesno("New", "Create new area? Unsaved changes will be lost."):
             self.current_area = Area()
             self.current_file = None
-            self.cursor_x = 0
-            self.cursor_y = 0
+            self.cursor_x = self.cursor_y = 0
             self.area_name_var.set(self.current_area.name)
             self.draw_area()
             self.update_properties_display()
-            
+    
     def save_area(self):
-        """Save the current area"""
         if self.current_file:
             self._save_to_file(self.current_file)
         else:
             self.save_area_as()
-            
+    
     def save_area_as(self):
-        """Save the current area with a new filename"""
         filename = filedialog.asksaveasfilename(
             defaultextension=".json",
             filetypes=[("JSON files", "*.json"), ("All files", "*.*")]
@@ -1190,276 +862,47 @@ class TinkerEditor:
         if filename:
             self._save_to_file(filename)
             self.current_file = filename
-            
+    
     def _save_to_file(self, filename):
-        """Save area data to file"""
         try:
-            # Convert area to dictionary
-            area_dict = asdict(self.current_area)
-            
             with open(filename, 'w') as f:
-                json.dump(area_dict, f, indent=2)
-                
+                json.dump(asdict(self.current_area), f, indent=2)
             messagebox.showinfo("Save", f"Area saved to {filename}")
         except Exception as e:
-            messagebox.showerror("Error", f"Failed to save area: {str(e)}")
-            
+            messagebox.showerror("Error", f"Failed to save: {e}")
+    
     def open_area(self):
-        """Open an existing area"""
-        filename = filedialog.askopenfilename(
-            filetypes=[("JSON files", "*.json"), ("All files", "*.*")]
-        )
+        filename = filedialog.askopenfilename(filetypes=[("JSON files", "*.json"), ("All files", "*.*")])
         if filename:
             try:
                 with open(filename, 'r') as f:
                     area_dict = json.load(f)
-                    
-                # Reconstruct area object
+                
                 self.current_area = Area(**area_dict)
                 
-                # Reconstruct tile objects
+                # Reconstruct objects
                 for y, row in enumerate(self.current_area.tiles):
                     for x, tile_data in enumerate(row):
                         if isinstance(tile_data, dict):
                             self.current_area.tiles[y][x] = Tile(**tile_data)
-                            
-                # Reconstruct object objects
-                self.current_area.objects = [GameObject(**obj_data) for obj_data in self.current_area.objects]
                 
-                # Reconstruct trigger objects
-                self.current_area.triggers = [Trigger(**trig_data) for trig_data in self.current_area.triggers]
+                self.current_area.objects = [GameObject(**obj) for obj in self.current_area.objects]
+                self.current_area.triggers = [Trigger(**trig) for trig in self.current_area.triggers]
                 
                 self.current_file = filename
-                self.cursor_x = 0
-                self.cursor_y = 0
+                self.cursor_x = self.cursor_y = 0
                 self.area_name_var.set(self.current_area.name)
                 self.draw_area()
                 self.update_properties_display()
-                
                 messagebox.showinfo("Open", f"Area loaded from {filename}")
             except Exception as e:
-                messagebox.showerror("Error", f"Failed to open area: {str(e)}")
-
-    def show_resize_dialog(self):
-        """Show dialog to resize the canvas"""
-        dialog = tk.Toplevel(self.root)
-        dialog.title("Resize Canvas")
-        dialog.geometry("300x150")
-        dialog.transient(self.root)
-        dialog.grab_set()
-        
-        # Center the dialog on the parent window
-        dialog.update_idletasks()
-        x = (self.root.winfo_x() + self.root.winfo_width() // 2 - dialog.winfo_width() // 2)
-        y = (self.root.winfo_y() + self.root.winfo_height() // 2 - dialog.winfo_height() // 2)
-        dialog.geometry(f"+{x}+{y}")
-        
-        # Current size display
-        current_frame = ttk.Frame(dialog)
-        current_frame.pack(fill=tk.X, padx=10, pady=5)
-        ttk.Label(current_frame, text=f"Current size: {self.current_area.width} x {self.current_area.height}").pack()
-        
-        # Input fields
-        input_frame = ttk.Frame(dialog)
-        input_frame.pack(fill=tk.X, padx=10, pady=5)
-        
-        ttk.Label(input_frame, text="Width:").grid(row=0, column=0, sticky=tk.W, padx=(0, 5))
-        width_var = tk.StringVar(value=str(self.current_area.width))
-        width_entry = ttk.Entry(input_frame, textvariable=width_var, width=10)
-        width_entry.grid(row=0, column=1, padx=(0, 10))
-        
-        ttk.Label(input_frame, text="Height:").grid(row=0, column=2, sticky=tk.W, padx=(0, 5))
-        height_var = tk.StringVar(value=str(self.current_area.height))
-        height_entry = ttk.Entry(input_frame, textvariable=height_var, width=10)
-        height_entry.grid(row=0, column=3)
-        
-        # Buttons
-        button_frame = ttk.Frame(dialog)
-        button_frame.pack(fill=tk.X, padx=10, pady=10)
-        
-        def apply_resize():
-            try:
-                new_width = int(width_var.get())
-                new_height = int(height_var.get())
-                
-                if new_width < 1 or new_height < 1:
-                    messagebox.showerror("Error", "Width and height must be at least 1")
-                    return
-                
-                if new_width > 200 or new_height > 200:
-                    if not messagebox.askyesno("Large Canvas", 
-                        f"Canvas size {new_width}x{new_height} is quite large. Continue?"):
-                        return
-                
-                self.resize_canvas(new_width, new_height)
-                dialog.destroy()
-                
-            except ValueError:
-                messagebox.showerror("Error", "Please enter valid numbers for width and height")
-        
-        ttk.Button(button_frame, text="Apply", command=apply_resize).pack(side=tk.RIGHT, padx=(5, 0))
-        ttk.Button(button_frame, text="Cancel", command=dialog.destroy).pack(side=tk.RIGHT)
-        
-        # Focus on width entry and select all
-        width_entry.focus_set()
-        width_entry.select_range(0, tk.END)
-        
-        # Handle Enter key
-        def on_enter(event):
-            apply_resize()
-        
-        dialog.bind('<Return>', on_enter)
-
-    def resize_canvas(self, new_width, new_height):
-        """Resize the canvas, preserving existing content where possible"""
-        old_width = self.current_area.width
-        old_height = self.current_area.height
-        
-        # Create new tile grid
-        new_tiles = [[Tile() for _ in range(new_width)] for _ in range(new_height)]
-        
-        # Copy existing tiles that fit in the new dimensions
-        copy_width = min(old_width, new_width)
-        copy_height = min(old_height, new_height)
-        
-        for y in range(copy_height):
-            for x in range(copy_width):
-                new_tiles[y][x] = self.current_area.tiles[y][x]
-        
-        # Remove objects and triggers that are outside the new boundaries
-        self.current_area.objects = [
-            obj for obj in self.current_area.objects 
-            if 0 <= obj.x < new_width and 0 <= obj.y < new_height
-        ]
-        
-        self.current_area.triggers = [
-            trigger for trigger in self.current_area.triggers 
-            if 0 <= trigger.x < new_width and 0 <= trigger.y < new_height
-        ]
-        
-        # Update area with new dimensions and tiles
-        self.current_area.width = new_width
-        self.current_area.height = new_height
-        self.current_area.tiles = new_tiles
-        
-        # Ensure cursor is still within bounds
-        self.cursor_x = min(self.cursor_x, new_width - 1)
-        self.cursor_y = min(self.cursor_y, new_height - 1)
-        
-        # Redraw everything
-        self.draw_area()
-        self.update_properties_display()
-        
-        messagebox.showinfo("Resize Complete", 
-            f"Canvas resized from {old_width}x{old_height} to {new_width}x{new_height}")
-
-    def crop_canvas_to_room(self):
-        """Crop the canvas to the minimum bounding box containing all non-empty content"""
-        # Find bounds of non-empty content
-        min_x, max_x = None, None
-        min_y, max_y = None, None
-        
-        # Check tiles for non-empty content
-        for y in range(self.current_area.height):
-            for x in range(self.current_area.width):
-                tile = self.current_area.tiles[y][x]
-                if tile.type != "empty":
-                    if min_x is None or x < min_x:
-                        min_x = x
-                    if max_x is None or x > max_x:
-                        max_x = x
-                    if min_y is None or y < min_y:
-                        min_y = y
-                    if max_y is None or y > max_y:
-                        max_y = y
-        
-        # Check objects for content
-        for obj in self.current_area.objects:
-            if min_x is None or obj.x < min_x:
-                min_x = obj.x
-            if max_x is None or obj.x > max_x:
-                max_x = obj.x
-            if min_y is None or obj.y < min_y:
-                min_y = obj.y
-            if max_y is None or obj.y > max_y:
-                max_y = obj.y
-        
-        # Check triggers for content
-        for trigger in self.current_area.triggers:
-            if min_x is None or trigger.x < min_x:
-                min_x = trigger.x
-            if max_x is None or trigger.x > max_x:
-                max_x = trigger.x
-            if min_y is None or trigger.y < min_y:
-                min_y = trigger.y
-            if max_y is None or trigger.y > max_y:
-                max_y = trigger.y
-        
-        # If no content found, show message
-        if min_x is None:
-            messagebox.showinfo("No Content", "No non-empty content found. Canvas remains unchanged.")
-            return
-        
-        # Calculate new dimensions (inclusive bounds + 1)
-        new_width = max_x - min_x + 1
-        new_height = max_y - min_y + 1
-        
-        # Confirm with user if the crop would be significant
-        old_size = self.current_area.width * self.current_area.height
-        new_size = new_width * new_height
-        
-        if old_size - new_size > old_size * 0.5:  # More than 50% reduction
-            if not messagebox.askyesno("Significant Crop", 
-                f"This will crop the canvas from {self.current_area.width}x{self.current_area.height} "
-                f"to {new_width}x{new_height}, removing {old_size - new_size} tiles. Continue?"):
-                return
-        
-        # Create new tile grid with content shifted to origin
-        new_tiles = [[Tile() for _ in range(new_width)] for _ in range(new_height)]
-        
-        # Copy tiles to new positions
-        for y in range(min_y, max_y + 1):
-            for x in range(min_x, max_x + 1):
-                new_y = y - min_y
-                new_x = x - min_x
-                new_tiles[new_y][new_x] = self.current_area.tiles[y][x]
-        
-        # Shift objects to new positions
-        for obj in self.current_area.objects:
-            obj.x -= min_x
-            obj.y -= min_y
-        
-        # Shift triggers to new positions
-        for trigger in self.current_area.triggers:
-            trigger.x -= min_x
-            trigger.y -= min_y
-        
-        # Update area
-        old_width, old_height = self.current_area.width, self.current_area.height
-        self.current_area.width = new_width
-        self.current_area.height = new_height
-        self.current_area.tiles = new_tiles
-        
-        # Adjust cursor position
-        self.cursor_x = max(0, min(self.cursor_x - min_x, new_width - 1))
-        self.cursor_y = max(0, min(self.cursor_y - min_y, new_height - 1))
-        
-        # Redraw everything
-        self.draw_area()
-        self.update_properties_display()
-        
-        messagebox.showinfo("Crop Complete", 
-            f"Canvas cropped from {old_width}x{old_height} to {new_width}x{new_height}\n"
-            f"Content bounds were: ({min_x},{min_y}) to ({max_x},{max_y})")
-
+                messagebox.showerror("Error", f"Failed to open: {e}")
 
 def main():
-    # Check if PIL is available
     try:
         from PIL import Image, ImageTk
     except ImportError:
-        print("Error: PIL (Pillow) is required for image support.")
-        print("Install it with: pip install Pillow")
+        print("Error: PIL (Pillow) required. Install with: pip install Pillow")
         return
     
     root = tk.Tk()
