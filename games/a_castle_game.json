@@ -4,9 +4,19 @@
     "gargoyle_room.json",
     "fountain_room.json"
   ],
-  "used_tiles": [],
+  "used_tiles": [
+    "gray_brick_door",
+    "brown_brick_wall",
+    "blue_brick_wall",
+    "cobblestone_floor"
+  ],
   "used_npcs": [],
-  "used_objects": [],
+  "used_objects": [
+    "lever_object",
+    "gargoyle_object",
+    "candles_object",
+    "fountain_object"
+  ],
   "used_triggers": [],
   "properties": {}
 }

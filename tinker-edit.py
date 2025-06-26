@@ -315,6 +315,8 @@ class TinkerEditor:
         game_menu.add_command(label="Save Game", command=self.save_game)
         game_menu.add_command(label="Save Game As", command=self.save_game_as)
         game_menu.add_separator()
+        game_menu.add_command(label="Save All", command=self.save_all)
+        game_menu.add_separator()
         game_menu.add_command(label="Game Properties", command=self.show_game_properties)
         
         # Area menu
@@ -850,7 +852,7 @@ class TinkerEditor:
     def show_game_properties(self):
         dialog = tk.Toplevel(self.root)
         dialog.title("Game Properties")
-        dialog.geometry("400x400")
+        dialog.geometry("400x300")
         dialog.transient(self.root)
         
         # Game name
@@ -885,8 +887,80 @@ class TinkerEditor:
         ttk.Button(button_frame, text="Save", command=save_properties).pack(side=tk.RIGHT, padx=(5,0))
         ttk.Button(button_frame, text="Cancel", command=dialog.destroy).pack(side=tk.RIGHT)
     
-    def update_game_assets(self):
-        """Update the game's asset lists based on what's used in all areas"""
+    def save_all(self):
+        """Save both the current area and the current game"""
+        saved_items = []
+        errors = []
+        
+        # Save current area first
+        if self.current_area:
+            try:
+                if self.current_area_file:
+                    self._save_area_to_file(self.current_area_file)
+                    saved_items.append(f"Area: {os.path.basename(self.current_area_file)}")
+                else:
+                    # Need to prompt for area filename
+                    area_filename = filedialog.asksaveasfilename(
+                        defaultextension=".json",
+                        filetypes=[("Area files", "*.json"), ("All files", "*.*")],
+                        initialdir="areas",
+                        title="Save Area As"
+                    )
+                    if area_filename:
+                        self._save_area_to_file(area_filename)
+                        self.current_area_file = area_filename
+                        saved_items.append(f"Area: {os.path.basename(area_filename)}")
+                        
+                        # Auto-add to game if not already included
+                        area_basename = os.path.basename(area_filename)
+                        if area_basename not in self.current_game.areas:
+                            self.current_game.areas.append(area_basename)
+                    else:
+                        errors.append("Area save cancelled by user")
+            except Exception as e:
+                errors.append(f"Failed to save area: {e}")
+        
+        # Update game assets based on current state
+        try:
+            self.update_game_assets_silent()
+            saved_items.append("Game assets updated")
+        except Exception as e:
+            errors.append(f"Failed to update game assets: {e}")
+        
+        # Save current game
+        if self.current_game:
+            try:
+                if self.current_game_file:
+                    self._save_game_to_file(self.current_game_file)
+                    saved_items.append(f"Game: {os.path.basename(self.current_game_file)}")
+                else:
+                    # Need to prompt for game filename
+                    game_filename = filedialog.asksaveasfilename(
+                        defaultextension=".json",
+                        filetypes=[("Game files", "*.json"), ("All files", "*.*")],
+                        title="Save Game As"
+                    )
+                    if game_filename:
+                        self._save_game_to_file(game_filename)
+                        self.current_game_file = game_filename
+                        saved_items.append(f"Game: {os.path.basename(game_filename)}")
+                    else:
+                        errors.append("Game save cancelled by user")
+            except Exception as e:
+                errors.append(f"Failed to save game: {e}")
+        
+        # Show results to user
+        if saved_items and not errors:
+            messagebox.showinfo("Save All", f"Successfully saved:\n" + "\n".join(f"• {item}" for item in saved_items))
+        elif saved_items and errors:
+            messagebox.showwarning("Save All", 
+                f"Partially successful:\n\nSaved:\n" + "\n".join(f"• {item}" for item in saved_items) +
+                f"\n\nErrors:\n" + "\n".join(f"• {error}" for error in errors))
+        else:
+            messagebox.showerror("Save All", f"Save failed:\n" + "\n".join(f"• {error}" for error in errors))
+    
+    def update_game_assets_silent(self):
+        """Update the game's asset lists without showing a message box"""
         used_tiles = set()
         used_objects = set()
         used_npcs = set()
@@ -945,12 +1019,69 @@ class TinkerEditor:
         self.current_game.used_objects = list(used_objects)
         self.current_game.used_npcs = list(used_npcs)
         self.current_game.used_triggers = list(used_triggers)
+        """Update the game's asset lists based on what's used in all areas"""
+        used_tiles = set()
+        used_objects = set()
+        used_npcs = set()
+        used_triggers = set()
+        
+        # Scan current area
+        for row in self.current_area.tiles:
+            for tile in row:
+                if tile.type != "empty":
+                    used_tiles.add(tile.type)
+        
+        for obj in self.current_area.objects:
+            if obj.type in self.tile_manager.get_npc_names():
+                used_npcs.add(obj.type)
+            else:
+                used_objects.add(obj.type)
+        
+        for trigger in self.current_area.triggers:
+            used_triggers.add("trigger")  # Generic trigger type
+        
+        # Scan all areas in game
+        for area_filename in self.current_game.areas:
+            area_path = os.path.join("areas", area_filename)
+            if os.path.exists(area_path):
+                try:
+                    with open(area_path, 'r') as f:
+                        area_dict = json.load(f)
+                    
+                    # Scan tiles
+                    for row in area_dict.get('tiles', []):
+                        for tile_data in row:
+                            if isinstance(tile_data, dict):
+                                tile_type = tile_data.get('type', 'empty')
+                            else:
+                                tile_type = 'empty'
+                            if tile_type != "empty":
+                                used_tiles.add(tile_type)
+                    
+                    # Scan objects
+                    for obj_data in area_dict.get('objects', []):
+                        obj_type = obj_data.get('type', '')
+                        if obj_type in self.tile_manager.get_npc_names():
+                            used_npcs.add(obj_type)
+                        else:
+                            used_objects.add(obj_type)
+                    
+                    # Scan triggers
+                    if area_dict.get('triggers', []):
+                        used_triggers.add("trigger")
+                        
+                except Exception as e:
+                    print(f"Error scanning area {area_filename}: {e}")
+        
+    def update_game_assets(self):
+        """Update the game's asset lists based on what's used in all areas"""
+        self.update_game_assets_silent()
         
         messagebox.showinfo("Update Assets", f"Game assets updated:\n"
-                          f"Tiles: {len(used_tiles)}\n"
-                          f"Objects: {len(used_objects)}\n"
-                          f"NPCs: {len(used_npcs)}\n"
-                          f"Triggers: {len(used_triggers)}")
+                          f"Tiles: {len(self.current_game.used_tiles)}\n"
+                          f"Objects: {len(self.current_game.used_objects)}\n"
+                          f"NPCs: {len(self.current_game.used_npcs)}\n"
+                          f"Triggers: {len(self.current_game.used_triggers)}")
     
     # Area management methods
     def new_area(self):

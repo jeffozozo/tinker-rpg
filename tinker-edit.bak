@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 """
 Tinker RPG Editor - A no-code game editor for creating 2D adventure games
-Simplified version with doors treated as regular tiles
+Enhanced version with game projects and asset management
 """
 
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
 import json
 import os
+import shutil
 from dataclasses import dataclass, asdict
 from typing import Dict, List, Optional, Any
 from PIL import Image, ImageTk
@@ -81,6 +82,31 @@ class Area:
             self.objects = []
         if self.triggers is None:
             self.triggers = []
+
+@dataclass
+class Game:
+    """Represents a complete game project"""
+    name: str = "Untitled Game"
+    areas: List[str] = None  # List of area filenames
+    used_tiles: List[str] = None  # Tiles used in this game
+    used_npcs: List[str] = None  # NPCs used in this game
+    used_objects: List[str] = None  # Objects used in this game
+    used_triggers: List[str] = None  # Triggers used in this game
+    properties: Dict[str, Any] = None
+    
+    def __post_init__(self):
+        if self.areas is None:
+            self.areas = []
+        if self.used_tiles is None:
+            self.used_tiles = []
+        if self.used_npcs is None:
+            self.used_npcs = []
+        if self.used_objects is None:
+            self.used_objects = []
+        if self.used_triggers is None:
+            self.used_triggers = []
+        if self.properties is None:
+            self.properties = {}
 
 class TileManager:
     """Manages loading tiles from PNG files and their properties"""
@@ -255,36 +281,67 @@ class TinkerEditor:
         self.root.geometry("1400x800")
         
         self.tile_manager = TileManager()
+        self.current_game = Game()
         self.current_area = Area()
-        self.current_file = None
+        self.current_area_file = None
+        self.current_game_file = None
         self.cursor_x = 0
         self.cursor_y = 0
         self.selected_tile = list(self.tile_manager.get_tile_names())[0] if self.tile_manager.get_tile_names() else "empty"
         self.selected_mode = "tile"
         self.tile_size = 32
         
+        self.create_directories()
         self.setup_ui()
         self.bind_events()
         
+    def create_directories(self):
+        """Create necessary directories if they don't exist"""
+        directories = ["tiles", "npcs", "objects", "triggers", "areas"]
+        for directory in directories:
+            if not os.path.exists(directory):
+                os.makedirs(directory)
+                
     def setup_ui(self):
         # Menu bar
         menubar = tk.Menu(self.root)
         self.root.config(menu=menubar)
         
-        file_menu = tk.Menu(menubar, tearoff=0)
-        menubar.add_cascade(label="File", menu=file_menu)
-        file_menu.add_command(label="New", command=self.new_area)
-        file_menu.add_command(label="Open", command=self.open_area)
-        file_menu.add_command(label="Save", command=self.save_area)
-        file_menu.add_command(label="Save As", command=self.save_area_as)
-        file_menu.add_separator()
-        file_menu.add_command(label="Exit", command=self.root.quit)
+        # Game menu
+        game_menu = tk.Menu(menubar, tearoff=0)
+        menubar.add_cascade(label="Game", menu=game_menu)
+        game_menu.add_command(label="New Game", command=self.new_game)
+        game_menu.add_command(label="Open Game", command=self.open_game)
+        game_menu.add_command(label="Save Game", command=self.save_game)
+        game_menu.add_command(label="Save Game As", command=self.save_game_as)
+        game_menu.add_separator()
+        game_menu.add_command(label="Save All", command=self.save_all)
+        game_menu.add_separator()
+        game_menu.add_command(label="Game Properties", command=self.show_game_properties)
         
+        # Area menu
+        area_menu = tk.Menu(menubar, tearoff=0)
+        menubar.add_cascade(label="Area", menu=area_menu)
+        area_menu.add_command(label="New Area", command=self.new_area)
+        area_menu.add_command(label="Open Area", command=self.open_area)
+        area_menu.add_command(label="Save Area", command=self.save_area)
+        area_menu.add_command(label="Save Area As", command=self.save_area_as)
+        area_menu.add_separator()
+        area_menu.add_command(label="Add Area to Game", command=self.add_area_to_game)
+        
+        # Tools menu
         tools_menu = tk.Menu(menubar, tearoff=0)
         menubar.add_cascade(label="Tools", menu=tools_menu)
         tools_menu.add_command(label="Reload Assets", command=self.reload_assets)
         tools_menu.add_command(label="Resize Canvas...", command=self.show_resize_dialog)
         tools_menu.add_command(label="Crop Canvas to Room", command=self.crop_canvas_to_room)
+        tools_menu.add_separator()
+        tools_menu.add_command(label="Update Game Assets", command=self.update_game_assets)
+        
+        # File menu (legacy support)
+        file_menu = tk.Menu(menubar, tearoff=0)
+        menubar.add_cascade(label="File", menu=file_menu)
+        file_menu.add_command(label="Exit", command=self.root.quit)
         
         # Main container
         main_frame = ttk.Frame(self.root)
@@ -335,7 +392,13 @@ class TinkerEditor:
         info_frame = ttk.Frame(self.area_frame)
         info_frame.pack(fill=tk.X, padx=5, pady=5)
         
-        ttk.Label(info_frame, text="Area Name:").pack(side=tk.LEFT)
+        # Game name
+        ttk.Label(info_frame, text="Game:").pack(side=tk.LEFT)
+        self.game_name_label = ttk.Label(info_frame, text=self.current_game.name, foreground="blue")
+        self.game_name_label.pack(side=tk.LEFT, padx=(5, 15))
+        
+        # Area name
+        ttk.Label(info_frame, text="Area:").pack(side=tk.LEFT)
         self.area_name_var = tk.StringVar(value=self.current_area.name)
         name_entry = ttk.Entry(info_frame, textvariable=self.area_name_var, width=20)
         name_entry.pack(side=tk.LEFT, padx=(5, 0))
@@ -725,6 +788,382 @@ class TinkerEditor:
         self.update_properties_display()
         self.draw_area()
     
+    # Game management methods
+    def new_game(self):
+        if messagebox.askyesno("New Game", "Create new game? Unsaved changes will be lost."):
+            self.current_game = Game()
+            self.current_area = Area()
+            self.current_area_file = None
+            self.current_game_file = None
+            self.cursor_x = self.cursor_y = 0
+            self.area_name_var.set(self.current_area.name)
+            self.game_name_label.config(text=self.current_game.name)
+            self.draw_area()
+            self.update_properties_display()
+    
+    def save_game(self):
+        if self.current_game_file:
+            self._save_game_to_file(self.current_game_file)
+        else:
+            self.save_game_as()
+    
+    def save_game_as(self):
+        filename = filedialog.asksaveasfilename(
+            defaultextension=".json",
+            filetypes=[("Game files", "*.json"), ("All files", "*.*")],
+            title="Save Game As"
+        )
+        if filename:
+            self._save_game_to_file(filename)
+            self.current_game_file = filename
+    
+    def _save_game_to_file(self, filename):
+        try:
+            with open(filename, 'w') as f:
+                json.dump(asdict(self.current_game), f, indent=2)
+            messagebox.showinfo("Save Game", f"Game saved to {filename}")
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to save game: {e}")
+    
+    def open_game(self):
+        filename = filedialog.askopenfilename(
+            filetypes=[("Game files", "*.json"), ("All files", "*.*")],
+            title="Open Game"
+        )
+        if filename:
+            try:
+                with open(filename, 'r') as f:
+                    game_dict = json.load(f)
+                
+                self.current_game = Game(**game_dict)
+                self.current_game_file = filename
+                self.game_name_label.config(text=self.current_game.name)
+                
+                # Load the first area if available
+                if self.current_game.areas:
+                    first_area_file = os.path.join("areas", self.current_game.areas[0])
+                    if os.path.exists(first_area_file):
+                        self._load_area_from_file(first_area_file)
+                
+                messagebox.showinfo("Open Game", f"Game loaded from {filename}")
+            except Exception as e:
+                messagebox.showerror("Error", f"Failed to open game: {e}")
+    
+    def show_game_properties(self):
+        dialog = tk.Toplevel(self.root)
+        dialog.title("Game Properties")
+        dialog.geometry("400x300")
+        dialog.transient(self.root)
+        
+        # Game name
+        ttk.Label(dialog, text="Game Name:").pack(pady=5)
+        game_name_var = tk.StringVar(value=self.current_game.name)
+        ttk.Entry(dialog, textvariable=game_name_var, width=40).pack(pady=5)
+        
+        # Areas in game
+        ttk.Label(dialog, text="Areas in Game:").pack(pady=(10,5))
+        areas_frame = ttk.Frame(dialog)
+        areas_frame.pack(fill=tk.BOTH, expand=True, padx=10)
+        
+        areas_listbox = tk.Listbox(areas_frame)
+        areas_scrollbar = ttk.Scrollbar(areas_frame, orient=tk.VERTICAL, command=areas_listbox.yview)
+        areas_listbox.configure(yscrollcommand=areas_scrollbar.set)
+        
+        for area_file in self.current_game.areas:
+            areas_listbox.insert(tk.END, area_file)
+        
+        areas_listbox.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        areas_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        
+        # Buttons
+        button_frame = ttk.Frame(dialog)
+        button_frame.pack(fill=tk.X, padx=10, pady=10)
+        
+        def save_properties():
+            self.current_game.name = game_name_var.get()
+            self.game_name_label.config(text=self.current_game.name)
+            dialog.destroy()
+        
+        ttk.Button(button_frame, text="Save", command=save_properties).pack(side=tk.RIGHT, padx=(5,0))
+        ttk.Button(button_frame, text="Cancel", command=dialog.destroy).pack(side=tk.RIGHT)
+    
+    def save_all(self):
+        """Save both the current area and the current game"""
+        saved_items = []
+        errors = []
+        
+        # Save current area first
+        if self.current_area:
+            try:
+                if self.current_area_file:
+                    self._save_area_to_file(self.current_area_file)
+                    saved_items.append(f"Area: {os.path.basename(self.current_area_file)}")
+                else:
+                    # Need to prompt for area filename
+                    area_filename = filedialog.asksaveasfilename(
+                        defaultextension=".json",
+                        filetypes=[("Area files", "*.json"), ("All files", "*.*")],
+                        initialdir="areas",
+                        title="Save Area As"
+                    )
+                    if area_filename:
+                        self._save_area_to_file(area_filename)
+                        self.current_area_file = area_filename
+                        saved_items.append(f"Area: {os.path.basename(area_filename)}")
+                        
+                        # Auto-add to game if not already included
+                        area_basename = os.path.basename(area_filename)
+                        if area_basename not in self.current_game.areas:
+                            self.current_game.areas.append(area_basename)
+                    else:
+                        errors.append("Area save cancelled by user")
+            except Exception as e:
+                errors.append(f"Failed to save area: {e}")
+        
+        # Update game assets based on current state
+        try:
+            self.update_game_assets_silent()
+            saved_items.append("Game assets updated")
+        except Exception as e:
+            errors.append(f"Failed to update game assets: {e}")
+        
+        # Save current game
+        if self.current_game:
+            try:
+                if self.current_game_file:
+                    self._save_game_to_file(self.current_game_file)
+                    saved_items.append(f"Game: {os.path.basename(self.current_game_file)}")
+                else:
+                    # Need to prompt for game filename
+                    game_filename = filedialog.asksaveasfilename(
+                        defaultextension=".json",
+                        filetypes=[("Game files", "*.json"), ("All files", "*.*")],
+                        title="Save Game As"
+                    )
+                    if game_filename:
+                        self._save_game_to_file(game_filename)
+                        self.current_game_file = game_filename
+                        saved_items.append(f"Game: {os.path.basename(game_filename)}")
+                    else:
+                        errors.append("Game save cancelled by user")
+            except Exception as e:
+                errors.append(f"Failed to save game: {e}")
+        
+        # Show results to user
+        if saved_items and not errors:
+            messagebox.showinfo("Save All", f"Successfully saved:\n" + "\n".join(f"• {item}" for item in saved_items))
+        elif saved_items and errors:
+            messagebox.showwarning("Save All", 
+                f"Partially successful:\n\nSaved:\n" + "\n".join(f"• {item}" for item in saved_items) +
+                f"\n\nErrors:\n" + "\n".join(f"• {error}" for error in errors))
+        else:
+            messagebox.showerror("Save All", f"Save failed:\n" + "\n".join(f"• {error}" for error in errors))
+    
+    def update_game_assets_silent(self):
+        """Update the game's asset lists without showing a message box"""
+        used_tiles = set()
+        used_objects = set()
+        used_npcs = set()
+        used_triggers = set()
+        
+        # Scan current area
+        for row in self.current_area.tiles:
+            for tile in row:
+                if tile.type != "empty":
+                    used_tiles.add(tile.type)
+        
+        for obj in self.current_area.objects:
+            if obj.type in self.tile_manager.get_npc_names():
+                used_npcs.add(obj.type)
+            else:
+                used_objects.add(obj.type)
+        
+        for trigger in self.current_area.triggers:
+            used_triggers.add("trigger")  # Generic trigger type
+        
+        # Scan all areas in game
+        for area_filename in self.current_game.areas:
+            area_path = os.path.join("areas", area_filename)
+            if os.path.exists(area_path):
+                try:
+                    with open(area_path, 'r') as f:
+                        area_dict = json.load(f)
+                    
+                    # Scan tiles
+                    for row in area_dict.get('tiles', []):
+                        for tile_data in row:
+                            if isinstance(tile_data, dict):
+                                tile_type = tile_data.get('type', 'empty')
+                            else:
+                                tile_type = 'empty'
+                            if tile_type != "empty":
+                                used_tiles.add(tile_type)
+                    
+                    # Scan objects
+                    for obj_data in area_dict.get('objects', []):
+                        obj_type = obj_data.get('type', '')
+                        if obj_type in self.tile_manager.get_npc_names():
+                            used_npcs.add(obj_type)
+                        else:
+                            used_objects.add(obj_type)
+                    
+                    # Scan triggers
+                    if area_dict.get('triggers', []):
+                        used_triggers.add("trigger")
+                        
+                except Exception as e:
+                    print(f"Error scanning area {area_filename}: {e}")
+        
+        # Update game asset lists
+        self.current_game.used_tiles = list(used_tiles)
+        self.current_game.used_objects = list(used_objects)
+        self.current_game.used_npcs = list(used_npcs)
+        self.current_game.used_triggers = list(used_triggers)
+        """Update the game's asset lists based on what's used in all areas"""
+        used_tiles = set()
+        used_objects = set()
+        used_npcs = set()
+        used_triggers = set()
+        
+        # Scan current area
+        for row in self.current_area.tiles:
+            for tile in row:
+                if tile.type != "empty":
+                    used_tiles.add(tile.type)
+        
+        for obj in self.current_area.objects:
+            if obj.type in self.tile_manager.get_npc_names():
+                used_npcs.add(obj.type)
+            else:
+                used_objects.add(obj.type)
+        
+        for trigger in self.current_area.triggers:
+            used_triggers.add("trigger")  # Generic trigger type
+        
+        # Scan all areas in game
+        for area_filename in self.current_game.areas:
+            area_path = os.path.join("areas", area_filename)
+            if os.path.exists(area_path):
+                try:
+                    with open(area_path, 'r') as f:
+                        area_dict = json.load(f)
+                    
+                    # Scan tiles
+                    for row in area_dict.get('tiles', []):
+                        for tile_data in row:
+                            if isinstance(tile_data, dict):
+                                tile_type = tile_data.get('type', 'empty')
+                            else:
+                                tile_type = 'empty'
+                            if tile_type != "empty":
+                                used_tiles.add(tile_type)
+                    
+                    # Scan objects
+                    for obj_data in area_dict.get('objects', []):
+                        obj_type = obj_data.get('type', '')
+                        if obj_type in self.tile_manager.get_npc_names():
+                            used_npcs.add(obj_type)
+                        else:
+                            used_objects.add(obj_type)
+                    
+                    # Scan triggers
+                    if area_dict.get('triggers', []):
+                        used_triggers.add("trigger")
+                        
+                except Exception as e:
+                    print(f"Error scanning area {area_filename}: {e}")
+        
+    def update_game_assets(self):
+        """Update the game's asset lists based on what's used in all areas"""
+        self.update_game_assets_silent()
+        
+        messagebox.showinfo("Update Assets", f"Game assets updated:\n"
+                          f"Tiles: {len(self.current_game.used_tiles)}\n"
+                          f"Objects: {len(self.current_game.used_objects)}\n"
+                          f"NPCs: {len(self.current_game.used_npcs)}\n"
+                          f"Triggers: {len(self.current_game.used_triggers)}")
+    
+    # Area management methods
+    def new_area(self):
+        if messagebox.askyesno("New Area", "Create new area? Unsaved changes will be lost."):
+            self.current_area = Area()
+            self.current_area_file = None
+            self.cursor_x = self.cursor_y = 0
+            self.area_name_var.set(self.current_area.name)
+            self.draw_area()
+            self.update_properties_display()
+    
+    def save_area(self):
+        if self.current_area_file:
+            self._save_area_to_file(self.current_area_file)
+        else:
+            self.save_area_as()
+    
+    def save_area_as(self):
+        filename = filedialog.asksaveasfilename(
+            defaultextension=".json",
+            filetypes=[("Area files", "*.json"), ("All files", "*.*")],
+            initialdir="areas",
+            title="Save Area As"
+        )
+        if filename:
+            self._save_area_to_file(filename)
+            self.current_area_file = filename
+    
+    def _save_area_to_file(self, filename):
+        try:
+            with open(filename, 'w') as f:
+                json.dump(asdict(self.current_area), f, indent=2)
+            messagebox.showinfo("Save Area", f"Area saved to {filename}")
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to save area: {e}")
+    
+    def open_area(self):
+        filename = filedialog.askopenfilename(
+            filetypes=[("Area files", "*.json"), ("All files", "*.*")],
+            initialdir="areas",
+            title="Open Area"
+        )
+        if filename:
+            self._load_area_from_file(filename)
+    
+    def _load_area_from_file(self, filename):
+        try:
+            with open(filename, 'r') as f:
+                area_dict = json.load(f)
+            
+            self.current_area = Area(**area_dict)
+            
+            # Reconstruct tile objects
+            for y, row in enumerate(self.current_area.tiles):
+                for x, tile_data in enumerate(row):
+                    if isinstance(tile_data, dict):
+                        self.current_area.tiles[y][x] = Tile(**tile_data)
+            
+            self.current_area.objects = [GameObject(**obj) for obj in self.current_area.objects]
+            self.current_area.triggers = [Trigger(**trig) for trig in self.current_area.triggers]
+            
+            self.current_area_file = filename
+            self.cursor_x = self.cursor_y = 0
+            self.area_name_var.set(self.current_area.name)
+            self.draw_area()
+            self.update_properties_display()
+            messagebox.showinfo("Open Area", f"Area loaded from {filename}")
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to open area: {e}")
+    
+    def add_area_to_game(self):
+        if not self.current_area_file:
+            messagebox.showwarning("Add Area", "Please save the area first before adding it to the game.")
+            return
+        
+        area_filename = os.path.basename(self.current_area_file)
+        if area_filename not in self.current_game.areas:
+            self.current_game.areas.append(area_filename)
+            messagebox.showinfo("Add Area", f"Area '{area_filename}' added to game '{self.current_game.name}'")
+        else:
+            messagebox.showinfo("Add Area", f"Area '{area_filename}' is already in the game.")
+    
     # Canvas tools
     def show_resize_dialog(self):
         dialog = tk.Toplevel(self.root)
@@ -830,7 +1269,7 @@ class TinkerEditor:
         self.update_properties_display()
         messagebox.showinfo("Crop", f"Canvas cropped to {new_width}x{new_height}")
     
-    # File operations
+    # Asset management
     def reload_assets(self):
         self.tile_manager = TileManager()
         if self.tile_manager.get_tile_names():
@@ -838,65 +1277,6 @@ class TinkerEditor:
         self.update_tile_display()
         self.draw_area()
         messagebox.showinfo("Reload", "Assets reloaded!")
-    
-    def new_area(self):
-        if messagebox.askyesno("New", "Create new area? Unsaved changes will be lost."):
-            self.current_area = Area()
-            self.current_file = None
-            self.cursor_x = self.cursor_y = 0
-            self.area_name_var.set(self.current_area.name)
-            self.draw_area()
-            self.update_properties_display()
-    
-    def save_area(self):
-        if self.current_file:
-            self._save_to_file(self.current_file)
-        else:
-            self.save_area_as()
-    
-    def save_area_as(self):
-        filename = filedialog.asksaveasfilename(
-            defaultextension=".json",
-            filetypes=[("JSON files", "*.json"), ("All files", "*.*")]
-        )
-        if filename:
-            self._save_to_file(filename)
-            self.current_file = filename
-    
-    def _save_to_file(self, filename):
-        try:
-            with open(filename, 'w') as f:
-                json.dump(asdict(self.current_area), f, indent=2)
-            messagebox.showinfo("Save", f"Area saved to {filename}")
-        except Exception as e:
-            messagebox.showerror("Error", f"Failed to save: {e}")
-    
-    def open_area(self):
-        filename = filedialog.askopenfilename(filetypes=[("JSON files", "*.json"), ("All files", "*.*")])
-        if filename:
-            try:
-                with open(filename, 'r') as f:
-                    area_dict = json.load(f)
-                
-                self.current_area = Area(**area_dict)
-                
-                # Reconstruct objects
-                for y, row in enumerate(self.current_area.tiles):
-                    for x, tile_data in enumerate(row):
-                        if isinstance(tile_data, dict):
-                            self.current_area.tiles[y][x] = Tile(**tile_data)
-                
-                self.current_area.objects = [GameObject(**obj) for obj in self.current_area.objects]
-                self.current_area.triggers = [Trigger(**trig) for trig in self.current_area.triggers]
-                
-                self.current_file = filename
-                self.cursor_x = self.cursor_y = 0
-                self.area_name_var.set(self.current_area.name)
-                self.draw_area()
-                self.update_properties_display()
-                messagebox.showinfo("Open", f"Area loaded from {filename}")
-            except Exception as e:
-                messagebox.showerror("Error", f"Failed to open: {e}")
 
 def main():
     try:
