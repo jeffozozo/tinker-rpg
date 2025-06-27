@@ -172,5 +172,26 @@
       "properties": {}
     }
   ],
-  "triggers": []
+  "triggers": [
+    {
+      "x": 3,
+      "y": 2,
+      "trigger_type": "show_dialog",
+      "name": "gargoyle_speaks",
+      "parameters": {
+        "message": "Answer me these questions three?\nwhat is your name?\nwhat is your quest?\nwhat is your favorite color?"
+      }
+    },
+    {
+      "x": 3,
+      "y": 3,
+      "trigger_type": "teleport",
+      "name": "go_to_great_hall",
+      "parameters": {
+        "area": "great_hall",
+        "x": 2,
+        "y": 1
+      }
+    }
+  ]
 }

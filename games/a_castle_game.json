@@ -2,21 +2,26 @@
   "name": "a castle game",
   "areas": [
     "gargoyle_room.json",
-    "fountain_room.json"
+    "fountain_room.json",
+    "great_hall.json"
   ],
   "used_tiles": [
-    "gray_brick_door",
+    "cobblestone_floor",
     "brown_brick_wall",
-    "blue_brick_wall",
-    "cobblestone_floor"
+    "gray_brick_wall",
+    "gray_brick_door",
+    "blue_brick_wall"
   ],
   "used_npcs": [],
   "used_objects": [
-    "lever_object",
     "gargoyle_object",
-    "candles_object",
-    "fountain_object"
+    "throne_object",
+    "lever_object",
+    "fountain_object",
+    "candles_object"
   ],
-  "used_triggers": [],
+  "used_triggers": [
+    "trigger"
+  ],
   "properties": {}
 }

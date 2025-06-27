@@ -1,6 +1,5 @@
 """
-Editor methods for the Tinker RPG Editor
-This module contains all the interactive methods for the editor
+Updated editor_methods.py with enhanced trigger system
 """
 
 import tkinter as tk
@@ -9,9 +8,21 @@ import json
 import os
 from dataclasses import asdict
 
-# Mixin class to add editor functionality
 class EditorMethods:
     """Mixin class containing all editor interaction methods"""
+    
+    def __init__(self):
+        # Add trigger selection tracking
+        self.selected_trigger_index = 0
+        self.trigger_colors = {
+            "teleport": "#0066CC",      # Blue
+            "inventory": "#009900",     # Green
+            "tile_update": "#FFCC00",   # Yellow
+            "area_object": "#FF6600",   # Orange
+            "game_end": "#9900CC",      # Purple
+            "show_dialog": "#00CCCC",   # Cyan
+            "custom": "#CC0000"         # Red
+        }
     
     def on_key_press(self, event):
         key = event.keysym.lower()
@@ -25,18 +36,36 @@ class EditorMethods:
             elif key == 'delete' or key == 'backspace':
                 self.remove_tile()
                 return "break"
+            elif key in ['1', '2', '3', '4', '5', '6']:
+                self.select_trigger(int(key))
+                return "break"
+            elif key == 'return':  # Enter key
+                self.edit_selected_trigger()
+                return "break"
     
-    def move_cursor(self, direction):
-        if direction == 'up' and self.cursor_y > 0:
-            self.cursor_y -= 1
-        elif direction == 'down' and self.cursor_y < self.current_area.height - 1:
-            self.cursor_y += 1
-        elif direction == 'left' and self.cursor_x > 0:
-            self.cursor_x -= 1
-        elif direction == 'right' and self.cursor_x < self.current_area.width - 1:
-            self.cursor_x += 1
-        self.update_cursor_display()
-        self.update_properties_display()
+    def select_trigger(self, trigger_number):
+        """Select a specific trigger at the current location"""
+        triggers_here = [trig for trig in self.current_area.triggers 
+                        if trig.x == self.cursor_x and trig.y == self.cursor_y]
+        if triggers_here and 1 <= trigger_number <= len(triggers_here):
+            self.selected_trigger_index = trigger_number - 1
+            self.update_properties_display()
+    
+    def edit_selected_trigger(self):
+        """Open edit dialog for the currently selected trigger"""
+        triggers_here = [trig for trig in self.current_area.triggers 
+                        if trig.x == self.cursor_x and trig.y == self.cursor_y]
+        if triggers_here and 0 <= self.selected_trigger_index < len(triggers_here):
+            trigger = triggers_here[self.selected_trigger_index]
+            self.show_trigger_edit_dialog(trigger)
+    
+    def get_next_trigger_name(self):
+        """Generate the next available trigger name (trigger_1, trigger_2, etc.)"""
+        existing_names = [trig.name for trig in self.current_area.triggers]
+        counter = 1
+        while f"trigger_{counter}" in existing_names:
+            counter += 1
+        return f"trigger_{counter}"
     
     def place_tile(self):
         if self.selected_mode == "tile":
@@ -78,14 +107,25 @@ class EditorMethods:
                     type=self.selected_tile, x=self.cursor_x, y=self.cursor_y))
         
         elif self.selected_mode == "trigger":
-            existing = [trig for trig in self.current_area.triggers 
-                       if trig.x == self.cursor_x and trig.y == self.cursor_y]
-            if existing:
-                self.current_area.triggers = [trig for trig in self.current_area.triggers 
-                                            if not (trig.x == self.cursor_x and trig.y == self.cursor_y)]
-            else:
-                from data_classes import Trigger
-                self.current_area.triggers.append(Trigger(x=self.cursor_x, y=self.cursor_y))
+            # Check if we can add more triggers (max 6)
+            triggers_here = [trig for trig in self.current_area.triggers 
+                           if trig.x == self.cursor_x and trig.y == self.cursor_y]
+            if len(triggers_here) >= 6:
+                messagebox.showwarning("Max Triggers", "Maximum 6 triggers allowed per location")
+                return
+            
+            from data_classes import Trigger
+            new_trigger = Trigger(
+                x=self.cursor_x, 
+                y=self.cursor_y,
+                trigger_type=self.selected_tile,  # selected_tile now holds trigger type
+                name=self.get_next_trigger_name()
+            )
+            self.current_area.triggers.append(new_trigger)
+            self.selected_trigger_index = len(triggers_here)  # Select the new trigger
+            
+            # Open edit dialog immediately for new trigger
+            self.show_trigger_edit_dialog(new_trigger)
         
         self.draw_area()
         self.update_properties_display()
@@ -105,10 +145,35 @@ class EditorMethods:
                                        if not (obj.x == self.cursor_x and obj.y == self.cursor_y and 
                                               obj.type in npc_types)]
         elif self.selected_mode == "trigger":
-            self.current_area.triggers = [trig for trig in self.current_area.triggers 
-                                        if not (trig.x == self.cursor_x and trig.y == self.cursor_y)]
+            triggers_here = [trig for trig in self.current_area.triggers 
+                           if trig.x == self.cursor_x and trig.y == self.cursor_y]
+            if triggers_here and 0 <= self.selected_trigger_index < len(triggers_here):
+                trigger_to_remove = triggers_here[self.selected_trigger_index]
+                self.current_area.triggers.remove(trigger_to_remove)
+                # Adjust selected index if needed
+                remaining_triggers = [trig for trig in self.current_area.triggers 
+                                    if trig.x == self.cursor_x and trig.y == self.cursor_y]
+                if not remaining_triggers:
+                    self.selected_trigger_index = 0
+                elif self.selected_trigger_index >= len(remaining_triggers):
+                    self.selected_trigger_index = len(remaining_triggers) - 1
         
         self.draw_area()
+        self.update_properties_display()
+    
+    def move_cursor(self, direction):
+        if direction == 'up' and self.cursor_y > 0:
+            self.cursor_y -= 1
+        elif direction == 'down' and self.cursor_y < self.current_area.height - 1:
+            self.cursor_y += 1
+        elif direction == 'left' and self.cursor_x > 0:
+            self.cursor_x -= 1
+        elif direction == 'right' and self.cursor_x < self.current_area.width - 1:
+            self.cursor_x += 1
+        
+        # Reset trigger selection when moving to new location
+        self.selected_trigger_index = 0
+        self.update_cursor_display()
         self.update_properties_display()
     
     def on_canvas_click(self, event):
@@ -121,6 +186,7 @@ class EditorMethods:
         if (0 <= grid_x < self.current_area.width and 0 <= grid_y < self.current_area.height):
             self.cursor_x = grid_x
             self.cursor_y = grid_y
+            self.selected_trigger_index = 0  # Reset trigger selection
             self.update_cursor_display()
             self.update_properties_display()
     
@@ -141,12 +207,17 @@ class EditorMethods:
                 self.update_tile_display()
                 break
             elif tag.startswith("trigger_"):
-                self.selected_tile = tag[8:]
+                self.selected_tile = tag[8:]  # trigger type (e.g., "teleport")
                 self.update_tile_display()
                 break
     
     def on_mode_change(self):
         self.selected_mode = self.mode_var.get()
+        # Set default selection for trigger mode
+        if self.selected_mode == "trigger":
+            self.selected_tile = "teleport"
+        elif self.selected_mode == "tile" and self.tile_manager.get_tile_names():
+            self.selected_tile = list(self.tile_manager.get_tile_names())[0]
         self.update_tile_display()
     
     def on_area_name_change(self, event):
@@ -231,13 +302,30 @@ class EditorMethods:
                     color = colors.get(obj.type, "#32CD32")
                     self.canvas.create_rectangle(x1 + 4, y1 + 4, x2 - 4, y2 - 4, fill=color, outline="black", width=2)
         
-        # Draw triggers
+        # Draw triggers with new color system
+        trigger_locations = {}
         for trigger in self.current_area.triggers:
-            x1, y1 = trigger.x * self.tile_size, trigger.y * self.tile_size
+            key = (trigger.x, trigger.y)
+            if key not in trigger_locations:
+                trigger_locations[key] = []
+            trigger_locations[key].append(trigger)
+        
+        for (x, y), triggers in trigger_locations.items():
+            x1, y1 = x * self.tile_size, y * self.tile_size
             x2, y2 = x1 + self.tile_size, y1 + self.tile_size
             center_x, center_y = (x1 + x2) / 2, (y1 + y2) / 2
-            self.canvas.create_polygon(center_x, y1 + 4, x2 - 4, center_y, center_x, y2 - 4, x1 + 4, center_y,
-                                     fill="#FF6347", outline="black", width=2)
+            
+            if len(triggers) == 1:
+                # Single trigger - use type color
+                color = self.trigger_colors.get(triggers[0].trigger_type, "#CC0000")
+                self.canvas.create_polygon(center_x, y1 + 4, x2 - 4, center_y, center_x, y2 - 4, x1 + 4, center_y,
+                                         fill=color, outline="black", width=2)
+            else:
+                # Multiple triggers - dark gray with white number
+                self.canvas.create_polygon(center_x, y1 + 4, x2 - 4, center_y, center_x, y2 - 4, x1 + 4, center_y,
+                                         fill="#444444", outline="black", width=2)
+                self.canvas.create_text(center_x, center_y, text=str(len(triggers)), 
+                                      fill="white", font=("Arial", 10, "bold"))
         
         self.canvas.configure(scrollregion=self.canvas.bbox("all"))
         self.update_cursor_display()
@@ -296,13 +384,28 @@ class EditorMethods:
                     self.tile_canvas.create_rectangle(8, y-2, 200, y + 32, outline="red", width=2, tags="selection")
         
         elif self.selected_mode == "trigger":
-            trigger_names = self.tile_manager.get_trigger_names() or ["trigger"]
-            for i, trigger_name in enumerate(trigger_names):
+            trigger_types = ["teleport", "inventory", "tile_update", "area_object", "game_end", "show_dialog", "custom"]
+            trigger_names = {
+                "teleport": "Teleport",
+                "inventory": "Inventory",
+                "tile_update": "Tile Update",
+                "area_object": "Area Object", 
+                "game_end": "Game End",
+                "show_dialog": "Show Dialog",
+                "custom": "Custom Script"
+            }
+            
+            for i, trigger_type in enumerate(trigger_types):
                 y = i * 40 + 10
-                self.tile_canvas.create_polygon(25, y + 5, 40, y + 20, 25, y + 35, 10, y + 20, 
-                                              fill="red", outline="black", tags=f"trigger_{trigger_name}")
-                self.tile_canvas.create_text(50, y + 20, text=trigger_name.title(), anchor=tk.W)
-                if trigger_name == self.selected_tile:
+                color = self.trigger_colors[trigger_type]
+                
+                # Draw colored diamond preview
+                center_x, center_y = 25, y + 20
+                self.tile_canvas.create_polygon(center_x, y + 5, 40, center_y, center_x, y + 35, 10, center_y, 
+                                              fill=color, outline="black", tags=f"trigger_{trigger_type}")
+                self.tile_canvas.create_text(50, y + 20, text=trigger_names[trigger_type], anchor=tk.W)
+                
+                if trigger_type == self.selected_tile:
                     self.tile_canvas.create_rectangle(8, y-2, 200, y + 32, outline="red", width=2, tags="selection")
         
         self.tile_canvas.configure(scrollregion=self.tile_canvas.bbox("all"))
@@ -335,9 +438,192 @@ class EditorMethods:
         if objects_here:
             for obj in objects_here:
                 info += f"Object: {obj.type}\n"
+        
         if triggers_here:
-            for trigger in triggers_here:
-                info += f"Trigger: {len(trigger.actions)} actions\n"
+            info += f"Triggers: ({len(triggers_here)})\n"
+            for i, trigger in enumerate(triggers_here):
+                selected_marker = "● " if i == self.selected_trigger_index else "  "
+                info += f"{selected_marker}{i+1}. {trigger.name} ({trigger.get_description()})\n"
+            info += f"\nPress {1 if len(triggers_here) == 1 else '1-' + str(len(triggers_here))} to select, Enter to edit\n"
         
         self.properties_text.insert(1.0, info)
         self.properties_text.configure(state='disabled')
+    
+    def show_trigger_edit_dialog(self, trigger):
+        """Open the edit dialog for a specific trigger"""
+        dialog = tk.Toplevel(self.root)
+        dialog.title(f"Edit {trigger.trigger_type.title()} Trigger")
+        dialog.geometry("500x400")
+        dialog.transient(self.root)
+        dialog.grab_set()
+        
+        # Name field (always first)
+        name_frame = ttk.Frame(dialog)
+        name_frame.pack(fill=tk.X, padx=10, pady=5)
+        ttk.Label(name_frame, text="Name:").pack(side=tk.LEFT)
+        name_var = tk.StringVar(value=trigger.name)
+        ttk.Entry(name_frame, textvariable=name_var, width=30).pack(side=tk.LEFT, padx=(5,0))
+        
+        # Parameters based on trigger type
+        params_frame = ttk.LabelFrame(dialog, text="Parameters")
+        params_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
+        
+        param_vars = {}
+        
+        if trigger.trigger_type == "teleport":
+            # Area dropdown
+            ttk.Label(params_frame, text="Area:").grid(row=0, column=0, sticky=tk.W, padx=5, pady=2)
+            area_var = tk.StringVar(value=trigger.parameters.get("area", ""))
+            area_combo = ttk.Combobox(params_frame, textvariable=area_var, width=20)
+            area_combo['values'] = [os.path.splitext(area)[0] for area in self.current_game.areas]
+            area_combo.grid(row=0, column=1, padx=5, pady=2)
+            param_vars['area'] = area_var
+            
+            # X coordinate
+            ttk.Label(params_frame, text="X:").grid(row=1, column=0, sticky=tk.W, padx=5, pady=2)
+            x_var = tk.StringVar(value=str(trigger.parameters.get("x", 0)))
+            ttk.Entry(params_frame, textvariable=x_var, width=10).grid(row=1, column=1, sticky=tk.W, padx=5, pady=2)
+            param_vars['x'] = x_var
+            
+            # Y coordinate
+            ttk.Label(params_frame, text="Y:").grid(row=2, column=0, sticky=tk.W, padx=5, pady=2)
+            y_var = tk.StringVar(value=str(trigger.parameters.get("y", 0)))
+            ttk.Entry(params_frame, textvariable=y_var, width=10).grid(row=2, column=1, sticky=tk.W, padx=5, pady=2)
+            param_vars['y'] = y_var
+            
+        elif trigger.trigger_type == "inventory":
+            # Add item dropdown
+            ttk.Label(params_frame, text="Add Item:").grid(row=0, column=0, sticky=tk.W, padx=5, pady=2)
+            add_var = tk.StringVar(value=trigger.parameters.get("add", ""))
+            add_combo = ttk.Combobox(params_frame, textvariable=add_var, width=20)
+            add_combo['values'] = [""] + self.current_game.used_objects
+            add_combo.grid(row=0, column=1, padx=5, pady=2)
+            param_vars['add'] = add_var
+            
+            # Remove item dropdown
+            ttk.Label(params_frame, text="Remove Item:").grid(row=1, column=0, sticky=tk.W, padx=5, pady=2)
+            remove_var = tk.StringVar(value=trigger.parameters.get("remove", ""))
+            remove_combo = ttk.Combobox(params_frame, textvariable=remove_var, width=20)
+            remove_combo['values'] = [""] + self.current_game.used_objects
+            remove_combo.grid(row=1, column=1, padx=5, pady=2)
+            param_vars['remove'] = remove_var
+            
+        elif trigger.trigger_type == "tile_update":
+            # X coordinate
+            ttk.Label(params_frame, text="X:").grid(row=0, column=0, sticky=tk.W, padx=5, pady=2)
+            x_var = tk.StringVar(value=str(trigger.parameters.get("x", 0)))
+            ttk.Entry(params_frame, textvariable=x_var, width=10).grid(row=0, column=1, sticky=tk.W, padx=5, pady=2)
+            param_vars['x'] = x_var
+            
+            # Y coordinate
+            ttk.Label(params_frame, text="Y:").grid(row=1, column=0, sticky=tk.W, padx=5, pady=2)
+            y_var = tk.StringVar(value=str(trigger.parameters.get("y", 0)))
+            ttk.Entry(params_frame, textvariable=y_var, width=10).grid(row=1, column=1, sticky=tk.W, padx=5, pady=2)
+            param_vars['y'] = y_var
+            
+            # Tile type dropdown
+            ttk.Label(params_frame, text="Tile:").grid(row=2, column=0, sticky=tk.W, padx=5, pady=2)
+            tile_var = tk.StringVar(value=trigger.parameters.get("tile", ""))
+            tile_combo = ttk.Combobox(params_frame, textvariable=tile_var, width=20)
+            tile_combo['values'] = self.current_game.used_tiles
+            tile_combo.grid(row=2, column=1, padx=5, pady=2)
+            param_vars['tile'] = tile_var
+            
+            # Walkable checkbox
+            walkable_var = tk.BooleanVar(value=trigger.parameters.get("walkable", True))
+            ttk.Checkbutton(params_frame, text="Walkable", variable=walkable_var).grid(row=3, column=0, columnspan=2, sticky=tk.W, padx=5, pady=2)
+            param_vars['walkable'] = walkable_var
+            
+        elif trigger.trigger_type == "area_object":
+            # Area dropdown
+            ttk.Label(params_frame, text="Area:").grid(row=0, column=0, sticky=tk.W, padx=5, pady=2)
+            area_var = tk.StringVar(value=trigger.parameters.get("area", ""))
+            area_combo = ttk.Combobox(params_frame, textvariable=area_var, width=20)
+            area_combo['values'] = [os.path.splitext(area)[0] for area in self.current_game.areas]
+            area_combo.grid(row=0, column=1, padx=5, pady=2)
+            param_vars['area'] = area_var
+            
+            # Object dropdown
+            ttk.Label(params_frame, text="Object:").grid(row=1, column=0, sticky=tk.W, padx=5, pady=2)
+            object_var = tk.StringVar(value=trigger.parameters.get("object", ""))
+            object_combo = ttk.Combobox(params_frame, textvariable=object_var, width=20)
+            object_combo['values'] = self.current_game.used_objects
+            object_combo.grid(row=1, column=1, padx=5, pady=2)
+            param_vars['object'] = object_var
+            
+        elif trigger.trigger_type == "game_end":
+            # Win/Lose dropdown
+            ttk.Label(params_frame, text="Result:").grid(row=0, column=0, sticky=tk.W, padx=5, pady=2)
+            result_var = tk.StringVar(value=trigger.parameters.get("win_lose", "win"))
+            result_combo = ttk.Combobox(params_frame, textvariable=result_var, width=20)
+            result_combo['values'] = ["win", "lose"]
+            result_combo.grid(row=0, column=1, padx=5, pady=2)
+            param_vars['win_lose'] = result_var
+            
+            # Message text
+            ttk.Label(params_frame, text="Message:").grid(row=1, column=0, sticky=tk.NW, padx=5, pady=2)
+            message_text = tk.Text(params_frame, width=40, height=5)
+            message_text.grid(row=1, column=1, padx=5, pady=2)
+            message_text.insert(1.0, trigger.parameters.get("message", ""))
+            param_vars['message'] = message_text
+            
+        elif trigger.trigger_type == "show_dialog":
+            # Message text
+            ttk.Label(params_frame, text="Message:").grid(row=0, column=0, sticky=tk.NW, padx=5, pady=2)
+            message_text = tk.Text(params_frame, width=40, height=8)
+            message_text.grid(row=0, column=1, padx=5, pady=2)
+            message_text.insert(1.0, trigger.parameters.get("message", ""))
+            param_vars['message'] = message_text
+            
+        elif trigger.trigger_type == "custom":
+            # Code text with helper comments
+            ttk.Label(params_frame, text="Python Code:").grid(row=0, column=0, sticky=tk.NW, padx=5, pady=2)
+            code_text = tk.Text(params_frame, width=50, height=15, font=("Consolas", 10))
+            code_text.grid(row=0, column=1, padx=5, pady=2)
+            
+            default_code = '''# Available game variables:
+# game.player_x, game.player_y - Player position
+# game.player_inventory - List of items player has
+# game.current_area - Current area name
+# game.set_area(area_name, x, y) - Teleport to area
+# game.add_item(item_name) - Add item to inventory
+# game.remove_item(item_name) - Remove item from inventory
+# game.show_dialog(message) - Show dialog to player
+# game.end_game(win=True, message="") - End the game
+
+# Your code here:
+'''
+            code_text.insert(1.0, trigger.parameters.get("code", default_code))
+            param_vars['code'] = code_text
+        
+        # Buttons
+        button_frame = ttk.Frame(dialog)
+        button_frame.pack(fill=tk.X, padx=10, pady=10)
+        
+        def save_trigger():
+            # Update trigger name
+            trigger.name = name_var.get()
+            
+            # Update parameters based on type
+            for param_name, param_var in param_vars.items():
+                if isinstance(param_var, tk.Text):
+                    trigger.parameters[param_name] = param_var.get(1.0, tk.END).strip()
+                elif isinstance(param_var, tk.BooleanVar):
+                    trigger.parameters[param_name] = param_var.get()
+                else:
+                    value = param_var.get()
+                    # Convert coordinates to integers
+                    if param_name in ['x', 'y']:
+                        try:
+                            trigger.parameters[param_name] = int(value)
+                        except ValueError:
+                            trigger.parameters[param_name] = 0
+                    else:
+                        trigger.parameters[param_name] = value
+            
+            dialog.destroy()
+            self.update_properties_display()
+            self.draw_area()
+        
+        ttk.Button(button_frame, text="Save", command=save_trigger).pack(side=tk.RIGHT, padx=(5,0))
+        ttk.Button(button_frame, text="Cancel", command=dialog.destroy).pack(side=tk.RIGHT)

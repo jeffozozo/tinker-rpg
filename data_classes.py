@@ -1,5 +1,5 @@
 """
-Data classes for the Tinker RPG Editor
+Updated data_classes.py with enhanced trigger system
 """
 
 from dataclasses import dataclass, asdict
@@ -38,11 +38,51 @@ class Trigger:
     """Represents a trigger tile that executes actions"""
     x: int = 0
     y: int = 0
-    actions: List[Dict[str, Any]] = None
+    trigger_type: str = "teleport"  # teleport, inventory, tile_update, area_object, game_end, show_dialog, custom
+    name: str = ""  # User-entered name
+    parameters: Dict[str, Any] = None  # Type-specific parameters
     
     def __post_init__(self):
-        if self.actions is None:
-            self.actions = []
+        if self.parameters is None:
+            self.parameters = {}
+        if not self.name:
+            # Set default name - will be updated to trigger_1, trigger_2, etc.
+            self.name = "trigger_1"
+    
+    def get_description(self):
+        """Get a brief description of what this trigger does"""
+        if self.trigger_type == "teleport":
+            area = self.parameters.get("area", "")
+            x = self.parameters.get("x", 0)
+            y = self.parameters.get("y", 0)
+            return f"Teleport to {area} ({x},{y})"
+        elif self.trigger_type == "inventory":
+            add_item = self.parameters.get("add", "")
+            remove_item = self.parameters.get("remove", "")
+            parts = []
+            if add_item:
+                parts.append(f"Add: {add_item}")
+            if remove_item:
+                parts.append(f"Remove: {remove_item}")
+            return ", ".join(parts) if parts else "Inventory change"
+        elif self.trigger_type == "tile_update":
+            tile = self.parameters.get("tile", "")
+            x = self.parameters.get("x", 0)
+            y = self.parameters.get("y", 0)
+            return f"Change tile at ({x},{y}) to {tile}"
+        elif self.trigger_type == "area_object":
+            area = self.parameters.get("area", "")
+            obj = self.parameters.get("object", "")
+            return f"Add {obj} to {area}"
+        elif self.trigger_type == "game_end":
+            result = self.parameters.get("win_lose", "win")
+            return f"Game {result}"
+        elif self.trigger_type == "show_dialog":
+            message = self.parameters.get("message", "")[:30]
+            return f"Dialog: \"{message}...\""
+        elif self.trigger_type == "custom":
+            return "Custom script"
+        return "Unknown trigger"
 
 @dataclass
 class Area:

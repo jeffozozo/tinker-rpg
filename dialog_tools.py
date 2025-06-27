@@ -11,7 +11,7 @@ class DialogTools:
     def show_game_properties(self):
         dialog = tk.Toplevel(self.root)
         dialog.title("Game Properties")
-        dialog.geometry("400x300")
+        dialog.geometry("400x400")
         dialog.transient(self.root)
         
         # Game name
