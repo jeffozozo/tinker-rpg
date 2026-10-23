@@ -176,7 +176,7 @@
     {
       "x": 3,
       "y": 2,
-      "trigger_type": "show_dialog",
+      "trigger_type": "show_message",
       "name": "gargoyle_speaks",
       "parameters": {
         "message": "Answer me these questions three?\nwhat is your name?\nwhat is your quest?\nwhat is your favorite color?"

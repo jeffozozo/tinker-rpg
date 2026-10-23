@@ -5,6 +5,8 @@ Updated data_classes.py with enhanced trigger system
 from dataclasses import dataclass, asdict
 from typing import Dict, List, Optional, Any
 
+MAX_AREA_DIMENSION = 100
+
 @dataclass
 class Tile:
     """Represents a single tile in the game world"""
@@ -38,13 +40,15 @@ class Trigger:
     """Represents a trigger tile that executes actions"""
     x: int = 0
     y: int = 0
-    trigger_type: str = "teleport"  # teleport, inventory, tile_update, area_object, game_end, show_dialog, custom
+    trigger_type: str = "teleport"  # teleport, inventory, tile_update, area_object, game_end, show_message, custom
     name: str = ""  # User-entered name
     parameters: Dict[str, Any] = None  # Type-specific parameters
     
     def __post_init__(self):
         if self.parameters is None:
             self.parameters = {}
+        if self.trigger_type == "show_dialog":
+            self.trigger_type = "show_message"
         if not self.name:
             # Set default name - will be updated to trigger_1, trigger_2, etc.
             self.name = "trigger_1"
@@ -77,9 +81,9 @@ class Trigger:
         elif self.trigger_type == "game_end":
             result = self.parameters.get("win_lose", "win")
             return f"Game {result}"
-        elif self.trigger_type == "show_dialog":
+        elif self.trigger_type == "show_message":
             message = self.parameters.get("message", "")[:30]
-            return f"Dialog: \"{message}...\""
+            return f"Message: \"{message}...\""
         elif self.trigger_type == "custom":
             return "Custom script"
         return "Unknown trigger"
@@ -112,6 +116,9 @@ class Game:
     used_objects: List[str] = None  # Objects used in this game
     used_triggers: List[str] = None  # Triggers used in this game
     properties: Dict[str, Any] = None
+    intro_message: str = ""
+    instructions_message: str = ""
+    game_end_message: str = ""
     
     def __post_init__(self):
         if self.areas is None:

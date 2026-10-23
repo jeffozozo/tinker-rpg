@@ -20,6 +20,7 @@ class TinkerEditor(EditorMethods, FileManager, DialogTools):
         self.root = root
         self.root.title("Tinker RPG Editor")
         self.root.geometry("1400x800")
+        self.set_app_icon()
         
         self.tile_manager = TileManager()
         self.current_game = Game()
@@ -40,7 +41,7 @@ class TinkerEditor(EditorMethods, FileManager, DialogTools):
             "tile_update": "#FFCC00",   # Yellow
             "area_object": "#FF6600",   # Orange
             "game_end": "#9900CC",      # Purple
-            "show_dialog": "#00CCCC",   # Cyan
+            "show_message": "#00CCCC",   # Cyan
             "custom": "#CC0000"         # Red
         }
         
@@ -48,13 +49,27 @@ class TinkerEditor(EditorMethods, FileManager, DialogTools):
         self.setup_ui()
         self.bind_events()
         self.show_startup_message()
+
+    def set_app_icon(self):
+        from PIL import Image, ImageTk
+
+        icon_path = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            "objects",
+            "gargoyle_object.png",
+        )
+        with Image.open(icon_path) as icon:
+            icon = icon.convert("RGBA").resize((128, 128), Image.NEAREST)
+        self.app_icon = ImageTk.PhotoImage(icon, master=self.root)
+        self.root.iconphoto(True, self.app_icon)
         
     def create_directories(self):
         """Create necessary directories if they don't exist"""
         directories = ["tiles", "npcs", "objects", "triggers", "areas"]
         for directory in directories:
-            if not os.path.exists(directory):
-                os.makedirs(directory)
+            path = os.path.join(os.path.dirname(os.path.abspath(__file__)), directory)
+            if not os.path.exists(path):
+                os.makedirs(path)
                 
     def setup_ui(self):
         # Menu bar
@@ -123,6 +138,10 @@ class TinkerEditor(EditorMethods, FileManager, DialogTools):
                        value="npc", command=self.on_mode_change).pack(anchor=tk.W)
         ttk.Radiobutton(mode_frame, text="Triggers", variable=self.mode_var, 
                        value="trigger", command=self.on_mode_change).pack(anchor=tk.W)
+        ttk.Radiobutton(mode_frame, text="Messages", variable=self.mode_var,
+                       value="messages", command=self.on_mode_change).pack(anchor=tk.W)
+        ttk.Radiobutton(mode_frame, text="Editor Help", variable=self.mode_var,
+                       value="editor_help", command=self.on_mode_change).pack(anchor=tk.W)
         
         # Tile canvas
         canvas_frame = ttk.Frame(self.tile_frame)
@@ -258,11 +277,7 @@ class TinkerEditor(EditorMethods, FileManager, DialogTools):
     # Asset management
     def reload_assets(self):
         self.tile_manager = TileManager()
-        if self.tile_manager.get_tile_names():
-            self.selected_tile = self.tile_manager.get_tile_names()[0]
-        elif self.selected_mode == "trigger":
-            self.selected_tile = "teleport"
-        self.update_tile_display()
+        self.on_mode_change()
         self.draw_area()
         
         # Show consolidated reload message

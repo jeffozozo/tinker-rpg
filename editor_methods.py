@@ -20,13 +20,15 @@ class EditorMethods:
             "tile_update": "#FFCC00",   # Yellow
             "area_object": "#FF6600",   # Orange
             "game_end": "#9900CC",      # Purple
-            "show_dialog": "#00CCCC",   # Cyan
+            "show_message": "#00CCCC",   # Cyan
             "custom": "#CC0000"         # Red
         }
     
     def on_key_press(self, event):
         key = event.keysym.lower()
         if self.root.focus_get() == self.canvas:
+            if self.selected_mode in ("messages", "editor_help"):
+                return "break"
             if key in ['up', 'down', 'left', 'right']:
                 self.move_cursor(key)
                 return "break"
@@ -177,6 +179,9 @@ class EditorMethods:
         self.update_properties_display()
     
     def on_canvas_click(self, event):
+        if self.selected_mode in ("messages", "editor_help"):
+            return
+
         self.canvas.focus_set()
         canvas_x = self.canvas.canvasx(event.x)
         canvas_y = self.canvas.canvasy(event.y)
@@ -194,6 +199,9 @@ class EditorMethods:
         clicked = self.tile_canvas.find_closest(event.x, event.y)[0]
         tags = self.tile_canvas.gettags(clicked)
         for tag in tags:
+            if tag.startswith("message_"):
+                self.edit_game_message(tag[8:])
+                break
             if tag.startswith("tile_"):
                 self.selected_tile = tag[5:]
                 self.update_tile_display()
@@ -213,17 +221,53 @@ class EditorMethods:
     
     def on_mode_change(self):
         self.selected_mode = self.mode_var.get()
-        # Set default selection for trigger mode
         if self.selected_mode == "trigger":
             self.selected_tile = "teleport"
         elif self.selected_mode == "tile" and self.tile_manager.get_tile_names():
             self.selected_tile = list(self.tile_manager.get_tile_names())[0]
+        elif self.selected_mode == "object":
+            self.selected_tile = (self.tile_manager.get_object_names() or
+                                  ["item", "lever", "fountain", "chest", "barrel"])[0]
+        elif self.selected_mode == "npc":
+            self.selected_tile = (self.tile_manager.get_npc_names() or
+                                  ["guard", "merchant", "villager", "wizard", "knight"])[0]
         self.update_tile_display()
+
+    def edit_game_message(self, message_type):
+        message_fields = {
+            "intro": ("Intro Message", "intro_message"),
+            "instructions": ("Help / Instructions Message", "instructions_message"),
+            "game_end": ("Game End Message", "game_end_message"),
+        }
+        if message_type not in message_fields:
+            return
+
+        title, field_name = message_fields[message_type]
+        dialog = tk.Toplevel(self.root)
+        dialog.title(title)
+        dialog.geometry("500x350")
+        dialog.transient(self.root)
+
+        message_text = tk.Text(dialog, wrap=tk.WORD)
+        message_text.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        message_text.insert("1.0", getattr(self.current_game, field_name))
+
+        def save_message():
+            setattr(self.current_game, field_name, message_text.get("1.0", tk.END).rstrip("\n"))
+            dialog.destroy()
+
+        button_frame = ttk.Frame(dialog)
+        button_frame.pack(fill=tk.X, padx=10, pady=(0, 10))
+        ttk.Button(button_frame, text="Save", command=save_message).pack(side=tk.RIGHT, padx=(5, 0))
+        ttk.Button(button_frame, text="Cancel", command=dialog.destroy).pack(side=tk.RIGHT)
     
     def on_area_name_change(self, event):
         self.current_area.name = self.area_name_var.get()
     
     def on_walkable_change(self):
+        if self.selected_mode in ("messages", "editor_help"):
+            return
+
         tile = self.current_area.tiles[self.cursor_y][self.cursor_x]
         value = self.walkable_override_var.get()
         if value == "default":
@@ -384,14 +428,14 @@ class EditorMethods:
                     self.tile_canvas.create_rectangle(8, y-2, 200, y + 32, outline="red", width=2, tags="selection")
         
         elif self.selected_mode == "trigger":
-            trigger_types = ["teleport", "inventory", "tile_update", "area_object", "game_end", "show_dialog", "custom"]
+            trigger_types = ["teleport", "inventory", "tile_update", "area_object", "game_end", "show_message", "custom"]
             trigger_names = {
                 "teleport": "Teleport",
                 "inventory": "Inventory",
                 "tile_update": "Tile Update",
                 "area_object": "Area Object", 
                 "game_end": "Game End",
-                "show_dialog": "Show Dialog",
+                "show_message": "Show Message",
                 "custom": "Custom Script"
             }
             
@@ -407,10 +451,63 @@ class EditorMethods:
                 
                 if trigger_type == self.selected_tile:
                     self.tile_canvas.create_rectangle(8, y-2, 200, y + 32, outline="red", width=2, tags="selection")
+
+        elif self.selected_mode == "messages":
+            message_entries = [
+                ("intro", "Intro Message"),
+                ("instructions", "Help / Instructions Message"),
+                ("game_end", "Game End Message"),
+            ]
+            for i, (message_type, label) in enumerate(message_entries):
+                y = i * 55 + 15
+                self.tile_canvas.create_text(
+                    10,
+                    y,
+                    text=label,
+                    anchor=tk.NW,
+                    width=190,
+                    tags=f"message_{message_type}",
+                )
+                self.tile_canvas.create_text(
+                    10,
+                    y + 22,
+                    text="Click to edit",
+                    anchor=tk.NW,
+                    fill="gray",
+                    tags=f"message_{message_type}",
+                )
+
+        elif self.selected_mode == "editor_help":
+            help_text = (
+                "EDITOR HELP\n\n"
+                "Tiles, Objects, and NPCs:\n"
+                "Choose an item, then click a map cell or use Space to place it.\n\n"
+                "Triggers:\n"
+                "Choose a trigger and click a map cell. Select stacked triggers "
+                "with number keys, press Enter to edit, and Delete to remove.\n\n"
+                "Map navigation (in editing modes):\n"
+                "Click a map cell or use the arrow keys to move the cursor. "
+                "Messages and Editor Help modes pause map editing.\n\n"
+                "Area tools:\n"
+                "Use the Area and Tools menus to save, resize, crop, and manage assets."
+            )
+            self.tile_canvas.create_text(
+                10,
+                10,
+                text=help_text,
+                anchor=tk.NW,
+                width=190,
+                tags="editor_help",
+            )
         
         self.tile_canvas.configure(scrollregion=self.tile_canvas.bbox("all"))
         if hasattr(self, 'selected_tile_label'):
-            self.selected_tile_label.config(text=f"Selected: {self.selected_tile}")
+            if self.selected_mode == "messages":
+                self.selected_tile_label.config(text="Choose a message to edit")
+            elif self.selected_mode == "editor_help":
+                self.selected_tile_label.config(text="Editor help")
+            else:
+                self.selected_tile_label.config(text=f"Selected: {self.selected_tile}")
     
     def update_properties_display(self):
         self.properties_text.configure(state='normal')
@@ -420,7 +517,12 @@ class EditorMethods:
         objects_here = [obj for obj in self.current_area.objects if obj.x == self.cursor_x and obj.y == self.cursor_y]
         triggers_here = [trig for trig in self.current_area.triggers if trig.x == self.cursor_x and trig.y == self.cursor_y]
         
-        info = f"Position: ({self.cursor_x}, {self.cursor_y})\n\n"
+        info = ""
+        if triggers_here and 0 <= self.selected_trigger_index < len(triggers_here):
+            selected_trigger = triggers_here[self.selected_trigger_index]
+            info += f"Selected trigger: {selected_trigger.get_description()}\n\n"
+
+        info += f"Position: ({self.cursor_x}, {self.cursor_y})\n\n"
         tile_info = self.tile_manager.get_tile_info(tile.type)
         global_walkable = self.tile_manager.get_default_walkable(tile.type)
         
@@ -448,7 +550,47 @@ class EditorMethods:
         
         self.properties_text.insert(1.0, info)
         self.properties_text.configure(state='disabled')
-    
+
+    def _trigger_coordinate_error(self, trigger_type, parameters):
+        if trigger_type == "teleport":
+            selected_area = parameters.get("area", "")
+            area_filename = next(
+                (area for area in self.current_game.areas
+                 if os.path.splitext(os.path.basename(area))[0] == selected_area),
+                None
+            )
+            if not area_filename:
+                return "Select a destination area that belongs to this game."
+
+            area_path = os.path.join(
+                os.path.dirname(os.path.abspath(__file__)), "areas", area_filename
+            )
+            if (self.current_area_file and
+                    os.path.realpath(self.current_area_file) == os.path.realpath(area_path)):
+                destination_width = self.current_area.width
+                destination_height = self.current_area.height
+            else:
+                try:
+                    with open(area_path, 'r') as f:
+                        destination_area = json.load(f)
+                    destination_width = int(destination_area["width"])
+                    destination_height = int(destination_area["height"])
+                except (OSError, KeyError, TypeError, ValueError) as e:
+                    return f"Could not read destination area dimensions: {e}"
+        elif trigger_type == "tile_update":
+            destination_width = self.current_area.width
+            destination_height = self.current_area.height
+        else:
+            return None
+
+        x, y = parameters["x"], parameters["y"]
+        if not (0 <= x < destination_width and 0 <= y < destination_height):
+            return (
+                "Coordinates must be within the destination area "
+                f"(X: 0-{destination_width - 1}, Y: 0-{destination_height - 1})."
+            )
+        return None
+
     def show_trigger_edit_dialog(self, trigger):
         """Open the edit dialog for a specific trigger"""
         dialog = tk.Toplevel(self.root)
@@ -567,7 +709,7 @@ class EditorMethods:
             message_text.insert(1.0, trigger.parameters.get("message", ""))
             param_vars['message'] = message_text
             
-        elif trigger.trigger_type == "show_dialog":
+        elif trigger.trigger_type == "show_message":
             # Message text
             ttk.Label(params_frame, text="Message:").grid(row=0, column=0, sticky=tk.NW, padx=5, pady=2)
             message_text = tk.Text(params_frame, width=40, height=8)
@@ -588,7 +730,7 @@ class EditorMethods:
 # game.set_area(area_name, x, y) - Teleport to area
 # game.add_item(item_name) - Add item to inventory
 # game.remove_item(item_name) - Remove item from inventory
-# game.show_dialog(message) - Show dialog to player
+# game.show_message(message) - Show a message to the player
 # game.end_game(win=True, message="") - End the game
 
 # Your code here:
@@ -601,25 +743,32 @@ class EditorMethods:
         button_frame.pack(fill=tk.X, padx=10, pady=10)
         
         def save_trigger():
-            # Update trigger name
-            trigger.name = name_var.get()
-            
-            # Update parameters based on type
+            parameters = {}
             for param_name, param_var in param_vars.items():
                 if isinstance(param_var, tk.Text):
-                    trigger.parameters[param_name] = param_var.get(1.0, tk.END).strip()
+                    parameters[param_name] = param_var.get(1.0, tk.END).strip()
                 elif isinstance(param_var, tk.BooleanVar):
-                    trigger.parameters[param_name] = param_var.get()
+                    parameters[param_name] = param_var.get()
                 else:
                     value = param_var.get()
-                    # Convert coordinates to integers
                     if param_name in ['x', 'y']:
                         try:
-                            trigger.parameters[param_name] = int(value)
+                            parameters[param_name] = int(value)
                         except ValueError:
-                            trigger.parameters[param_name] = 0
+                            messagebox.showerror("Invalid Coordinates", f"{param_name.upper()} must be a whole number.")
+                            return
                     else:
-                        trigger.parameters[param_name] = value
+                        parameters[param_name] = value
+
+            coordinate_error = self._trigger_coordinate_error(trigger.trigger_type, parameters)
+            if coordinate_error:
+                title = ("Invalid Area" if trigger.trigger_type == "teleport" and
+                         not coordinate_error.startswith("Coordinates") else "Invalid Coordinates")
+                messagebox.showerror(title, coordinate_error)
+                return
+
+            trigger.name = name_var.get()
+            trigger.parameters.update(parameters)
             
             dialog.destroy()
             self.update_properties_display()

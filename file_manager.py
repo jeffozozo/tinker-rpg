@@ -10,6 +10,13 @@ from dataclasses import asdict
 
 class FileManager:
     """Mixin class containing file management methods"""
+
+    def _project_path(self, *parts):
+        return os.path.join(os.path.dirname(os.path.abspath(__file__)), *parts)
+
+    def _is_project_area(self, filename):
+        area_dir = os.path.realpath(self._project_path("areas"))
+        return os.path.dirname(os.path.realpath(filename)) == area_dir
     
     # Game management methods
     def new_game(self):
@@ -38,20 +45,22 @@ class FileManager:
             title="Save Game As"
         )
         if filename:
-            self._save_game_to_file(filename)
-            self.current_game_file = filename
-    
+            if self._save_game_to_file(filename):
+                self.current_game_file = filename
+
     def _save_game_to_file(self, filename):
         try:
             with open(filename, 'w') as f:
                 json.dump(asdict(self.current_game), f, indent=2)
             messagebox.showinfo("Save Game", f"Game saved to {filename}")
+            return True
         except Exception as e:
             messagebox.showerror("Error", f"Failed to save game: {e}")
+            return False
     
     def open_game(self):
         filename = filedialog.askopenfilename(
-            initialdir="games",
+            initialdir=self._project_path("games"),
             filetypes=[("Game files", "*.json"), ("All files", "*.*")],
             title="Open Game"
         )
@@ -69,11 +78,11 @@ class FileManager:
                 
                 # Load the first area if available
                 if self.current_game.areas:
-                    first_area_file = os.path.join("areas", self.current_game.areas[0])
+                    first_area_file = self._project_path("areas", self.current_game.areas[0])
                     if os.path.exists(first_area_file):
                         self._load_area_from_file(first_area_file, show_message=False)
                         loaded_areas = [os.path.splitext(area)[0] for area in self.current_game.areas 
-                                      if os.path.exists(os.path.join("areas", area))]
+                                      if os.path.exists(self._project_path("areas", area))]
                 
                 # Show consolidated load message
                 self.show_load_message(
@@ -93,25 +102,30 @@ class FileManager:
         if self.current_area:
             try:
                 if self.current_area_file:
-                    self._save_area_to_file(self.current_area_file)
-                    saved_items.append(f"Area: {os.path.basename(self.current_area_file)}")
+                    if self._save_area_to_file(self.current_area_file):
+                        saved_items.append(f"Area: {os.path.basename(self.current_area_file)}")
+                    else:
+                        errors.append(f"Failed to save area: {os.path.basename(self.current_area_file)}")
                 else:
                     # Need to prompt for area filename
                     area_filename = filedialog.asksaveasfilename(
                         defaultextension=".json",
                         filetypes=[("Area files", "*.json"), ("All files", "*.*")],
-                        initialdir="areas",
+                        initialdir=self._project_path("areas"),
                         title="Save Area As"
                     )
                     if area_filename:
-                        self._save_area_to_file(area_filename)
-                        self.current_area_file = area_filename
-                        saved_items.append(f"Area: {os.path.basename(area_filename)}")
-                        
-                        # Auto-add to game if not already included
-                        area_basename = os.path.basename(area_filename)
-                        if area_basename not in self.current_game.areas:
-                            self.current_game.areas.append(area_basename)
+                        if not self._is_project_area(area_filename):
+                            errors.append("Area must be saved inside the project's areas/ folder")
+                        elif self._save_area_to_file(area_filename):
+                            self.current_area_file = area_filename
+                            saved_items.append(f"Area: {os.path.basename(area_filename)}")
+
+                            area_basename = os.path.basename(area_filename)
+                            if area_basename not in self.current_game.areas:
+                                self.current_game.areas.append(area_basename)
+                        else:
+                            errors.append(f"Failed to save area: {os.path.basename(area_filename)}")
                     else:
                         errors.append("Area save cancelled by user")
             except Exception as e:
@@ -128,8 +142,10 @@ class FileManager:
         if self.current_game:
             try:
                 if self.current_game_file:
-                    self._save_game_to_file(self.current_game_file)
-                    saved_items.append(f"Game: {os.path.basename(self.current_game_file)}")
+                    if self._save_game_to_file(self.current_game_file):
+                        saved_items.append(f"Game: {os.path.basename(self.current_game_file)}")
+                    else:
+                        errors.append(f"Failed to save game: {os.path.basename(self.current_game_file)}")
                 else:
                     # Need to prompt for game filename
                     game_filename = filedialog.asksaveasfilename(
@@ -138,9 +154,11 @@ class FileManager:
                         title="Save Game As"
                     )
                     if game_filename:
-                        self._save_game_to_file(game_filename)
-                        self.current_game_file = game_filename
-                        saved_items.append(f"Game: {os.path.basename(game_filename)}")
+                        if self._save_game_to_file(game_filename):
+                            self.current_game_file = game_filename
+                            saved_items.append(f"Game: {os.path.basename(game_filename)}")
+                        else:
+                            errors.append(f"Failed to save game: {os.path.basename(game_filename)}")
                     else:
                         errors.append("Game save cancelled by user")
             except Exception as e:
@@ -177,25 +195,29 @@ class FileManager:
         filename = filedialog.asksaveasfilename(
             defaultextension=".json",
             filetypes=[("Area files", "*.json"), ("All files", "*.*")],
-            initialdir="areas",
+            initialdir=self._project_path("areas"),
             title="Save Area As"
         )
         if filename:
-            self._save_area_to_file(filename)
-            self.current_area_file = filename
-    
+            if not self._is_project_area(filename):
+                messagebox.showerror("Save Area", "Area files must be saved inside the project's areas/ folder.")
+            elif self._save_area_to_file(filename):
+                self.current_area_file = filename
+
     def _save_area_to_file(self, filename):
         try:
             with open(filename, 'w') as f:
                 json.dump(asdict(self.current_area), f, indent=2)
             messagebox.showinfo("Save Area", f"Area saved to {filename}")
+            return True
         except Exception as e:
             messagebox.showerror("Error", f"Failed to save area: {e}")
+            return False
     
     def open_area(self):
         filename = filedialog.askopenfilename(
             filetypes=[("Area files", "*.json"), ("All files", "*.*")],
-            initialdir="areas",
+            initialdir=self._project_path("areas"),
             title="Open Area"
         )
         if filename:
@@ -206,7 +228,14 @@ class FileManager:
             with open(filename, 'r') as f:
                 area_dict = json.load(f)
             
-            from data_classes import Area, Tile, GameObject, Trigger
+            from data_classes import Area, Tile, GameObject, Trigger, MAX_AREA_DIMENSION
+            width, height = area_dict.get("width"), area_dict.get("height")
+            if (type(width) is not int or type(height) is not int or
+                    not (1 <= width <= MAX_AREA_DIMENSION and 1 <= height <= MAX_AREA_DIMENSION)):
+                raise ValueError(
+                    f"Area width and height must each be between 1 and {MAX_AREA_DIMENSION}."
+                )
+
             self.current_area = Area(**area_dict)
             
             # Reconstruct tile objects
@@ -237,6 +266,9 @@ class FileManager:
             return
         
         area_filename = os.path.basename(self.current_area_file)
+        if not self._is_project_area(self.current_area_file):
+            messagebox.showwarning("Add Area", "Game areas must be saved inside the project's areas/ folder.")
+            return
         if area_filename not in self.current_game.areas:
             self.current_game.areas.append(area_filename)
             messagebox.showinfo("Add Area", f"Area '{area_filename}' added to game '{self.current_game.name}'")
@@ -267,7 +299,7 @@ class FileManager:
         
         # Scan all areas in game
         for area_filename in self.current_game.areas:
-            area_path = os.path.join("areas", area_filename)
+            area_path = self._project_path("areas", area_filename)
             if os.path.exists(area_path):
                 try:
                     with open(area_path, 'r') as f:

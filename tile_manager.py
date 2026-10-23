@@ -31,7 +31,7 @@ class TileManager:
         return loaded_assets
     
     def load_tiles(self):
-        tiles_dir = "tiles"
+        tiles_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "tiles")
         if not os.path.exists(tiles_dir):
             os.makedirs(tiles_dir)
             self._create_default_tile()
@@ -69,7 +69,7 @@ class TileManager:
         return True
     
     def load_npcs(self):
-        npcs_dir = "npcs"
+        npcs_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "npcs")
         if not os.path.exists(npcs_dir):
             os.makedirs(npcs_dir)
             return False
@@ -96,7 +96,7 @@ class TileManager:
         return loaded_any
     
     def load_objects(self):
-        objects_dir = "objects"
+        objects_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "objects")
         if not os.path.exists(objects_dir):
             os.makedirs(objects_dir)
             return False
@@ -123,7 +123,7 @@ class TileManager:
         return loaded_any
     
     def load_triggers(self):
-        triggers_dir = "triggers"
+        triggers_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "triggers")
         if not os.path.exists(triggers_dir):
             os.makedirs(triggers_dir)
             return False

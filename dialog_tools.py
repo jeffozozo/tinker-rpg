@@ -5,6 +5,8 @@ Dialog and tool methods for the Tinker RPG Editor
 import tkinter as tk
 from tkinter import ttk, messagebox
 
+from data_classes import MAX_AREA_DIMENSION
+
 class DialogTools:
     """Mixin class containing dialog and tool methods"""
     
@@ -68,8 +70,13 @@ class DialogTools:
         def apply():
             try:
                 new_w, new_h = int(width_var.get()), int(height_var.get())
-                if new_w > 0 and new_h > 0:
-                    self.resize_canvas(new_w, new_h)
+                if not (1 <= new_w <= MAX_AREA_DIMENSION and 1 <= new_h <= MAX_AREA_DIMENSION):
+                    messagebox.showerror(
+                        "Error",
+                        f"Width and height must each be between 1 and {MAX_AREA_DIMENSION}."
+                    )
+                    return
+                if self.resize_canvas(new_w, new_h):
                     dialog.destroy()
             except ValueError:
                 messagebox.showerror("Error", "Please enter valid numbers")
@@ -78,6 +85,13 @@ class DialogTools:
         ttk.Button(dialog, text="Cancel", command=dialog.destroy).pack()
     
     def resize_canvas(self, new_width, new_height):
+        if not (1 <= new_width <= MAX_AREA_DIMENSION and 1 <= new_height <= MAX_AREA_DIMENSION):
+            messagebox.showerror(
+                "Error",
+                f"Width and height must each be between 1 and {MAX_AREA_DIMENSION}."
+            )
+            return False
+
         from data_classes import Tile
         old_w, old_h = self.current_area.width, self.current_area.height
         new_tiles = [[Tile() for _ in range(new_width)] for _ in range(new_height)]
@@ -100,6 +114,7 @@ class DialogTools:
         self.draw_area()
         self.update_properties_display()
         messagebox.showinfo("Resize", f"Canvas resized to {new_width}x{new_height}")
+        return True
     
     def crop_canvas_to_room(self):
         from data_classes import Tile
