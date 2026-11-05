@@ -8,6 +8,8 @@ import json
 import os
 from dataclasses import asdict
 
+from data_classes import MAX_PLAYER_INVENTORY_SLOTS
+
 class EditorMethods:
     """Mixin class containing all editor interaction methods"""
     
@@ -23,13 +25,207 @@ class EditorMethods:
             "show_message": "#00CCCC",   # Cyan
             "custom": "#CC0000"         # Red
         }
+
+    def get_player_settings(self):
+        properties = self.current_game.properties
+        player = properties.setdefault("player", {})
+        player.setdefault("sprite", "fighter_npc")
+        player.setdefault("starting_inventory", [])
+        defaults = {
+            "starting_health": 20,
+            "max_health": 20,
+            "starting_energy": 0,
+            "max_energy": 0,
+            "strength": 1,
+            "intelligence": 1,
+            "gold": 0,
+        }
+        stats = player.setdefault("stats", {})
+        for key, value in defaults.items():
+            stats.setdefault(key, value)
+        properties.setdefault("start_area", "")
+        properties.setdefault("start_x", 0)
+        properties.setdefault("start_y", 0)
+        return player
+
+    def setup_player_inventory(self, parent):
+        self.player_inventory_frame = ttk.LabelFrame(
+            parent, text=f"Starting Inventory ({MAX_PLAYER_INVENTORY_SLOTS} slots)"
+        )
+        ttk.Label(
+            self.player_inventory_frame,
+            text="Mark objects Gettable to add them here.",
+        ).pack(anchor=tk.W, padx=4, pady=(3, 1))
+        self.player_inventory_vars = []
+        self.player_inventory_selectors = []
+        for index in range(MAX_PLAYER_INVENTORY_SLOTS):
+            row = ttk.Frame(self.player_inventory_frame)
+            row.pack(fill=tk.X, padx=4, pady=1)
+            ttk.Label(row, text=f"{index + 1}:", width=3).pack(side=tk.LEFT)
+            variable = tk.StringVar()
+            selector = ttk.Combobox(
+                row, textvariable=variable, state="readonly", width=19
+            )
+            selector.pack(side=tk.LEFT, fill=tk.X, expand=True)
+            self.player_inventory_vars.append(variable)
+            self.player_inventory_selectors.append(selector)
+        ttk.Button(
+            self.player_inventory_frame,
+            text="Clear Starting Inventory",
+            command=self.clear_player_inventory,
+        ).pack(fill=tk.X, padx=4, pady=(3, 4))
+        self.player_inventory_frame.pack_forget()
+
+    def clear_player_inventory(self):
+        for variable in getattr(self, "player_inventory_vars", []):
+            variable.set("")
+
+    def refresh_player_inventory(self):
+        variables = getattr(self, "player_inventory_vars", [])
+        if not variables:
+            return
+        player = self.get_player_settings()
+        inventory = player.get("starting_inventory", [])
+        if not isinstance(inventory, list):
+            inventory = []
+        available_items = self._available_inventory_items()
+        for item in inventory:
+            if isinstance(item, str) and item and item not in available_items:
+                available_items.append(item)
+        choices = [""] + available_items
+        for selector, variable, index in zip(
+            self.player_inventory_selectors, variables, range(len(variables))
+        ):
+            selector.configure(values=choices)
+            item = inventory[index] if index < len(inventory) else ""
+            variable.set(item if isinstance(item, str) else "")
+
+    def _available_inventory_items(self):
+        return sorted(
+            item for item in self.tile_manager.get_object_names()
+            if self.current_game.get_object_definition(item).get("gettable")
+        )
+
+    def _player_start_area_text(self):
+        start_area = self.current_game.properties.get("start_area")
+        return f"Start area: {start_area or 'Not set'}"
+
+    def _player_start_position_text(self):
+        properties = self.current_game.properties
+        return f"Start position: ({properties.get('start_x', 0)}, {properties.get('start_y', 0)})"
+
+    def refresh_player_setup(self):
+        player = self.get_player_settings()
+        if hasattr(self, "player_start_area_label"):
+            self.player_start_area_label.config(text=self._player_start_area_text())
+            self.player_start_position_label.config(
+                text=self._player_start_position_text()
+            )
+        for key, variable in getattr(self, "player_stat_vars", {}).items():
+            variable.set(str(player["stats"][key]))
+        self.refresh_player_inventory()
+
+    def save_player_setup(self):
+        player = self.get_player_settings()
+        try:
+            stats = {
+                key: int(variable.get())
+                for key, variable in self.player_stat_vars.items()
+            }
+        except ValueError:
+            messagebox.showerror("Invalid Player Settings", "Player stats must be whole numbers.")
+            return False
+        if any(value < 0 for value in stats.values()) or stats["max_health"] < 1:
+            messagebox.showerror(
+                "Invalid Player Settings",
+                "Stats cannot be negative, and maximum health must be at least 1.",
+            )
+            return False
+        if stats["starting_health"] < 1:
+            messagebox.showerror(
+                "Invalid Player Settings",
+                "Starting health must be at least 1.",
+            )
+            return False
+        if stats["starting_health"] > stats["max_health"]:
+            messagebox.showerror(
+                "Invalid Player Settings",
+                "Starting health cannot exceed maximum health.",
+            )
+            return False
+        if stats["starting_energy"] > stats["max_energy"]:
+            messagebox.showerror(
+                "Invalid Player Settings",
+                "Starting energy cannot exceed maximum energy.",
+            )
+            return False
+        inventory_vars = getattr(self, "player_inventory_vars", None)
+        if inventory_vars is not None:
+            inventory = [
+                variable.get().strip() for variable in inventory_vars
+            ]
+            if len(inventory) > MAX_PLAYER_INVENTORY_SLOTS:
+                messagebox.showerror(
+                    "Invalid Player Inventory",
+                    f"Starting inventory can contain at most {MAX_PLAYER_INVENTORY_SLOTS} slots.",
+                )
+                return False
+            old_inventory = player.get("starting_inventory", [])
+            old_items = (
+                {item for item in old_inventory if isinstance(item, str)}
+                if isinstance(old_inventory, list)
+                else set()
+            )
+            available_items = set(self._available_inventory_items()) | old_items
+            invalid_items = sorted(
+                item for item in inventory if item and item not in available_items
+            )
+            if invalid_items:
+                messagebox.showerror(
+                    "Invalid Player Inventory",
+                    "Choose items from the available object list.",
+                )
+                return False
+            player["starting_inventory"] = inventory
+        player["stats"] = stats
+        return True
+
+    def set_player_start(self, x, y):
+        if (not self.current_area_file or
+                not self._is_project_area(self.current_area_file)):
+            messagebox.showwarning(
+                "Player Start",
+                "Save this area in the project's areas folder before setting it as the start area.",
+            )
+            return False
+        if self.is_tile_blocked(x, y):
+            messagebox.showwarning(
+                "Player Start", "Choose a walkable, unoccupied tile for the player start."
+            )
+            return False
+
+        area_filename = os.path.basename(self.current_area_file)
+        if area_filename not in self.current_game.areas:
+            self.current_game.areas.append(area_filename)
+            self.refresh_game_areas_list()
+
+        properties = self.current_game.properties
+        properties["start_area"] = area_filename
+        properties["start_x"] = x
+        properties["start_y"] = y
+        player = self.get_player_settings()
+        player["sprite"] = self.selected_tile
+        self.refresh_player_setup()
+        self.draw_area()
+        self.update_properties_display()
+        return True
     
     def on_key_press(self, event):
         key = event.keysym.lower()
         if getattr(self, "_trigger_position_picker", None) is not None:
             if key == "escape":
                 self._trigger_position_picker = None
-                self.update_cursor_display()
+                self._restore_coordinate_picker_area()
             return "break"
         if self.root.focus_get() == self.canvas:
             if self.selected_mode in ("messages", "editor_help"):
@@ -84,7 +280,11 @@ class EditorMethods:
         return f"trigger_{counter}"
     
     def place_tile(self):
-        if self.selected_mode == "tile":
+        if self.selected_mode == "player":
+            self.set_player_start(self.cursor_x, self.cursor_y)
+        elif self.selected_mode == "enemy":
+            self.place_selected_enemy()
+        elif self.selected_mode == "tile":
             current_tile = self.current_area.tiles[self.cursor_y][self.cursor_x]
             if current_tile.type == self.selected_tile:
                 from data_classes import Tile
@@ -175,6 +375,8 @@ class EditorMethods:
             self.current_area.objects = [obj for obj in self.current_area.objects 
                                        if not (obj.x == self.cursor_x and obj.y == self.cursor_y and 
                                               obj.type not in npc_types)]
+        elif self.selected_mode == "enemy":
+            self.remove_enemies_at_cursor()
         elif self.selected_mode == "npc":
             npc_types = set(self.tile_manager.get_npc_names()) or {"guard", "merchant", "villager"}
             self.current_area.objects = [obj for obj in self.current_area.objects 
@@ -218,7 +420,7 @@ class EditorMethods:
                 position_picker["x_var"].set(str(grid_x))
                 position_picker["y_var"].set(str(grid_y))
                 self._trigger_position_picker = None
-                self.update_cursor_display()
+                self._restore_coordinate_picker_area()
             self.canvas.focus_set()
             return "break"
 
@@ -259,12 +461,102 @@ class EditorMethods:
         self.canvas.focus_set()
         
         if (0 <= grid_x < self.current_area.width and 0 <= grid_y < self.current_area.height):
+            if self.selected_mode == "player":
+                self.cursor_x = grid_x
+                self.cursor_y = grid_y
+                self.update_cursor_display()
+                self.set_player_start(grid_x, grid_y)
+                return "break"
             self.cursor_x = grid_x
             self.cursor_y = grid_y
             self.selected_trigger_index = 0  # Reset trigger selection
             self.update_cursor_display()
             self.refresh_trigger_editor()
             self.update_properties_display()
+
+    def _begin_trigger_position_pick(
+            self, x_var, y_var, destination_area_name=None
+    ):
+            area = self.current_area
+            area_file = self.current_area_file
+            if destination_area_name:
+                destination_filename = next(
+                    (
+                        filename for filename in self.current_game.areas
+                        if os.path.splitext(os.path.basename(filename))[0]
+                        == destination_area_name
+                    ),
+                    None,
+                )
+                if destination_filename is None:
+                    messagebox.showerror(
+                        "Pick Coordinates",
+                        "Choose a destination area that belongs to this game.",
+                    )
+                    return False
+
+                destination_path = self._project_path(
+                    "areas", destination_filename
+                )
+                if (
+                    area_file
+                    and os.path.realpath(area_file) == os.path.realpath(destination_path)
+                ):
+                    destination_area = area
+                else:
+                    try:
+                        destination_area = self._read_area_file(destination_path)
+                    except (OSError, ValueError, TypeError, KeyError) as error:
+                        messagebox.showerror(
+                            "Pick Coordinates",
+                            f"Could not load destination area "
+                            f"{destination_filename}: {error}",
+                        )
+                        return False
+                area = destination_area
+                area_file = destination_path
+
+            self._coordinate_picker_source = (
+                self.current_area,
+                self.current_area_file,
+                self.cursor_x,
+                self.cursor_y,
+                self.selected_trigger_index,
+            )
+            self.current_area = area
+            self.current_area_file = area_file
+            self._trigger_position_picker = {"x_var": x_var, "y_var": y_var}
+            try:
+                target_x = int(x_var.get())
+                target_y = int(y_var.get())
+            except (ValueError, TypeError):
+                target_x = target_y = 0
+            if not (
+                0 <= target_x < area.width and 0 <= target_y < area.height
+            ):
+                target_x = target_y = 0
+            self.cursor_x, self.cursor_y = target_x, target_y
+            self.draw_area()
+            self.cursor_label.config(
+                text=f"Click target cell in {area.name} (Esc to cancel)"
+            )
+            self.canvas.focus_set()
+            return True
+
+    def _restore_coordinate_picker_area(self):
+            source = getattr(self, "_coordinate_picker_source", None)
+            if source is None:
+                self.update_cursor_display()
+                return
+            (
+                self.current_area,
+                self.current_area_file,
+                self.cursor_x,
+                self.cursor_y,
+                self.selected_trigger_index,
+            ) = source
+            self._coordinate_picker_source = None
+            self.draw_area()
 
     def on_canvas_right_click(self, event):
         if (getattr(self, "_trigger_position_picker", None) is not None or
@@ -308,6 +600,32 @@ class EditorMethods:
         self.mouse_position_label.config(text="Mouse: --")
 
     def on_tile_canvas_click(self, event):
+        if self.selected_mode == "enemy":
+            canvas_y = self.tile_canvas.canvasy(event.y)
+            row_index = int((canvas_y - 10) // 40)
+            enemy_ids = list(self.get_enemy_definitions())
+            if (
+                0 <= row_index < len(enemy_ids)
+                and 10 + row_index * 40 <= canvas_y < 42 + row_index * 40
+            ):
+                self.select_enemy_definition(row_index)
+            return
+
+        if self.selected_mode in ("npc", "player"):
+            npc_names = self.tile_manager.get_npc_names()
+            canvas_y = self.tile_canvas.canvasy(event.y)
+            row_index = int((canvas_y - 10) // 40)
+            if (
+                0 <= row_index < len(npc_names)
+                and 10 + row_index * 40 <= canvas_y < 40 + row_index * 40
+            ):
+                self.selected_tile = npc_names[row_index]
+                self.update_tile_display()
+                if self.selected_mode == "player":
+                    self.get_player_settings()["sprite"] = self.selected_tile
+                    self.draw_area()
+            return
+
         clicked = self.tile_canvas.find_closest(event.x, event.y)[0]
         tags = self.tile_canvas.gettags(clicked)
         for tag in tags:
@@ -327,6 +645,9 @@ class EditorMethods:
             elif tag.startswith("npc_"):
                 self.selected_tile = tag[4:]
                 self.update_tile_display()
+                if self.selected_mode == "player":
+                    self.get_player_settings()["sprite"] = self.selected_tile
+                    self.draw_area()
                 break
             elif tag.startswith("trigger_"):
                 self.selected_tile = tag[8:]  # trigger type (e.g., "teleport")
@@ -336,6 +657,9 @@ class EditorMethods:
     
     def on_mode_change(self):
         previous_mode = getattr(self, "selected_mode", None)
+        if previous_mode == "enemy" and not self.save_enemy_definition():
+            self.mode_var.set(previous_mode)
+            return
         if previous_mode == "trigger" and not self.save_selected_trigger(
             show_error=True, refresh=False
         ):
@@ -343,8 +667,18 @@ class EditorMethods:
             return
 
         self.selected_mode = self.mode_var.get()
-        if self.selected_mode == "trigger":
+        if self.selected_mode == "enemy":
+            self.refresh_enemy_editor()
+        elif self.selected_mode == "trigger":
             self.selected_tile = "teleport"
+        elif self.selected_mode == "player":
+            player = self.get_player_settings()
+            npc_names = self.tile_manager.get_npc_names()
+            self.selected_tile = (
+                player["sprite"] if player["sprite"] in npc_names
+                else (npc_names[0] if npc_names else "fighter_npc")
+            )
+            player["sprite"] = self.selected_tile
         elif self.selected_mode == "tile" and self.tile_manager.get_tile_names():
             self.selected_tile = list(self.tile_manager.get_tile_names())[0]
         elif self.selected_mode == "object":
@@ -366,6 +700,43 @@ class EditorMethods:
                 self.trigger_editor_frame.pack_forget()
                 self.details_label.pack(padx=5, pady=(10, 0))
                 self.properties_text.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
+        if hasattr(self, "player_setup_frame"):
+            if self.selected_mode == "player":
+                self.tile_walkable_frame.pack_forget()
+                self.object_definition_frame.pack_forget()
+                if hasattr(self, "player_inventory_frame"):
+                    self.player_inventory_frame.pack(
+                        before=self.tile_canvas_frame,
+                        fill=tk.X,
+                        padx=5,
+                        pady=(0, 4),
+                    )
+                self.details_label.pack(padx=5, pady=(10, 0))
+                self.properties_text.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
+                self.player_setup_frame.pack(
+                    before=self.details_label, fill=tk.X, padx=5, pady=5
+                )
+                self.details_label.pack_forget()
+                self.properties_text.pack_forget()
+                self.refresh_player_setup()
+            else:
+                self.player_setup_frame.pack_forget()
+                if hasattr(self, "player_inventory_frame"):
+                    self.player_inventory_frame.pack_forget()
+        if hasattr(self, "enemy_properties_frame"):
+            if self.selected_mode == "enemy":
+                self.tile_walkable_frame.pack_forget()
+                self.object_definition_frame.pack_forget()
+                self.trigger_editor_frame.pack_forget()
+                self.details_label.pack_forget()
+                self.properties_text.pack_forget()
+                self.player_setup_frame.pack_forget()
+                self.enemy_properties_frame.pack(fill=tk.X, padx=5, pady=5)
+                self.enemy_controls_frame.pack(fill=tk.X, padx=5, pady=5)
+                self.refresh_enemy_editor()
+            else:
+                self.enemy_properties_frame.pack_forget()
+                self.enemy_controls_frame.pack_forget()
         if hasattr(self, "object_definition_frame"):
             if self.selected_mode == "object":
                 self.tile_walkable_frame.pack_forget()
@@ -373,6 +744,9 @@ class EditorMethods:
                     before=self.details_label, fill=tk.X, padx=5, pady=5
                 )
                 self.load_object_definition_editor()
+            elif self.selected_mode in ("player", "enemy"):
+                self.object_definition_frame.pack_forget()
+                self.tile_walkable_frame.pack_forget()
             elif self.selected_mode == "trigger" and not hasattr(
                 self, "trigger_editor_frame"
             ):
@@ -537,6 +911,27 @@ class EditorMethods:
         # Draw objects and NPCs
         for obj in self.current_area.objects:
             x1, y1 = obj.x * self.tile_size, obj.y * self.tile_size
+            enemy_id = obj.properties.get("enemy_id")
+            enemy_data = obj.properties.get("enemy_data")
+            if enemy_id and hasattr(self, "get_enemy_definitions"):
+                enemy_data = self.get_enemy_definitions().get(enemy_id, enemy_data)
+            if enemy_data:
+                sprite = enemy_data.get("sprite", obj.type)
+                enemy_info = self.tile_manager.get_npc_info(sprite)
+                if "image" in enemy_info:
+                    self.canvas.create_image(
+                        x1, y1, image=enemy_info["image"], anchor=tk.NW
+                    )
+                else:
+                    self.canvas.create_rectangle(
+                        x1 + 4, y1 + 4, x1 + 28, y1 + 28,
+                        fill="#DC143C", outline="black", width=2,
+                    )
+                self.canvas.create_rectangle(
+                    x1 + 1, y1 + 1, x1 + self.tile_size - 1,
+                    y1 + self.tile_size - 1, outline="#DC143C", width=2,
+                )
+                continue
             npc_info = self.tile_manager.get_npc_info(obj.type)
             obj_info = self.tile_manager.get_object_info(obj.type)
             
@@ -589,6 +984,32 @@ class EditorMethods:
                 )
                 self.canvas.create_text(center_x, center_y, text=str(marker_number),
                                       fill=number_color, font=("Arial", 10, "bold"))
+
+        properties = getattr(getattr(self, "current_game", None), "properties", {})
+        start_area = properties.get("start_area")
+        current_area_filename = (
+            os.path.basename(self.current_area_file)
+            if getattr(self, "current_area_file", None) else ""
+        )
+        start_x = properties.get("start_x")
+        start_y = properties.get("start_y")
+        if (start_area == current_area_filename and
+                isinstance(start_x, int) and isinstance(start_y, int) and
+                0 <= start_x < self.current_area.width and
+                0 <= start_y < self.current_area.height):
+            x1, y1 = start_x * self.tile_size, start_y * self.tile_size
+            player = properties.get("player", {})
+            sprite = player.get("sprite", "")
+            player_info = self.tile_manager.get_npc_info(sprite)
+            if "image" in player_info:
+                self.canvas.create_image(
+                    x1, y1, image=player_info["image"], anchor=tk.NW,
+                    tags="player_start",
+                )
+            self.canvas.create_rectangle(
+                x1 + 1, y1 + 1, x1 + self.tile_size - 1, y1 + self.tile_size - 1,
+                outline="#00FFFF", width=2, tags="player_start",
+            )
         
         self.canvas.configure(scrollregion=self.canvas.bbox("all"))
         self.update_cursor_display()
@@ -603,7 +1024,31 @@ class EditorMethods:
     def update_tile_display(self):
         self.tile_canvas.delete("all")
         
-        if self.selected_mode == "tile":
+        if self.selected_mode == "enemy":
+            definitions = self.get_enemy_definitions()
+            for index, (enemy_id, definition) in enumerate(definitions.items()):
+                y = index * 40 + 10
+                sprite_info = self.tile_manager.get_npc_info(
+                    definition.get("sprite", "")
+                )
+                if "image" in sprite_info:
+                    self.tile_canvas.create_image(
+                        10, y, image=sprite_info["image"], anchor=tk.NW
+                    )
+                else:
+                    self.tile_canvas.create_rectangle(
+                        10, y, 40, y + 30, fill="#DC143C", outline="black"
+                    )
+                self.tile_canvas.create_text(
+                    50, y + 15,
+                    text=definition.get("name", enemy_id),
+                    anchor=tk.W,
+                )
+                if enemy_id == self.selected_enemy_id:
+                    self.tile_canvas.create_rectangle(
+                        8, y - 2, 220, y + 32, outline="red", width=2
+                    )
+        elif self.selected_mode == "tile":
             tiles_per_row = 5
             tile_names = self.tile_manager.get_tile_names()
             for i, tile_name in enumerate(tile_names):
@@ -629,6 +1074,26 @@ class EditorMethods:
                 self.tile_canvas.create_text(50, y + 15, text=npc_name.title(), anchor=tk.W)
                 if npc_name == self.selected_tile:
                     self.tile_canvas.create_rectangle(8, y-2, 200, y + 32, outline="red", width=2, tags="selection")
+
+        elif self.selected_mode == "player":
+            npc_names = self.tile_manager.get_npc_names()
+            for i, npc_name in enumerate(npc_names):
+                y = i * 40 + 10
+                npc_info = self.tile_manager.get_npc_info(npc_name)
+                if "image" in npc_info:
+                    self.tile_canvas.create_image(
+                        10, y, image=npc_info["image"], anchor=tk.NW,
+                        tags=f"npc_{npc_name}",
+                    )
+                self.tile_canvas.create_text(
+                    50, y + 15, text=npc_name.replace("_", " ").title(), anchor=tk.W,
+                    tags=f"npc_{npc_name}",
+                )
+                if npc_name == self.selected_tile:
+                    self.tile_canvas.create_rectangle(
+                        8, y - 2, 200, y + 32, outline="red", width=2,
+                        tags="selection",
+                    )
         
         elif self.selected_mode == "object":
             obj_names = self.tile_manager.get_object_names() or ["item", "lever", "fountain", "chest", "barrel"]
@@ -701,6 +1166,10 @@ class EditorMethods:
                 "EDITOR HELP\n\n"
                 "Tiles, Objects, and NPCs:\n"
                 "Choose an item, then use Space or right-click to place it at the cursor/map cell.\n\n"
+                "Enemies:\n"
+                "Add and select enemy types in the left panel, edit their stats on the right, "
+                "then press Space to place the selected enemy at the cursor. "
+                "Use Delete to remove an enemy from the cursor tile.\n\n"
                 "Triggers:\n"
                 "Choose a trigger and use Space or right-click to add it at a map cell. "
                 "Select stacked triggers "
@@ -954,14 +1423,16 @@ class EditorMethods:
             self._trigger_editor_vars[key] = text
             return text
 
-        def add_coordinate_picker(x_var, y_var):
+        def add_coordinate_picker(x_var, y_var, destination_area_var=None):
             def start_pick():
-                self._trigger_position_picker = {
-                    "x_var": x_var,
-                    "y_var": y_var,
-                }
-                self.cursor_label.config(text="Click target cell (Esc to cancel)")
-                self.canvas.focus_set()
+                destination_area = (
+                    destination_area_var.get()
+                    if destination_area_var is not None
+                    else None
+                )
+                self._begin_trigger_position_pick(
+                    x_var, y_var, destination_area
+                )
 
             ttk.Button(form, text="Pick coordinates on map", command=start_pick).pack(
                 anchor=tk.W, pady=3
@@ -969,10 +1440,12 @@ class EditorMethods:
 
         if trigger_type == "teleport":
             area_names = [os.path.splitext(area)[0] for area in self.current_game.areas]
-            add_combo("area", "Area:", area_names, params.get("area", ""))
+            destination_area_var = add_combo(
+                "area", "Area:", area_names, params.get("area", "")
+            )
             x_var = add_entry("x", "Target X:", params.get("x", 0))
             y_var = add_entry("y", "Target Y:", params.get("y", 0))
-            add_coordinate_picker(x_var, y_var)
+            add_coordinate_picker(x_var, y_var, destination_area_var)
         elif trigger_type == "inventory":
             items = [""] + self.current_game.used_objects
             add_combo("add", "Add item:", items, params.get("add", ""))

@@ -6,6 +6,25 @@ import os
 import glob
 from PIL import Image, ImageTk
 
+
+def default_tile_walkable(tile_name):
+    if tile_name == "mountains" or tile_name.startswith("lake_"):
+        return False
+    if tile_name in {"grass", "forest", "swamp", "town", "castle"}:
+        return True
+    if "_wall" in tile_name:
+        category = "wall"
+    elif "_floor" in tile_name:
+        category = "floor"
+    elif "_door_" in tile_name:
+        category = "door"
+    elif "_stairs" in tile_name:
+        category = "stairs"
+    else:
+        category = "unknown"
+    return category in {"floor", "door", "stairs"}
+
+
 class TileManager:
     """Manages loading tiles from PNG files and their properties"""
     
@@ -161,12 +180,7 @@ class TileManager:
             return "unknown"
     
     def get_default_walkable(self, tile_name):
-        if tile_name == "mountains" or tile_name.startswith("lake_"):
-            return False
-        if tile_name in {"grass", "forest", "swamp", "town", "castle"}:
-            return True
-        category = self._get_tile_category(tile_name)
-        return category in ["floor", "door", "stairs"]
+        return default_tile_walkable(tile_name)
     
     def _create_default_tile(self):
         pil_image = Image.new('RGB', (32, 32), color=(200, 200, 200))

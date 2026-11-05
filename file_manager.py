@@ -8,11 +8,103 @@ import json
 import os
 from dataclasses import asdict
 
+MAX_RECENT_GAMES = 10
+
+
 class FileManager:
     """Mixin class containing file management methods"""
 
     def _project_path(self, *parts):
         return os.path.join(os.path.dirname(os.path.abspath(__file__)), *parts)
+
+    def _recent_games_path(self):
+        return os.path.join(
+            os.path.expanduser("~"), ".tinker-rpg", "recent_games.json"
+        )
+
+    def create_open_recent_menu(self, parent):
+        self.recent_games_menu = tk.Menu(parent, tearoff=0)
+        self.recent_games = self._read_recent_games()
+        self.recent_games_menu.configure(postcommand=self.refresh_open_recent_menu)
+        return self.recent_games_menu
+
+    def _read_recent_games(self):
+        filename = self._recent_games_path()
+        if not os.path.exists(filename):
+            return []
+        try:
+            with open(filename, "r", encoding="utf-8") as recent_file:
+                paths = json.load(recent_file)
+        except (OSError, json.JSONDecodeError) as error:
+            messagebox.showwarning(
+                "Open Recent",
+                f"Could not read the recent games list: {error}",
+            )
+            return []
+        if not isinstance(paths, list) or any(
+            not isinstance(path, str) for path in paths
+        ):
+            messagebox.showwarning(
+                "Open Recent",
+                "The recent games list is invalid and will be ignored.",
+            )
+            return []
+        existing_paths = []
+        for path in paths:
+            normalized = os.path.abspath(os.path.expanduser(path))
+            if os.path.isfile(normalized) and normalized not in existing_paths:
+                existing_paths.append(normalized)
+        return existing_paths[:MAX_RECENT_GAMES]
+
+    def _write_recent_games(self):
+        filename = self._recent_games_path()
+        try:
+            os.makedirs(os.path.dirname(filename), exist_ok=True)
+            with open(filename, "w", encoding="utf-8") as recent_file:
+                json.dump(self.recent_games[:MAX_RECENT_GAMES], recent_file, indent=2)
+        except OSError as error:
+            messagebox.showwarning(
+                "Open Recent",
+                f"Could not save the recent games list: {error}",
+            )
+
+    def refresh_open_recent_menu(self):
+        self.recent_games = [
+            path for path in self.recent_games if os.path.isfile(path)
+        ][:MAX_RECENT_GAMES]
+        self.recent_games_menu.delete(0, tk.END)
+        if self.recent_games:
+            for path in self.recent_games:
+                filename = os.path.basename(path)
+                directory = os.path.basename(os.path.dirname(path))
+                label = f"{filename} ({directory})" if directory else filename
+                self.recent_games_menu.add_command(
+                    label=label,
+                    command=lambda recent_path=path: self.open_game(recent_path),
+                )
+            self.recent_games_menu.add_separator()
+            self.recent_games_menu.add_command(
+                label="Clear Recent",
+                command=self.clear_recent_games,
+            )
+        else:
+            self.recent_games_menu.add_command(
+                label="No Recent Games",
+                state=tk.DISABLED,
+            )
+
+    def _remember_recent_game(self, filename):
+        path = os.path.abspath(os.path.expanduser(filename))
+        self.recent_games = [
+            path,
+            *[recent for recent in self.recent_games if recent != path],
+        ][:MAX_RECENT_GAMES]
+        self._write_recent_games()
+
+    def clear_recent_games(self):
+        self.recent_games = []
+        self._write_recent_games()
+        self.refresh_open_recent_menu()
 
     def _is_project_area(self, filename):
         area_dir = os.path.realpath(self._project_path("areas"))
@@ -58,8 +150,12 @@ class FileManager:
         if messagebox.askyesno("New Game", "Create new game? Unsaved changes will be lost."):
             if hasattr(self, "save_selected_trigger") and not self.save_selected_trigger():
                 return
+            if hasattr(self, "save_enemy_definition") and not self.save_enemy_definition():
+                return
             from data_classes import Game, Area
             self.current_game = Game()
+            if hasattr(self, "ensure_example_enemy_definitions"):
+                self.ensure_example_enemy_definitions()
             self.current_area = Area()
             self.current_area_file = None
             self.current_game_file = None
@@ -67,6 +163,10 @@ class FileManager:
             self.area_name_var.set(self.current_area.name)
             self.refresh_game_areas_list()
             self.game_name_var.set(self.current_game.name)
+            self.refresh_player_setup()
+            if hasattr(self, "refresh_enemy_editor"):
+                self.selected_enemy_id = None
+                self.refresh_enemy_editor()
             self.draw_area()
             if hasattr(self, "refresh_trigger_editor"):
                 self.refresh_trigger_editor()
@@ -92,6 +192,12 @@ class FileManager:
 
     def _save_game_to_file(self, filename):
         try:
+            if (hasattr(self, "save_enemy_definition") and
+                    not self.save_enemy_definition()):
+                return False
+            if (hasattr(self, "player_stat_vars") and
+                    not self.save_player_setup()):
+                return False
             with open(filename, 'w') as f:
                 json.dump(asdict(self.current_game), f, indent=2)
             messagebox.showinfo("Save Game", f"Game saved to {filename}")
@@ -100,22 +206,30 @@ class FileManager:
             messagebox.showerror("Error", f"Failed to save game: {e}")
             return False
     
-    def open_game(self):
-        filename = filedialog.askopenfilename(
-            initialdir=self._project_path("games"),
-            filetypes=[("Game files", "*.json"), ("All files", "*.*")],
-            title="Open Game"
-        )
+    def open_game(self, filename=None):
+        if filename is None:
+            filename = filedialog.askopenfilename(
+                initialdir=self._project_path("games"),
+                filetypes=[("Game files", "*.json"), ("All files", "*.*")],
+                title="Open Game"
+            )
         if filename:
             try:
+                filename = os.path.abspath(os.path.expanduser(filename))
                 with open(filename, 'r') as f:
                     game_dict = json.load(f)
                 
                 from data_classes import Game
                 self.current_game = Game(**game_dict)
+                if hasattr(self, "ensure_example_enemy_definitions"):
+                    self.ensure_example_enemy_definitions()
                 self.current_game_file = filename
                 self.game_name_var.set(self.current_game.name)
                 self.refresh_game_areas_list()
+                self.refresh_player_setup()
+                if hasattr(self, "refresh_enemy_editor"):
+                    self.selected_enemy_id = None
+                    self.refresh_enemy_editor()
                 
                 loaded_areas = []
                 
@@ -134,6 +248,7 @@ class FileManager:
                     loaded_areas=loaded_areas,
                     game_name=self.current_game.name
                 )
+                self._remember_recent_game(filename)
                 
             except Exception as e:
                 messagebox.showerror("Error", f"Failed to open game: {e}")
@@ -243,13 +358,23 @@ class FileManager:
                 self.refresh_trigger_editor()
             self.update_properties_display()
     
-    def save_area(self):
+    def save_trigger_and_area(self):
+        if not self.save_selected_trigger():
+            return False
+        return self.save_area(save_trigger=False)
+
+    def save_area(self, save_trigger=True):
         if self.current_area_file:
-            self._save_area_to_file(self.current_area_file)
-        else:
-            self.save_area_as()
+            if save_trigger:
+                return self._save_area_to_file(self.current_area_file)
+            return self._save_area_to_file(
+                self.current_area_file, save_trigger=False
+            )
+        if save_trigger:
+            return self.save_area_as()
+        return self.save_area_as(save_trigger=False)
     
-    def save_area_as(self):
+    def save_area_as(self, save_trigger=True):
         filename = filedialog.asksaveasfilename(
             defaultextension=".json",
             filetypes=[("Area files", "*.json"), ("All files", "*.*")],
@@ -261,16 +386,25 @@ class FileManager:
             filename = self._normalize_save_filename(filename)
             if not self._is_project_area(filename):
                 messagebox.showerror("Save Area", "Area files must be saved inside the project's areas/ folder.")
+                return False
             elif not self._confirm_area_overwrite(filename):
-                return
-            elif self._save_area_to_file(filename):
+                return False
+            elif (
+                self._save_area_to_file(filename)
+                if save_trigger
+                else self._save_area_to_file(filename, save_trigger=False)
+            ):
                 self.current_area_file = filename
+                return True
+        return False
 
-    def _save_area_to_file(self, filename):
+    def _save_area_to_file(self, filename, save_trigger=True):
         try:
-            if (hasattr(self, "save_selected_trigger") and
+            if (save_trigger and hasattr(self, "save_selected_trigger") and
                     not self.save_selected_trigger()):
                 return False
+            if hasattr(self, "sync_enemy_instances"):
+                self.sync_enemy_instances()
             with open(filename, 'w') as f:
                 json.dump(asdict(self.current_area), f, indent=2)
             messagebox.showinfo("Save Area", f"Area saved to {filename}")
@@ -293,27 +427,9 @@ class FileManager:
             if (hasattr(self, "save_selected_trigger") and
                     not self.save_selected_trigger()):
                 return False
-            with open(filename, 'r') as f:
-                area_dict = json.load(f)
-            
-            from data_classes import Area, Tile, GameObject, Trigger, MAX_AREA_DIMENSION
-            width, height = area_dict.get("width"), area_dict.get("height")
-            if (type(width) is not int or type(height) is not int or
-                    not (1 <= width <= MAX_AREA_DIMENSION and 1 <= height <= MAX_AREA_DIMENSION)):
-                raise ValueError(
-                    f"Area width and height must each be between 1 and {MAX_AREA_DIMENSION}."
-                )
-
-            self.current_area = Area(**area_dict)
-            
-            # Reconstruct tile objects
-            for y, row in enumerate(self.current_area.tiles):
-                for x, tile_data in enumerate(row):
-                    if isinstance(tile_data, dict):
-                        self.current_area.tiles[y][x] = Tile(**tile_data)
-            
-            self.current_area.objects = [GameObject(**obj) for obj in self.current_area.objects]
-            self.current_area.triggers = [Trigger(**trig) for trig in self.current_area.triggers]
+            self.current_area = self._read_area_file(filename)
+            if hasattr(self, "sync_enemy_instances"):
+                self.sync_enemy_instances()
             
             self.current_area_file = filename
             self.cursor_x = self.cursor_y = 0
@@ -329,6 +445,34 @@ class FileManager:
                 
         except Exception as e:
             messagebox.showerror("Error", f"Failed to open area: {e}")
+
+    @staticmethod
+    def _read_area_file(filename):
+        with open(filename, "r", encoding="utf-8") as area_file:
+            area_dict = json.load(area_file)
+
+        from data_classes import Area, Tile, GameObject, Trigger, MAX_AREA_DIMENSION
+        width, height = area_dict.get("width"), area_dict.get("height")
+        if (type(width) is not int or type(height) is not int or
+                not (1 <= width <= MAX_AREA_DIMENSION and
+                     1 <= height <= MAX_AREA_DIMENSION)):
+            raise ValueError(
+                f"Area width and height must each be between 1 and "
+                f"{MAX_AREA_DIMENSION}."
+            )
+
+        area = Area(**area_dict)
+        if (len(area.tiles) != height or
+                any(not isinstance(row, list) or len(row) != width
+                    for row in area.tiles)):
+            raise ValueError("Area tile data does not match its dimensions.")
+        for y, row in enumerate(area.tiles):
+            for x, tile_data in enumerate(row):
+                if isinstance(tile_data, dict):
+                    area.tiles[y][x] = Tile(**tile_data)
+        area.objects = [GameObject(**obj) for obj in area.objects]
+        area.triggers = [Trigger(**trigger) for trigger in area.triggers]
+        return area
     
     def add_area_to_game(self):
         if not self.current_area_file:
@@ -367,6 +511,13 @@ class FileManager:
         
         for trigger in self.current_area.triggers:
             used_triggers.add("trigger")  # Generic trigger type
+
+        enemy_definitions = self.current_game.properties.get("enemies", {})
+        if isinstance(enemy_definitions, dict):
+            for definition in enemy_definitions.values():
+                sprite = definition.get("sprite")
+                if sprite:
+                    used_npcs.add(sprite)
         
         # Scan all areas in game
         for area_filename in self.current_game.areas:

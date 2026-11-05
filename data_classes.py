@@ -6,6 +6,7 @@ from dataclasses import dataclass, asdict
 from typing import Dict, List, Optional, Any
 
 MAX_AREA_DIMENSION = 100
+MAX_PLAYER_INVENTORY_SLOTS = 8
 
 @dataclass
 class Tile:

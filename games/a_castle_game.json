@@ -3,25 +3,128 @@
   "areas": [
     "gargoyle_room.json",
     "fountain_room.json",
-    "great_hall.json"
+    "great_hall.json",
+    "outside-map.json",
+    "cave.json"
   ],
   "used_tiles": [
     "cobblestone_floor",
-    "brown_brick_wall",
+    "mountains",
+    "grass",
+    "swamp",
     "gray_brick_wall",
+    "castle",
+    "blue_brick_wall",
+    "forest",
     "gray_brick_door",
-    "blue_brick_wall"
+    "lake_center",
+    "brown_brick_wall",
+    "town"
   ],
-  "used_npcs": [],
+  "used_npcs": [
+    "black_blob_npc",
+    "oldwoman_npc",
+    "orc_npc",
+    "spider_npc",
+    "dragon_npc",
+    "skeleton_npc",
+    "gargoyle_npc"
+  ],
   "used_objects": [
-    "gargoyle_object",
-    "throne_object",
     "lever_object",
-    "fountain_object",
-    "candles_object"
+    "gargoyle_object",
+    "candles_object",
+    "throne_object",
+    "fountain_object"
   ],
   "used_triggers": [
     "trigger"
   ],
-  "properties": {}
+  "properties": {
+    "enemies": {
+      "enemy_71658feaff88464597d5fcd81442bef1": {
+        "id": "enemy_71658feaff88464597d5fcd81442bef1",
+        "name": "Gargoyle",
+        "sprite": "gargoyle_npc",
+        "health": 24,
+        "movement_speed": 0.5,
+        "ranged_attack": "none",
+        "starter_key": "example:gargoyle"
+      },
+      "enemy_4407999aa6ba4128a20ff362220e3b18": {
+        "id": "enemy_4407999aa6ba4128a20ff362220e3b18",
+        "name": "Orc",
+        "sprite": "orc_npc",
+        "health": 16,
+        "movement_speed": 1.0,
+        "ranged_attack": "none",
+        "starter_key": "example:orc"
+      },
+      "enemy_62e5ed3dc9e1441bb669c9307f9d20c9": {
+        "id": "enemy_62e5ed3dc9e1441bb669c9307f9d20c9",
+        "name": "Dragon",
+        "sprite": "dragon_npc",
+        "health": 50,
+        "movement_speed": 0.5,
+        "ranged_attack": "flame",
+        "starter_key": "example:dragon"
+      },
+      "enemy_de80cafe68f0458cac7fc5294ff71775": {
+        "id": "enemy_de80cafe68f0458cac7fc5294ff71775",
+        "name": "Spider",
+        "sprite": "spider_npc",
+        "health": 8,
+        "movement_speed": 1.5,
+        "ranged_attack": "none",
+        "starter_key": "example:spider"
+      },
+      "enemy_513ea502f7b14b64a2631a9d0bbbec20": {
+        "id": "enemy_513ea502f7b14b64a2631a9d0bbbec20",
+        "name": "Skeleton",
+        "sprite": "skeleton_npc",
+        "health": 12,
+        "movement_speed": 1.0,
+        "ranged_attack": "none",
+        "starter_key": "example:skeleton"
+      },
+      "enemy_23a5958435d74387b16db412ccbcbe4d": {
+        "id": "enemy_23a5958435d74387b16db412ccbcbe4d",
+        "name": "Black Blob",
+        "sprite": "black_blob_npc",
+        "health": 10,
+        "movement_speed": 0.75,
+        "ranged_attack": "none",
+        "starter_key": "example:black_blob"
+      }
+    },
+    "player": {
+      "sprite": "peasant_npc",
+      "starting_inventory": [
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        ""
+      ],
+      "stats": {
+        "starting_health": 20,
+        "max_health": 20,
+        "starting_energy": 0,
+        "max_energy": 0,
+        "strength": 1,
+        "intelligence": 1,
+        "gold": 0
+      }
+    },
+    "start_area": "outside-map.json",
+    "start_x": 3,
+    "start_y": 3
+  },
+  "object_definitions": {},
+  "intro_message": "Welcome to a castle game!\n\nThis is really just to show you what is possible. It will evolve and get better over time.\n\nFor now, just wander around and see what you can find. ",
+  "instructions_message": "just wander around. There are places that you can go, that if you just walk on the spot you will be taken elsewhere.",
+  "game_end_message": "Aha! you have finished the quest!"
 }

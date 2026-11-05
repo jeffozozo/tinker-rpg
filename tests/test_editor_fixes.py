@@ -5,15 +5,18 @@ import tempfile
 import unittest
 from unittest.mock import Mock, patch
 
+from PIL import Image
+
 from data_classes import Area, Game, GameObject, Trigger
 from dialog_tools import DialogTools
 import editor_methods
 from editor_methods import EditorMethods
+from enemy_editor import EnemyEditor
 from file_manager import FileManager
 import tile_manager
 from tile_manager import TileManager
 
-MAIN_MODULE_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "tinker-main.py")
+MAIN_MODULE_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "tinker-edit.py")
 MAIN_MODULE_SPEC = importlib.util.spec_from_file_location("tinker_main", MAIN_MODULE_PATH)
 tinker_main = importlib.util.module_from_spec(MAIN_MODULE_SPEC)
 MAIN_MODULE_SPEC.loader.exec_module(tinker_main)
@@ -38,6 +41,31 @@ class FileManagerHarness(FileManager):
         self.current_area = Area()
         self.current_area_file = None
         self.current_game_file = None
+
+
+class EnemyEditorHarness(EnemyEditor):
+    def __init__(self):
+        self.current_game = Game()
+        self.current_area = Area()
+        self.tile_manager = Mock()
+        self.tile_manager.get_npc_names.return_value = ["goblin", "wizard"]
+        self.selected_enemy_id = None
+        self.draw_area = Mock()
+        self.update_properties_display = Mock()
+
+
+class EnemyFileManagerHarness(EnemyEditor, FileManager):
+    def __init__(self):
+        self.current_game = Game()
+        self.current_area = Area()
+        self.current_area_file = None
+        self.current_game_file = None
+        self.area_name_var = Mock()
+        self.tile_manager = Mock()
+        self.tile_manager.get_npc_names.return_value = ["goblin", "wizard"]
+        self.draw_area = Mock()
+        self.update_properties_display = Mock()
+        self.selected_enemy_id = None
 
 
 class ModeHarness(EditorMethods):
@@ -314,6 +342,79 @@ class EditorFixTests(unittest.TestCase):
         self.assertIsNone(editor._trigger_position_picker)
         self.assertEqual((editor.cursor_x, editor.cursor_y), (1, 2))
         self.assertEqual(result, "break")
+
+    def test_teleport_coordinate_picker_previews_destination_area_then_restores(self):
+        source_area = Area(width=6, height=4, name="Source")
+        destination_area = Area(width=3, height=2, name="Destination")
+        editor = object.__new__(EditorMethods)
+        editor.current_area = source_area
+        editor.current_area_file = "/project/areas/source.json"
+        editor.current_game = Game(areas=["source.json", "destination.json"])
+        editor.cursor_x = 4
+        editor.cursor_y = 2
+        editor.selected_trigger_index = 1
+        editor._project_path = lambda *parts: os.path.join("/project", *parts)
+        editor._read_area_file = Mock(return_value=destination_area)
+        editor.draw_area = Mock()
+        editor.cursor_label = Mock()
+        editor.canvas = Mock()
+        x_var, y_var = Mock(), Mock()
+        x_var.get.return_value = "1"
+        y_var.get.return_value = "1"
+
+        self.assertTrue(editor._begin_trigger_position_pick(
+            x_var, y_var, "destination"
+        ))
+
+        self.assertIs(editor.current_area, destination_area)
+        self.assertEqual(editor.current_area_file, "/project/areas/destination.json")
+        self.assertEqual((editor.cursor_x, editor.cursor_y), (1, 1))
+        editor._read_area_file.assert_called_once_with(
+            "/project/areas/destination.json"
+        )
+        editor.draw_area.assert_called_once_with()
+        editor.cursor_label.config.assert_called_once_with(
+            text="Click target cell in Destination (Esc to cancel)"
+        )
+
+        editor.canvas.canvasx.return_value = 64
+        editor.canvas.canvasy.return_value = 32
+        editor.tile_size = 32
+        result = editor.on_canvas_click(Mock(x=64, y=32))
+
+        x_var.set.assert_called_once_with("2")
+        y_var.set.assert_called_once_with("1")
+        self.assertIs(editor.current_area, source_area)
+        self.assertEqual(editor.current_area_file, "/project/areas/source.json")
+        self.assertEqual((editor.cursor_x, editor.cursor_y), (4, 2))
+        self.assertEqual(editor.selected_trigger_index, 1)
+        self.assertIsNone(editor._coordinate_picker_source)
+        self.assertEqual(result, "break")
+
+    def test_teleport_coordinate_picker_allows_current_area_as_destination(self):
+        editor = object.__new__(EditorMethods)
+        current_area = Area(width=6, height=4, name="Current")
+        editor.current_area = current_area
+        editor.current_area_file = "/project/areas/current.json"
+        editor.current_game = Game(areas=["current.json"])
+        editor.cursor_x = 1
+        editor.cursor_y = 2
+        editor.selected_trigger_index = 0
+        editor._project_path = lambda *parts: os.path.join("/project", *parts)
+        editor._read_area_file = Mock()
+        editor.draw_area = Mock()
+        editor.cursor_label = Mock()
+        editor.canvas = Mock()
+        x_var, y_var = Mock(), Mock()
+        x_var.get.return_value = "2"
+        y_var.get.return_value = "1"
+
+        self.assertTrue(editor._begin_trigger_position_pick(
+            x_var, y_var, "current"
+        ))
+
+        self.assertIs(editor.current_area, current_area)
+        editor._read_area_file.assert_not_called()
 
     def test_mouse_position_shows_0_based_map_coordinates(self):
         editor = Mock()
@@ -609,6 +710,70 @@ class EditorFixTests(unittest.TestCase):
         manager.save_game_as()
         self.assertEqual(manager.current_game_file, "/tmp/My_Game.json")
 
+    def test_recent_games_are_persisted_and_most_recent_is_first(self):
+        manager = FileManagerHarness()
+        with tempfile.TemporaryDirectory() as directory:
+            recent_file = os.path.join(directory, "config", "recent_games.json")
+            game_paths = []
+            for index in range(3):
+                path = os.path.join(directory, f"game_{index}.json")
+                with open(path, "w", encoding="utf-8") as game_file:
+                    game_file.write("{}")
+                game_paths.append(path)
+            manager._recent_games_path = lambda: recent_file
+            manager.recent_games = []
+
+            manager._remember_recent_game(game_paths[0])
+            manager._remember_recent_game(game_paths[1])
+            manager._remember_recent_game(game_paths[0])
+
+            with open(recent_file, "r", encoding="utf-8") as recent_list:
+                self.assertEqual(
+                    json.load(recent_list),
+                    [game_paths[0], game_paths[1]],
+                )
+            self.assertEqual(
+                manager._read_recent_games(),
+                [game_paths[0], game_paths[1]],
+            )
+
+    def test_open_recent_menu_lists_games_and_can_be_cleared(self):
+        manager = FileManagerHarness()
+        menu = Mock()
+        manager.recent_games_menu = menu
+        manager.open_game = Mock()
+        manager.clear_recent_games = Mock()
+
+        with tempfile.TemporaryDirectory() as directory:
+            games_directory = os.path.join(directory, "games")
+            os.makedirs(games_directory)
+            game_paths = [
+                os.path.join(games_directory, "first.json"),
+                os.path.join(games_directory, "second.json"),
+            ]
+            for path in game_paths:
+                with open(path, "w", encoding="utf-8") as game_file:
+                    game_file.write("{}")
+            manager.recent_games = game_paths
+
+            manager.refresh_open_recent_menu()
+
+            self.assertEqual(menu.add_command.call_count, 3)
+            self.assertEqual(
+                menu.add_command.call_args_list[0].kwargs["label"],
+                "first.json (games)",
+            )
+            self.assertEqual(
+                menu.add_command.call_args_list[1].kwargs["label"],
+                "second.json (games)",
+            )
+            self.assertEqual(
+                menu.add_command.call_args_list[2].kwargs["label"],
+                "Clear Recent",
+            )
+            menu.add_command.call_args_list[0].kwargs["command"]()
+            manager.open_game.assert_called_once_with(game_paths[0])
+
     @patch("file_manager.messagebox.showerror")
     @patch("file_manager.messagebox.showinfo")
     @patch("file_manager.messagebox.showwarning")
@@ -703,6 +868,29 @@ class EditorFixTests(unittest.TestCase):
         manager._save_area_to_file.assert_called_once_with(area_path)
         self.assertEqual(manager.current_area_file, area_path)
 
+    def test_save_trigger_and_area_saves_area_after_trigger_validation(self):
+        manager = FileManagerHarness()
+        manager.current_area_file = "/tmp/area.json"
+        manager.save_selected_trigger = Mock(return_value=True)
+        manager._save_area_to_file = Mock(return_value=True)
+
+        self.assertTrue(manager.save_trigger_and_area())
+
+        manager.save_selected_trigger.assert_called_once_with()
+        manager._save_area_to_file.assert_called_once_with(
+            "/tmp/area.json", save_trigger=False
+        )
+
+    def test_save_trigger_and_area_does_not_save_invalid_trigger(self):
+        manager = FileManagerHarness()
+        manager.current_area_file = "/tmp/area.json"
+        manager.save_selected_trigger = Mock(return_value=False)
+        manager._save_area_to_file = Mock()
+
+        self.assertFalse(manager.save_trigger_and_area())
+
+        manager._save_area_to_file.assert_not_called()
+
     def test_game_name_field_updates_current_game_name(self):
         editor = object.__new__(EditorMethods)
         editor.current_game = Game()
@@ -712,6 +900,576 @@ class EditorFixTests(unittest.TestCase):
         editor.on_game_name_change()
 
         self.assertEqual(editor.current_game.name, "Castle Adventure")
+
+    def test_enemy_definitions_have_defaults_and_can_place_multiple_instances(self):
+        editor = EnemyEditorHarness()
+        editor.add_enemy_definition()
+
+        enemy_id = editor.selected_enemy_id
+        definition = editor.get_enemy_definitions()[enemy_id]
+        self.assertEqual(definition["sprite"], "goblin")
+        self.assertEqual(definition["health"], 10)
+        self.assertEqual(definition["movement_speed"], 1.0)
+        self.assertEqual(definition["ranged_attack"], "none")
+        self.assertNotIn("dead_sprite", definition)
+
+        editor.cursor_x, editor.cursor_y = 2, 3
+        self.assertTrue(editor.place_selected_enemy())
+        editor.cursor_x, editor.cursor_y = 5, 6
+        self.assertTrue(editor.place_selected_enemy())
+
+        self.assertEqual(len(editor.current_area.objects), 2)
+        self.assertEqual(
+            [(obj.x, obj.y) for obj in editor.current_area.objects],
+            [(2, 3), (5, 6)],
+        )
+        self.assertTrue(all(obj.properties["enemy_id"] == enemy_id
+                            for obj in editor.current_area.objects))
+
+    def test_example_enemies_are_added_once_with_expected_defaults(self):
+        editor = EnemyEditorHarness()
+        editor.tile_manager.get_npc_names.return_value = [
+            "gargoyle_npc",
+            "orc_npc",
+            "dragon_npc",
+            "spider_npc",
+            "skeleton_npc",
+            "black_blob_npc",
+        ]
+
+        editor.add_example_enemy_definitions()
+
+        definitions = editor.get_enemy_definitions()
+        self.assertEqual(
+            {definition["name"] for definition in definitions.values()},
+            {"Gargoyle", "Orc", "Dragon", "Spider", "Skeleton", "Black Blob"},
+        )
+        by_name = {definition["name"]: definition for definition in definitions.values()}
+        self.assertEqual(by_name["Dragon"]["ranged_attack"], "flame")
+        self.assertEqual(by_name["Spider"]["movement_speed"], 1.5)
+        by_name["Orc"]["health"] = 22
+
+        editor.add_example_enemy_definitions()
+
+        self.assertEqual(len(definitions), 6)
+        self.assertEqual(
+            {definition["name"]: definition for definition in definitions.values()}[
+                "Orc"
+            ]["health"],
+            22,
+        )
+
+    def test_example_enemies_are_seeded_without_overwriting_custom_definitions(self):
+        editor = EnemyEditorHarness()
+        editor.tile_manager.get_npc_names.return_value = [
+            "gargoyle_npc",
+            "orc_npc",
+            "dragon_npc",
+            "spider_npc",
+            "skeleton_npc",
+            "black_blob_npc",
+        ]
+        editor.current_game.properties["enemies"] = {
+            "example:orc": {"id": "example:orc", "name": "Custom Orc"}
+        }
+
+        editor.ensure_example_enemy_definitions()
+
+        definitions = editor.get_enemy_definitions()
+        self.assertEqual(len(definitions), 6)
+        self.assertEqual(definitions["example:orc"]["name"], "Custom Orc")
+        self.assertEqual(
+            next(definition["name"] for definition in definitions.values()
+                 if definition.get("starter_key") == "example:dragon"),
+            "Dragon",
+        )
+        for enemy_id, definition in definitions.items():
+            if definition.get("starter_key"):
+                self.assertEqual(enemy_id, definition["id"])
+                self.assertNotEqual(enemy_id, definition["starter_key"])
+
+    def test_example_enemy_icons_are_32_by_32_pngs(self):
+        npc_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "npcs")
+        object_dir = os.path.join(
+            os.path.dirname(os.path.dirname(__file__)), "objects"
+        )
+        for sprite_name in (
+            "gargoyle_npc",
+            "orc_npc",
+            "dragon_npc",
+            "spider_npc",
+            "skeleton_npc",
+            "black_blob_npc",
+        ):
+            with self.subTest(sprite=sprite_name):
+                image_path = os.path.join(npc_dir, f"{sprite_name}.png")
+                with Image.open(image_path) as image:
+                    self.assertEqual(image.size, (32, 32))
+                    if sprite_name == "gargoyle_npc":
+                        with Image.open(
+                            os.path.join(object_dir, "gargoyle_object.png")
+                        ) as original:
+                            self.assertEqual(
+                                image.convert("RGBA").tobytes(),
+                                original.convert("RGBA").tobytes(),
+                            )
+
+    @patch("enemy_editor.messagebox.showerror")
+    def test_enemy_definition_edits_sync_linked_instances(self, showerror):
+        editor = EnemyEditorHarness()
+        editor.add_enemy_definition()
+        enemy_id = editor.selected_enemy_id
+        definition = editor.get_enemy_definitions()[enemy_id]
+        editor.current_area.objects = [
+            GameObject(type="goblin", x=x, y=1, properties={
+                "enemy_id": enemy_id,
+                "enemy_data": dict(definition),
+                "walkable": False,
+            })
+            for x in (2, 4)
+        ]
+        editor.enemy_name_var = Mock(get=Mock(return_value="Storm Caster"))
+        editor.enemy_sprite_var = Mock(get=Mock(return_value="wizard"))
+        editor.enemy_health_var = Mock(get=Mock(return_value="18"))
+        editor.enemy_speed_var = Mock(get=Mock(return_value="0.25"))
+        editor.enemy_ranged_attack_var = Mock(get=Mock(return_value="lightning"))
+
+        self.assertTrue(editor.save_enemy_definition())
+
+        self.assertEqual(definition["name"], "Storm Caster")
+        self.assertEqual(definition["sprite"], "wizard")
+        self.assertEqual(definition["health"], 18)
+        self.assertEqual(definition["movement_speed"], 0.25)
+        self.assertEqual(definition["ranged_attack"], "lightning")
+        self.assertNotIn("dead_sprite", definition)
+        for instance in editor.current_area.objects:
+            self.assertEqual(instance.type, "wizard")
+            self.assertEqual(instance.properties["enemy_data"], definition)
+        showerror.assert_not_called()
+
+    def test_selecting_enemy_definition_loads_its_properties(self):
+        editor = EnemyEditorHarness()
+        editor.current_game.properties["enemies"] = {
+            "enemy_a": {
+                "id": "enemy_a",
+                "name": "First",
+                "sprite": "goblin",
+                "health": 10,
+                "movement_speed": 1.0,
+                "ranged_attack": "none",
+            },
+            "enemy_b": {
+                "id": "enemy_b",
+                "name": "Second",
+                "sprite": "wizard",
+                "health": 20,
+                "movement_speed": 0.25,
+                "ranged_attack": "flame",
+            },
+        }
+        editor.selected_enemy_id = "enemy_a"
+        editor.tile_canvas = Mock()
+        editor.update_tile_display = Mock()
+        editor.enemy_name_var = Mock(get=Mock(return_value="First"), set=Mock())
+        editor.enemy_sprite_var = Mock(get=Mock(return_value="goblin"), set=Mock())
+        editor.enemy_health_var = Mock(get=Mock(return_value="10"), set=Mock())
+        editor.enemy_speed_var = Mock(get=Mock(return_value="1"), set=Mock())
+        editor.enemy_ranged_attack_var = Mock(get=Mock(return_value="none"), set=Mock())
+
+        editor.select_enemy_definition(1)
+
+        self.assertEqual(editor.selected_enemy_id, "enemy_b")
+        self.assertNotIn("dead_sprite", editor.current_game.properties["enemies"]["enemy_b"])
+        editor.enemy_name_var.set.assert_called_with("Second")
+        editor.enemy_sprite_var.set.assert_called_with("wizard")
+        editor.enemy_health_var.set.assert_called_with("20")
+        editor.enemy_speed_var.set.assert_called_with("0.25")
+        editor.enemy_ranged_attack_var.set.assert_called_with("flame")
+        editor.update_tile_display.assert_called_once_with()
+
+    def test_enemy_palette_draws_icons_and_names_with_selected_marker(self):
+        editor = ToolboxDisplayHarness("enemy")
+        editor.tile_canvas = Mock()
+        editor.tile_canvas.bbox.return_value = (0, 0, 200, 80)
+        editor.get_enemy_definitions = EnemyEditor.get_enemy_definitions.__get__(
+            editor
+        )
+        editor.current_game = Game(properties={
+            "enemies": {
+                "enemy_a": {"name": "Orc", "sprite": "orc_npc"},
+                "enemy_b": {"name": "Dragon", "sprite": "dragon_npc"},
+            },
+        })
+        editor.selected_enemy_id = "enemy_b"
+        editor.tile_manager = Mock()
+        editor.tile_manager.get_npc_info.side_effect = lambda name: {
+            "image": f"image:{name}"
+        }
+
+        editor.update_tile_display()
+
+        create_image = editor.tile_canvas.create_image
+        self.assertEqual(create_image.call_count, 2)
+        self.assertEqual(create_image.call_args_list[0].kwargs["image"], "image:orc_npc")
+        self.assertEqual(create_image.call_args_list[1].kwargs["image"], "image:dragon_npc")
+        labels = [
+            call.kwargs.get("text")
+            for call in editor.tile_canvas.create_text.call_args_list
+        ]
+        self.assertEqual(labels, ["Orc", "Dragon"])
+        editor.tile_canvas.create_rectangle.assert_called_once()
+
+    def test_enemy_palette_click_selects_the_visible_scrolled_row(self):
+        editor = object.__new__(EditorMethods)
+        editor.selected_mode = "enemy"
+        editor.tile_canvas = Mock()
+        editor.tile_canvas.canvasy.return_value = 55
+        editor.get_enemy_definitions = Mock(return_value={
+            "enemy_a": {},
+            "enemy_b": {},
+        })
+        editor.select_enemy_definition = Mock()
+
+        editor.on_tile_canvas_click(Mock(x=60, y=15))
+
+        editor.select_enemy_definition.assert_called_once_with(1)
+        editor.tile_canvas.find_closest.assert_not_called()
+
+    def test_enemy_placement_uses_the_map_spacebar_action(self):
+        editor = object.__new__(EditorMethods)
+        editor.root = Mock()
+        editor.canvas = Mock()
+        editor.root.focus_get.return_value = editor.canvas
+        editor.selected_mode = "enemy"
+        editor.place_tile = Mock()
+
+        result = editor.on_key_press(Mock(keysym="space"))
+
+        self.assertEqual(result, "break")
+        editor.place_tile.assert_called_once_with()
+
+    @patch("enemy_editor.messagebox.showerror")
+    def test_enemy_definition_edit_updates_instances_in_every_saved_game_area(
+        self, showerror
+    ):
+        editor = EnemyEditorHarness()
+        editor.current_game.areas = ["first.json", "second.json"]
+        editor.current_game.properties["enemies"] = {
+            "enemy_shared": {
+                "id": "enemy_shared",
+                "name": "Orc",
+                "sprite": "goblin",
+                "health": 10,
+                "movement_speed": 1.0,
+                "ranged_attack": "none",
+            },
+        }
+        editor.selected_enemy_id = "enemy_shared"
+        editor.current_area_file = None
+        editor.enemy_name_var = Mock(get=Mock(return_value="Armored Orc"))
+        editor.enemy_sprite_var = Mock(get=Mock(return_value="wizard"))
+        editor.enemy_health_var = Mock(get=Mock(return_value="30"))
+        editor.enemy_speed_var = Mock(get=Mock(return_value="0"))
+        editor.enemy_ranged_attack_var = Mock(get=Mock(return_value="gun"))
+
+        with tempfile.TemporaryDirectory() as directory:
+            editor._project_path = lambda *parts: os.path.join(directory, *parts)
+            areas_directory = os.path.join(directory, "areas")
+            os.makedirs(areas_directory)
+            for area_name, x_positions in (
+                ("first.json", (1, 2)), ("second.json", (4,))
+            ):
+                area_path = os.path.join(areas_directory, area_name)
+                with open(area_path, "w") as area_file:
+                    json.dump({
+                        "objects": [
+                            {
+                                "type": "goblin",
+                                "x": x,
+                                "y": 2,
+                                "properties": {
+                                    "enemy_id": "enemy_shared",
+                                    "enemy_data": {"health": 10},
+                                    "walkable": False,
+                                },
+                            }
+                            for x in x_positions
+                        ],
+                    }, area_file)
+
+            self.assertTrue(editor.save_enemy_definition())
+
+            for area_name in ("first.json", "second.json"):
+                with open(os.path.join(areas_directory, area_name), "r") as area_file:
+                    objects = json.load(area_file)["objects"]
+                for obj in objects:
+                    self.assertEqual(obj["type"], "wizard")
+                    self.assertEqual(obj["properties"]["enemy_data"]["health"], 30)
+                    self.assertEqual(
+                        obj["properties"]["enemy_data"]["movement_speed"], 0.0
+                    )
+                    self.assertEqual(
+                        obj["properties"]["enemy_data"]["ranged_attack"], "gun"
+                    )
+        showerror.assert_not_called()
+
+    @patch("enemy_editor.messagebox.showwarning")
+    def test_enemy_speed_zero_is_valid_and_duplicate_tile_placement_is_blocked(
+        self, showwarning
+    ):
+        editor = EnemyEditorHarness()
+        editor.add_enemy_definition()
+        editor.enemy_name_var = Mock(get=Mock(return_value="Stationary Guard"))
+        editor.enemy_sprite_var = Mock(get=Mock(return_value="goblin"))
+        editor.enemy_health_var = Mock(get=Mock(return_value="5"))
+        editor.enemy_speed_var = Mock(get=Mock(return_value="0"))
+        editor.enemy_ranged_attack_var = Mock(get=Mock(return_value="none"))
+
+        self.assertTrue(editor.save_enemy_definition())
+        self.assertEqual(
+            editor.get_enemy_definitions()[editor.selected_enemy_id][
+                "movement_speed"
+            ],
+            0.0,
+        )
+        editor.cursor_x = editor.cursor_y = 1
+        self.assertTrue(editor.place_selected_enemy())
+        self.assertFalse(editor.place_selected_enemy())
+        self.assertEqual(len(editor.current_area.objects), 1)
+        showwarning.assert_called_once()
+
+    def test_enemy_definitions_and_portable_instances_round_trip(self):
+        manager = EnemyFileManagerHarness()
+        manager.current_game.properties["enemies"] = {
+            "enemy_1": {
+                "id": "enemy_1",
+                "name": "Stone Guard",
+                "sprite": "goblin",
+                "health": 14,
+                "movement_speed": 0.5,
+                "ranged_attack": "flame",
+            },
+        }
+        manager.current_area.objects = [
+            GameObject(type="goblin", x=3, y=4, properties={
+                "enemy_id": "enemy_1",
+                "enemy_data": {"health": 1},
+                "walkable": False,
+            })
+        ]
+
+        with tempfile.TemporaryDirectory() as directory:
+            game_path = os.path.join(directory, "game.json")
+            area_path = os.path.join(directory, "area.json")
+            with patch("file_manager.messagebox.showinfo"):
+                self.assertTrue(manager._save_game_to_file(game_path))
+                self.assertTrue(manager._save_area_to_file(area_path))
+            with open(game_path, "r") as saved_game:
+                game_data = json.load(saved_game)
+            with open(area_path, "r") as saved_area:
+                area_data = json.load(saved_area)
+
+            manager.current_game = Game(**game_data)
+            manager._load_area_from_file(area_path, show_message=False)
+
+        definition = manager.get_enemy_definitions()["enemy_1"]
+        instance = manager.current_area.objects[0]
+        self.assertEqual(definition["movement_speed"], 0.5)
+        self.assertNotIn("dead_sprite", definition)
+        self.assertEqual(area_data["objects"][0]["properties"]["enemy_data"], definition)
+        self.assertEqual(instance.properties["enemy_data"], definition)
+        self.assertEqual(instance.type, "goblin")
+
+    def test_npc_palette_click_selects_the_sprite_in_the_clicked_scrolled_row(self):
+        for mode in ("npc", "player"):
+            with self.subTest(mode=mode):
+                editor = object.__new__(EditorMethods)
+                editor.selected_mode = mode
+                editor.selected_tile = "previous-selection"
+                editor.tile_manager = AssetNames()
+                editor.tile_canvas = Mock()
+                editor.tile_canvas.canvasy.side_effect = lambda y: y + 40
+                editor.update_tile_display = Mock()
+                editor.draw_area = Mock()
+                player_settings = {"sprite": "previous-selection"}
+                editor.get_player_settings = Mock(return_value=player_settings)
+
+                editor.on_tile_canvas_click(Mock(x=55, y=15))
+
+                self.assertEqual(editor.selected_tile, "wizard")
+                editor.update_tile_display.assert_called_once_with()
+                if mode == "player":
+                    self.assertEqual(player_settings["sprite"], "wizard")
+                    editor.draw_area.assert_called_once_with()
+                else:
+                    editor.get_player_settings.assert_not_called()
+                    editor.draw_area.assert_not_called()
+
+                editor.on_tile_canvas_click(Mock(x=55, y=47))
+
+                self.assertEqual(editor.selected_tile, "wizard")
+                editor.update_tile_display.assert_called_once_with()
+                editor.tile_canvas.find_closest.assert_not_called()
+
+    def test_player_start_selection_saves_area_position_and_sprite(self):
+        editor = object.__new__(EditorMethods)
+        editor.current_game = Game()
+        editor.current_area_file = "/project/areas/main_map.json"
+        editor.selected_tile = "wizard_npc"
+        editor._is_project_area = Mock(return_value=True)
+        editor.is_tile_blocked = Mock(return_value=False)
+        editor.refresh_game_areas_list = Mock()
+        editor.refresh_player_setup = Mock()
+        editor.draw_area = Mock()
+        editor.update_properties_display = Mock()
+
+        self.assertTrue(editor.set_player_start(4, 6))
+
+        self.assertEqual(editor.current_game.areas, ["main_map.json"])
+        self.assertEqual(editor.current_game.properties["start_area"], "main_map.json")
+        self.assertEqual(editor.current_game.properties["start_x"], 4)
+        self.assertEqual(editor.current_game.properties["start_y"], 6)
+        self.assertEqual(
+            editor.current_game.properties["player"]["sprite"], "wizard_npc"
+        )
+        editor.refresh_game_areas_list.assert_called_once_with()
+        editor.draw_area.assert_called_once_with()
+
+    @patch("editor_methods.messagebox.showwarning")
+    def test_player_start_rejects_blocked_tile(self, showwarning):
+        editor = object.__new__(EditorMethods)
+        editor.current_game = Game()
+        editor.current_area_file = "/project/areas/main_map.json"
+        editor.selected_tile = "wizard_npc"
+        editor._is_project_area = Mock(return_value=True)
+        editor.is_tile_blocked = Mock(return_value=True)
+        editor.draw_area = Mock()
+
+        self.assertFalse(editor.set_player_start(4, 6))
+
+        self.assertEqual(editor.current_game.properties, {})
+        showwarning.assert_called_once()
+        editor.draw_area.assert_not_called()
+
+    @patch("editor_methods.messagebox.showerror")
+    def test_player_starting_stats_are_validated(self, showerror):
+        editor = object.__new__(EditorMethods)
+        editor.current_game = Game()
+        editor.player_stat_vars = {
+            "starting_health": Mock(get=Mock(return_value="21")),
+            "max_health": Mock(get=Mock(return_value="20")),
+            "starting_energy": Mock(get=Mock(return_value="0")),
+            "max_energy": Mock(get=Mock(return_value="0")),
+            "strength": Mock(get=Mock(return_value="1")),
+            "intelligence": Mock(get=Mock(return_value="1")),
+            "gold": Mock(get=Mock(return_value="0")),
+        }
+
+        self.assertFalse(editor.save_player_setup())
+
+        showerror.assert_called_once()
+        self.assertEqual(
+            editor.current_game.properties["player"]["stats"]["starting_health"], 20
+        )
+
+    def test_player_settings_round_trip_in_game_save(self):
+        manager = FileManagerHarness()
+        manager.current_game.properties = {
+            "start_area": "main_map.json",
+            "start_x": 2,
+            "start_y": 3,
+            "player": {
+                "sprite": "wizard_npc",
+                "stats": {
+                    "starting_health": 12,
+                    "max_health": 20,
+                    "starting_energy": 4,
+                    "max_energy": 8,
+                    "strength": 2,
+                    "intelligence": 3,
+                    "gold": 10,
+                },
+                "starting_inventory": [],
+            },
+        }
+
+        with tempfile.TemporaryDirectory() as directory:
+            game_path = os.path.join(directory, "game.json")
+            with patch("file_manager.messagebox.showinfo"):
+                self.assertTrue(manager._save_game_to_file(game_path))
+            with open(game_path, "r") as saved_game:
+                properties = json.load(saved_game)["properties"]
+
+        self.assertEqual(properties["start_area"], "main_map.json")
+        self.assertEqual((properties["start_x"], properties["start_y"]), (2, 3))
+        self.assertEqual(properties["player"]["sprite"], "wizard_npc")
+        self.assertEqual(properties["player"]["stats"]["gold"], 10)
+
+    def test_player_inventory_editor_saves_eight_ordered_slots(self):
+        editor = object.__new__(EditorMethods)
+        editor.current_game = Game(object_definitions={
+            "key_object": {"gettable": True},
+            "chest_object": {"gettable": True},
+        })
+        editor.tile_manager = Mock()
+        editor.tile_manager.get_object_names.return_value = [
+            "key_object", "chest_object",
+        ]
+        editor.player_stat_vars = {
+            "starting_health": Mock(get=Mock(return_value="20")),
+            "max_health": Mock(get=Mock(return_value="20")),
+            "starting_energy": Mock(get=Mock(return_value="0")),
+            "max_energy": Mock(get=Mock(return_value="0")),
+            "strength": Mock(get=Mock(return_value="1")),
+            "intelligence": Mock(get=Mock(return_value="1")),
+            "gold": Mock(get=Mock(return_value="0")),
+        }
+        selected_items = [
+            "key_object", "", "chest_object", "key_object", "", "", "", "",
+        ]
+        editor.player_inventory_vars = [
+            Mock(get=Mock(return_value=item)) for item in selected_items
+        ]
+
+        self.assertTrue(editor.save_player_setup())
+
+        self.assertEqual(
+            editor.current_game.properties["player"]["starting_inventory"],
+            selected_items,
+        )
+
+    def test_player_inventory_choices_only_include_gettable_objects(self):
+        editor = object.__new__(EditorMethods)
+        editor.current_game = Game(object_definitions={
+            "key_object": {"gettable": True},
+            "table_object": {"gettable": False},
+        })
+        editor.tile_manager = Mock()
+        editor.tile_manager.get_object_names.return_value = [
+            "key_object", "table_object",
+        ]
+
+        self.assertEqual(editor._available_inventory_items(), ["key_object"])
+
+    @patch("editor_methods.messagebox.showerror")
+    def test_player_inventory_editor_rejects_more_than_eight_slots(self, showerror):
+        editor = object.__new__(EditorMethods)
+        editor.current_game = Game()
+        editor.player_stat_vars = {
+            "starting_health": Mock(get=Mock(return_value="20")),
+            "max_health": Mock(get=Mock(return_value="20")),
+            "starting_energy": Mock(get=Mock(return_value="0")),
+            "max_energy": Mock(get=Mock(return_value="0")),
+            "strength": Mock(get=Mock(return_value="1")),
+            "intelligence": Mock(get=Mock(return_value="1")),
+            "gold": Mock(get=Mock(return_value="0")),
+        }
+        editor.player_inventory_vars = [
+            Mock(get=Mock(return_value="")) for _ in range(9)
+        ]
+
+        self.assertFalse(editor.save_player_setup())
+        showerror.assert_called_once()
 
     @patch("file_manager.messagebox.showerror")
     def test_area_loader_rejects_dimensions_over_the_limit(self, showerror):

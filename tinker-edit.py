@@ -11,11 +11,12 @@ from dataclasses import asdict
 
 from data_classes import Tile, GameObject, Trigger, Area, Game
 from tile_manager import TileManager
+from enemy_editor import EnemyEditor
 from editor_methods import EditorMethods
 from file_manager import FileManager
 from dialog_tools import DialogTools
 
-class TinkerEditor(EditorMethods, FileManager, DialogTools):
+class TinkerEditor(EnemyEditor, EditorMethods, FileManager, DialogTools):
     def __init__(self, root):
         self.root = root
         self.root.title("Tinker RPG Editor")
@@ -24,6 +25,7 @@ class TinkerEditor(EditorMethods, FileManager, DialogTools):
         
         self.tile_manager = TileManager()
         self.current_game = Game()
+        self.ensure_example_enemy_definitions()
         self.current_area = Area()
         self.current_area_file = None
         self.current_game_file = None
@@ -31,6 +33,7 @@ class TinkerEditor(EditorMethods, FileManager, DialogTools):
         self.cursor_y = 0
         self.selected_tile = list(self.tile_manager.get_tile_names())[0] if self.tile_manager.get_tile_names() else "empty"
         self.selected_mode = "tile"
+        self.selected_enemy_id = None
         self.tile_size = 32
         
         # Initialize trigger system
@@ -81,6 +84,9 @@ class TinkerEditor(EditorMethods, FileManager, DialogTools):
         menubar.add_cascade(label="Game", menu=game_menu)
         game_menu.add_command(label="New Game", command=self.new_game)
         game_menu.add_command(label="Open Game", command=self.open_game)
+        game_menu.add_cascade(
+            label="Open Recent", menu=self.create_open_recent_menu(game_menu)
+        )
         game_menu.add_command(label="Save Game", command=self.save_game)
         game_menu.add_command(label="Save Game As", command=self.save_game_as)
         game_menu.add_separator()
@@ -139,6 +145,10 @@ class TinkerEditor(EditorMethods, FileManager, DialogTools):
                        value="object", command=self.on_mode_change).pack(anchor=tk.W)
         ttk.Radiobutton(mode_frame, text="NPCs", variable=self.mode_var, 
                        value="npc", command=self.on_mode_change).pack(anchor=tk.W)
+        ttk.Radiobutton(mode_frame, text="Enemies", variable=self.mode_var,
+                       value="enemy", command=self.on_mode_change).pack(anchor=tk.W)
+        ttk.Radiobutton(mode_frame, text="Player", variable=self.mode_var,
+                       value="player", command=self.on_mode_change).pack(anchor=tk.W)
         ttk.Radiobutton(mode_frame, text="Triggers", variable=self.mode_var, 
                        value="trigger", command=self.on_mode_change).pack(anchor=tk.W)
         ttk.Radiobutton(mode_frame, text="Messages", variable=self.mode_var,
@@ -155,6 +165,7 @@ class TinkerEditor(EditorMethods, FileManager, DialogTools):
         # Tile canvas
         canvas_frame = ttk.Frame(self.tile_frame)
         canvas_frame.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
+        self.tile_canvas_frame = canvas_frame
         
         self.tile_canvas = tk.Canvas(canvas_frame, bg="white", width=200)
         tile_scrollbar = ttk.Scrollbar(canvas_frame, orient=tk.VERTICAL, command=self.tile_canvas.yview)
@@ -165,6 +176,8 @@ class TinkerEditor(EditorMethods, FileManager, DialogTools):
         
         self.tile_canvas.bind('<Button-1>', self.on_tile_canvas_click)
         self.tile_canvas.configure(takefocus=True)
+        self.setup_enemy_palette(self.tile_frame)
+        self.setup_player_inventory(self.tile_frame)
 
     def setup_area_panel(self, parent):
         self.area_frame = ttk.LabelFrame(parent, text="Area Editor")
@@ -247,6 +260,50 @@ class TinkerEditor(EditorMethods, FileManager, DialogTools):
         self.game_areas_listbox.bind(
             "<<ListboxSelect>>", self.load_selected_game_area
         )
+
+        self.setup_enemy_properties(props_frame)
+
+        self.player_setup_frame = ttk.LabelFrame(props_frame, text="Player Setup")
+        player = self.get_player_settings()
+        self.player_start_area_label = ttk.Label(
+            self.player_setup_frame,
+            text=self._player_start_area_text(),
+            wraplength=250,
+        )
+        self.player_start_area_label.pack(anchor=tk.W, padx=5, pady=(5, 2))
+        self.player_start_position_label = ttk.Label(
+            self.player_setup_frame,
+            text=self._player_start_position_text(),
+        )
+        self.player_start_position_label.pack(anchor=tk.W, padx=5, pady=2)
+        ttk.Label(
+            self.player_setup_frame,
+            text="Choose a sprite in the left panel, then click the map to set the start.",
+            wraplength=250,
+        ).pack(anchor=tk.W, padx=5, pady=2)
+        self.player_stat_vars = {}
+        stats = player["stats"]
+        for key, label in (
+            ("starting_health", "Starting health"),
+            ("max_health", "Maximum health"),
+            ("starting_energy", "Starting energy"),
+            ("max_energy", "Maximum energy"),
+            ("strength", "Strength"),
+            ("intelligence", "Intelligence"),
+            ("gold", "Starting $"),
+        ):
+            row = ttk.Frame(self.player_setup_frame)
+            row.pack(fill=tk.X, padx=5, pady=2)
+            ttk.Label(row, text=f"{label}:").pack(side=tk.LEFT)
+            value = tk.StringVar(value=str(stats[key]))
+            ttk.Entry(row, textvariable=value, width=8).pack(side=tk.RIGHT)
+            self.player_stat_vars[key] = value
+        ttk.Button(
+            self.player_setup_frame,
+            text="Apply Player Settings",
+            command=self.save_player_setup,
+        ).pack(anchor=tk.E, padx=5, pady=5)
+        self.player_setup_frame.pack_forget()
         
         # Walkable controls
         walkable_frame = ttk.LabelFrame(props_frame, text="Walkable Settings")
@@ -359,7 +416,11 @@ class TinkerEditor(EditorMethods, FileManager, DialogTools):
         ttk.Button(
             trigger_actions, text="Delete", command=lambda: self.delete_selected_trigger(confirm=True)
         ).pack(side=tk.LEFT, padx=3)
-        ttk.Button(trigger_actions, text="Save", command=self.save_selected_trigger).pack(side=tk.RIGHT)
+        ttk.Button(
+            trigger_actions,
+            text="Save",
+            command=self.save_trigger_and_area,
+        ).pack(side=tk.RIGHT)
         self.trigger_editor_frame.pack_forget()
         
         # Properties text
