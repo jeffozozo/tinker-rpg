@@ -119,6 +119,9 @@ class TinkerEditor(EditorMethods, FileManager, DialogTools):
         self.setup_tile_panel(main_frame)
         self.setup_area_panel(main_frame)
         self.setup_properties_panel(main_frame)
+        self.refresh_game_areas_list()
+        self.refresh_trigger_editor()
+        self.update_properties_display()
 
     def setup_tile_panel(self, parent):
         self.tile_frame = ttk.LabelFrame(parent, text="Toolbox", width=250)
@@ -142,6 +145,12 @@ class TinkerEditor(EditorMethods, FileManager, DialogTools):
                        value="messages", command=self.on_mode_change).pack(anchor=tk.W)
         ttk.Radiobutton(mode_frame, text="Editor Help", variable=self.mode_var,
                        value="editor_help", command=self.on_mode_change).pack(anchor=tk.W)
+
+        ttk.Button(
+            self.tile_frame,
+            text="Fill Empty Tiles",
+            command=self.fill_empty_tiles,
+        ).pack(fill=tk.X, padx=5, pady=(0, 5))
         
         # Tile canvas
         canvas_frame = ttk.Frame(self.tile_frame)
@@ -167,8 +176,12 @@ class TinkerEditor(EditorMethods, FileManager, DialogTools):
         
         # Game name
         ttk.Label(info_frame, text="Game:").pack(side=tk.LEFT)
-        self.game_name_label = ttk.Label(info_frame, text=self.current_game.name, foreground="blue")
-        self.game_name_label.pack(side=tk.LEFT, padx=(5, 15))
+        self.game_name_var = tk.StringVar(value=self.current_game.name)
+        self.game_name_var.trace_add("write", self.on_game_name_change)
+        self.game_name_entry = ttk.Entry(
+            info_frame, textvariable=self.game_name_var, width=20
+        )
+        self.game_name_entry.pack(side=tk.LEFT, padx=(5, 15))
         
         # Area name
         ttk.Label(info_frame, text="Area:").pack(side=tk.LEFT)
@@ -177,8 +190,14 @@ class TinkerEditor(EditorMethods, FileManager, DialogTools):
         name_entry.pack(side=tk.LEFT, padx=(5, 0))
         name_entry.bind('<KeyRelease>', self.on_area_name_change)
         
-        self.cursor_label = ttk.Label(info_frame, text=f"Cursor: ({self.cursor_x}, {self.cursor_y})")
-        self.cursor_label.pack(side=tk.RIGHT)
+        coordinate_frame = ttk.Frame(info_frame)
+        coordinate_frame.pack(side=tk.RIGHT)
+        self.cursor_label = ttk.Label(
+            coordinate_frame, text=f"Cursor: ({self.cursor_x}, {self.cursor_y})"
+        )
+        self.cursor_label.pack(anchor=tk.E)
+        self.mouse_position_label = ttk.Label(coordinate_frame, text="Mouse: --")
+        self.mouse_position_label.pack(anchor=tk.E)
         
         self.selected_tile_label = ttk.Label(info_frame, text=f"Selected: {self.selected_tile}")
         self.selected_tile_label.pack(side=tk.RIGHT, padx=(0, 10))
@@ -200,6 +219,9 @@ class TinkerEditor(EditorMethods, FileManager, DialogTools):
         
         self.canvas.configure(takefocus=True)
         self.canvas.bind('<Button-1>', self.on_canvas_click)
+        self.canvas.bind('<Button-3>', self.on_canvas_right_click)
+        self.canvas.bind('<Motion>', self.on_canvas_motion)
+        self.canvas.bind('<Leave>', self.on_canvas_leave)
         
         self.draw_area()
         self.update_tile_display()
@@ -208,6 +230,23 @@ class TinkerEditor(EditorMethods, FileManager, DialogTools):
         props_frame = ttk.LabelFrame(parent, text="Properties", width=300)
         props_frame.pack(side=tk.RIGHT, fill=tk.Y)
         props_frame.pack_propagate(False)
+
+        areas_frame = ttk.LabelFrame(props_frame, text="Areas in Game")
+        areas_frame.pack(fill=tk.X, padx=5, pady=5)
+        areas_list_frame = ttk.Frame(areas_frame)
+        areas_list_frame.pack(fill=tk.X, padx=5, pady=5)
+        self.game_areas_listbox = tk.Listbox(
+            areas_list_frame, height=4, exportselection=False
+        )
+        areas_scrollbar = ttk.Scrollbar(
+            areas_list_frame, orient=tk.VERTICAL, command=self.game_areas_listbox.yview
+        )
+        self.game_areas_listbox.configure(yscrollcommand=areas_scrollbar.set)
+        self.game_areas_listbox.pack(side=tk.LEFT, fill=tk.X, expand=True)
+        areas_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        self.game_areas_listbox.bind(
+            "<<ListboxSelect>>", self.load_selected_game_area
+        )
         
         # Walkable controls
         walkable_frame = ttk.LabelFrame(props_frame, text="Walkable Settings")
@@ -226,9 +265,106 @@ class TinkerEditor(EditorMethods, FileManager, DialogTools):
         ttk.Radiobutton(walkable_frame, text="Force blocked", 
                        variable=self.walkable_override_var, value="not_walkable",
                        command=self.on_walkable_change).pack(anchor=tk.W, padx=5)
+
+        self.tile_walkable_frame = walkable_frame
+
+        self.object_definition_frame = ttk.LabelFrame(
+            props_frame, text="Object Definition"
+        )
+        self.object_definition_frame.pack(fill=tk.X, padx=5, pady=5)
+
+        self.object_gettable_var = tk.BooleanVar(value=False)
+        ttk.Checkbutton(
+            self.object_definition_frame,
+            text="Gettable (can be added to inventory)",
+            variable=self.object_gettable_var,
+            command=self.on_object_gettable_change,
+        ).pack(anchor=tk.W, padx=5, pady=3)
+
+        self.object_walkable_var = tk.BooleanVar(value=True)
+        ttk.Checkbutton(
+            self.object_definition_frame,
+            text="Walkable (does not block movement)",
+            variable=self.object_walkable_var,
+        ).pack(anchor=tk.W, padx=5, pady=3)
+
+        self.object_effects_frame = ttk.Frame(self.object_definition_frame)
+        effect_mode_frame = ttk.Frame(self.object_effects_frame)
+        effect_mode_frame.pack(fill=tk.X, padx=5, pady=3)
+        ttk.Label(effect_mode_frame, text="Effect mode:").pack(side=tk.LEFT)
+        self.object_effect_mode_var = tk.StringVar(value="passive")
+        ttk.Combobox(
+            effect_mode_frame,
+            textvariable=self.object_effect_mode_var,
+            values=("passive", "consumable"),
+            state="readonly",
+            width=13,
+        ).pack(side=tk.LEFT, padx=5)
+
+        ttk.Label(
+            self.object_effects_frame,
+            text="Signed stat changes (e.g. 5 or -2):",
+        ).pack(anchor=tk.W, padx=5, pady=(5, 2))
+        self.object_effect_vars = {}
+        for stat in ("health", "energy", "armor", "attack"):
+            row = ttk.Frame(self.object_effects_frame)
+            row.pack(fill=tk.X, padx=5, pady=2)
+            ttk.Label(row, text=f"{stat.title()}:").pack(side=tk.LEFT)
+            value_var = tk.StringVar(value="0")
+            ttk.Entry(row, textvariable=value_var, width=10).pack(side=tk.RIGHT)
+            self.object_effect_vars[stat] = value_var
+
+        ttk.Label(
+            self.object_effects_frame,
+            text="Passive health changes maximum health. Consumable health restores current health.",
+            wraplength=260,
+        ).pack(anchor=tk.W, padx=5, pady=5)
+        self.object_effects_frame.pack(fill=tk.X, padx=5, pady=3)
+
+        self.object_save_button = ttk.Button(
+            self.object_definition_frame,
+            text="Save Changes",
+            command=self.save_object_definition_changes,
+        )
+        self.object_save_button.pack(anchor=tk.E, padx=5, pady=5)
+        self.object_definition_frame.pack_forget()
+
+        self.trigger_editor_frame = ttk.LabelFrame(props_frame, text="Triggers at Cursor")
+        trigger_list_frame = ttk.Frame(self.trigger_editor_frame)
+        trigger_list_frame.pack(fill=tk.X, padx=5, pady=5)
+        self.trigger_listbox = tk.Listbox(trigger_list_frame, height=4, exportselection=False)
+        trigger_list_scrollbar = ttk.Scrollbar(
+            trigger_list_frame, orient=tk.VERTICAL, command=self.trigger_listbox.yview
+        )
+        self.trigger_listbox.configure(yscrollcommand=trigger_list_scrollbar.set)
+        self.trigger_listbox.pack(side=tk.LEFT, fill=tk.X, expand=True)
+        trigger_list_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        self.trigger_listbox.bind("<<ListboxSelect>>", self.on_trigger_list_select)
+
+        navigation_frame = ttk.Frame(self.trigger_editor_frame)
+        navigation_frame.pack(fill=tk.X, padx=5)
+        ttk.Button(
+            navigation_frame, text="Previous", command=lambda: self.cycle_selected_trigger(-1)
+        ).pack(side=tk.LEFT, expand=True, fill=tk.X)
+        ttk.Button(
+            navigation_frame, text="Next", command=lambda: self.cycle_selected_trigger(1)
+        ).pack(side=tk.LEFT, expand=True, fill=tk.X)
+
+        self.trigger_form_frame = ttk.Frame(self.trigger_editor_frame)
+        self.trigger_form_frame.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
+
+        trigger_actions = ttk.Frame(self.trigger_editor_frame)
+        trigger_actions.pack(fill=tk.X, padx=5, pady=(0, 5))
+        ttk.Button(trigger_actions, text="Add", command=self.add_trigger_at_cursor).pack(side=tk.LEFT)
+        ttk.Button(
+            trigger_actions, text="Delete", command=lambda: self.delete_selected_trigger(confirm=True)
+        ).pack(side=tk.LEFT, padx=3)
+        ttk.Button(trigger_actions, text="Save", command=self.save_selected_trigger).pack(side=tk.RIGHT)
+        self.trigger_editor_frame.pack_forget()
         
         # Properties text
-        ttk.Label(props_frame, text="Details:").pack(padx=5, pady=(10,0))
+        self.details_label = ttk.Label(props_frame, text="Details:")
+        self.details_label.pack(padx=5, pady=(10,0))
         self.properties_text = tk.Text(props_frame, height=15, width=35, state='disabled')
         self.properties_text.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
 

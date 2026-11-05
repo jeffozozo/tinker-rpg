@@ -161,6 +161,10 @@ class TileManager:
             return "unknown"
     
     def get_default_walkable(self, tile_name):
+        if tile_name == "mountains" or tile_name.startswith("lake_"):
+            return False
+        if tile_name in {"grass", "forest", "swamp", "town", "castle"}:
+            return True
         category = self._get_tile_category(tile_name)
         return category in ["floor", "door", "stairs"]
     

@@ -1,0 +1,1612 @@
+{
+  "name": "inn",
+  "width": 20,
+  "height": 15,
+  "tiles": [
+    [
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "up_stairs",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "gray_brick_door",
+        "walkable_override": true,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "wood_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ]
+  ],
+  "objects": [
+    {
+      "type": "table_object",
+      "x": 2,
+      "y": 6,
+      "properties": {}
+    },
+    {
+      "type": "table_object",
+      "x": 4,
+      "y": 8,
+      "properties": {}
+    },
+    {
+      "type": "chair_object",
+      "x": 5,
+      "y": 4,
+      "properties": {}
+    },
+    {
+      "type": "chair_object",
+      "x": 2,
+      "y": 5,
+      "properties": {}
+    },
+    {
+      "type": "table_object",
+      "x": 4,
+      "y": 5,
+      "properties": {}
+    },
+    {
+      "type": "table_object",
+      "x": 5,
+      "y": 5,
+      "properties": {}
+    },
+    {
+      "type": "table_object",
+      "x": 6,
+      "y": 5,
+      "properties": {}
+    },
+    {
+      "type": "candles_object",
+      "x": 8,
+      "y": 9,
+      "properties": {}
+    },
+    {
+      "type": "candles_object",
+      "x": 8,
+      "y": 8,
+      "properties": {}
+    },
+    {
+      "type": "candles_object",
+      "x": 8,
+      "y": 2,
+      "properties": {}
+    },
+    {
+      "type": "candles_object",
+      "x": 8,
+      "y": 1,
+      "properties": {}
+    },
+    {
+      "type": "chair_object",
+      "x": 4,
+      "y": 7,
+      "properties": {}
+    }
+  ],
+  "triggers": []
+}

@@ -1,0 +1,529 @@
+{
+  "name": "main map",
+  "width": 10,
+  "height": 10,
+  "tiles": [
+    [
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "castle",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "town",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "lake_bottom",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "lake_right",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "lake_center",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "lake_left",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "lake_top",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ]
+  ],
+  "objects": [],
+  "triggers": []
+}

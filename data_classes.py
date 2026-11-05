@@ -116,6 +116,7 @@ class Game:
     used_objects: List[str] = None  # Objects used in this game
     used_triggers: List[str] = None  # Triggers used in this game
     properties: Dict[str, Any] = None
+    object_definitions: Dict[str, Dict[str, Any]] = None
     intro_message: str = ""
     instructions_message: str = ""
     game_end_message: str = ""
@@ -133,3 +134,25 @@ class Game:
             self.used_triggers = []
         if self.properties is None:
             self.properties = {}
+        if self.object_definitions is None:
+            self.object_definitions = {}
+
+    def get_object_definition(self, object_type: str) -> Dict[str, Any]:
+        definition = {
+            "gettable": False,
+            "walkable": True,
+            "effect_mode": "passive",
+            "effects": {
+                "health": 0,
+                "energy": 0,
+                "armor": 0,
+                "attack": 0,
+            },
+        }
+        stored_definition = self.object_definitions.get(object_type, {})
+        definition.update(stored_definition)
+        definition["effects"] = {
+            **{"health": 0, "energy": 0, "armor": 0, "attack": 0},
+            **stored_definition.get("effects", {}),
+        }
+        return definition

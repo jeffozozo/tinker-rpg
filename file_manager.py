@@ -17,10 +17,47 @@ class FileManager:
     def _is_project_area(self, filename):
         area_dir = os.path.realpath(self._project_path("areas"))
         return os.path.dirname(os.path.realpath(filename)) == area_dir
+
+    def _confirm_area_overwrite(self, filename):
+        if not os.path.exists(filename):
+            return True
+        area_name = os.path.splitext(os.path.basename(filename))[0]
+        return messagebox.askyesno(
+            "Area Already Exists",
+            f"An area named '{area_name}' already exists. Do you want to overwrite it?",
+        )
+
+    @staticmethod
+    def _normalize_save_filename(filename):
+        directory, basename = os.path.split(filename)
+        return os.path.join(directory, basename.replace(" ", "_"))
+
+    def refresh_game_areas_list(self):
+        if not hasattr(self, "game_areas_listbox"):
+            return
+        self.game_areas_listbox.delete(0, tk.END)
+        if self.current_game.areas:
+            for area_filename in self.current_game.areas:
+                area_name = os.path.splitext(os.path.basename(area_filename))[0]
+                self.game_areas_listbox.insert(tk.END, area_name)
+        else:
+            self.game_areas_listbox.insert(tk.END, "(No areas in this game)")
+
+    def load_selected_game_area(self, _event=None):
+        if not hasattr(self, "game_areas_listbox"):
+            return
+        selection = self.game_areas_listbox.curselection()
+        if not selection or selection[0] >= len(self.current_game.areas):
+            return
+        area_filename = self.current_game.areas[selection[0]]
+        area_path = self._project_path("areas", area_filename)
+        self._load_area_from_file(area_path, show_message=False)
     
     # Game management methods
     def new_game(self):
         if messagebox.askyesno("New Game", "Create new game? Unsaved changes will be lost."):
+            if hasattr(self, "save_selected_trigger") and not self.save_selected_trigger():
+                return
             from data_classes import Game, Area
             self.current_game = Game()
             self.current_area = Area()
@@ -28,8 +65,11 @@ class FileManager:
             self.current_game_file = None
             self.cursor_x = self.cursor_y = 0
             self.area_name_var.set(self.current_area.name)
-            self.game_name_label.config(text=self.current_game.name)
+            self.refresh_game_areas_list()
+            self.game_name_var.set(self.current_game.name)
             self.draw_area()
+            if hasattr(self, "refresh_trigger_editor"):
+                self.refresh_trigger_editor()
             self.update_properties_display()
     
     def save_game(self):
@@ -42,9 +82,11 @@ class FileManager:
         filename = filedialog.asksaveasfilename(
             defaultextension=".json",
             filetypes=[("Game files", "*.json"), ("All files", "*.*")],
+            initialfile=f"{self.current_game.name.replace(' ', '_')}.json",
             title="Save Game As"
         )
         if filename:
+            filename = self._normalize_save_filename(filename)
             if self._save_game_to_file(filename):
                 self.current_game_file = filename
 
@@ -72,7 +114,8 @@ class FileManager:
                 from data_classes import Game
                 self.current_game = Game(**game_dict)
                 self.current_game_file = filename
-                self.game_name_label.config(text=self.current_game.name)
+                self.game_name_var.set(self.current_game.name)
+                self.refresh_game_areas_list()
                 
                 loaded_areas = []
                 
@@ -81,8 +124,10 @@ class FileManager:
                     first_area_file = self._project_path("areas", self.current_game.areas[0])
                     if os.path.exists(first_area_file):
                         self._load_area_from_file(first_area_file, show_message=False)
-                        loaded_areas = [os.path.splitext(area)[0] for area in self.current_game.areas 
-                                      if os.path.exists(self._project_path("areas", area))]
+                        loaded_areas = [
+                            os.path.splitext(area)[0] for area in self.current_game.areas
+                            if os.path.exists(self._project_path("areas", area))
+                        ]
                 
                 # Show consolidated load message
                 self.show_load_message(
@@ -112,11 +157,17 @@ class FileManager:
                         defaultextension=".json",
                         filetypes=[("Area files", "*.json"), ("All files", "*.*")],
                         initialdir=self._project_path("areas"),
+                        initialfile=f"{self.current_area.name.replace(' ', '_')}.json",
                         title="Save Area As"
                     )
                     if area_filename:
+                        area_filename = self._normalize_save_filename(area_filename)
                         if not self._is_project_area(area_filename):
                             errors.append("Area must be saved inside the project's areas/ folder")
+                        elif not self._confirm_area_overwrite(area_filename):
+                            errors.append(
+                                f"Area overwrite cancelled: {os.path.basename(area_filename)}"
+                            )
                         elif self._save_area_to_file(area_filename):
                             self.current_area_file = area_filename
                             saved_items.append(f"Area: {os.path.basename(area_filename)}")
@@ -124,6 +175,7 @@ class FileManager:
                             area_basename = os.path.basename(area_filename)
                             if area_basename not in self.current_game.areas:
                                 self.current_game.areas.append(area_basename)
+                                self.refresh_game_areas_list()
                         else:
                             errors.append(f"Failed to save area: {os.path.basename(area_filename)}")
                     else:
@@ -151,9 +203,11 @@ class FileManager:
                     game_filename = filedialog.asksaveasfilename(
                         defaultextension=".json",
                         filetypes=[("Game files", "*.json"), ("All files", "*.*")],
+                        initialfile=f"{self.current_game.name.replace(' ', '_')}.json",
                         title="Save Game As"
                     )
                     if game_filename:
+                        game_filename = self._normalize_save_filename(game_filename)
                         if self._save_game_to_file(game_filename):
                             self.current_game_file = game_filename
                             saved_items.append(f"Game: {os.path.basename(game_filename)}")
@@ -177,12 +231,16 @@ class FileManager:
     # Area management methods
     def new_area(self):
         if messagebox.askyesno("New Area", "Create new area? Unsaved changes will be lost."):
+            if hasattr(self, "save_selected_trigger") and not self.save_selected_trigger():
+                return
             from data_classes import Area
             self.current_area = Area()
             self.current_area_file = None
             self.cursor_x = self.cursor_y = 0
             self.area_name_var.set(self.current_area.name)
             self.draw_area()
+            if hasattr(self, "refresh_trigger_editor"):
+                self.refresh_trigger_editor()
             self.update_properties_display()
     
     def save_area(self):
@@ -196,16 +254,23 @@ class FileManager:
             defaultextension=".json",
             filetypes=[("Area files", "*.json"), ("All files", "*.*")],
             initialdir=self._project_path("areas"),
+            initialfile=f"{self.current_area.name.replace(' ', '_')}.json",
             title="Save Area As"
         )
         if filename:
+            filename = self._normalize_save_filename(filename)
             if not self._is_project_area(filename):
                 messagebox.showerror("Save Area", "Area files must be saved inside the project's areas/ folder.")
+            elif not self._confirm_area_overwrite(filename):
+                return
             elif self._save_area_to_file(filename):
                 self.current_area_file = filename
 
     def _save_area_to_file(self, filename):
         try:
+            if (hasattr(self, "save_selected_trigger") and
+                    not self.save_selected_trigger()):
+                return False
             with open(filename, 'w') as f:
                 json.dump(asdict(self.current_area), f, indent=2)
             messagebox.showinfo("Save Area", f"Area saved to {filename}")
@@ -225,6 +290,9 @@ class FileManager:
     
     def _load_area_from_file(self, filename, show_message=True):
         try:
+            if (hasattr(self, "save_selected_trigger") and
+                    not self.save_selected_trigger()):
+                return False
             with open(filename, 'r') as f:
                 area_dict = json.load(f)
             
@@ -251,6 +319,8 @@ class FileManager:
             self.cursor_x = self.cursor_y = 0
             self.area_name_var.set(self.current_area.name)
             self.draw_area()
+            if hasattr(self, "refresh_trigger_editor"):
+                self.refresh_trigger_editor()
             self.update_properties_display()
             
             if show_message:
@@ -265,12 +335,13 @@ class FileManager:
             messagebox.showwarning("Add Area", "Please save the area first before adding it to the game.")
             return
         
-        area_filename = os.path.basename(self.current_area_file)
         if not self._is_project_area(self.current_area_file):
             messagebox.showwarning("Add Area", "Game areas must be saved inside the project's areas/ folder.")
             return
+        area_filename = os.path.basename(self.current_area_file)
         if area_filename not in self.current_game.areas:
             self.current_game.areas.append(area_filename)
+            self.refresh_game_areas_list()
             messagebox.showinfo("Add Area", f"Area '{area_filename}' added to game '{self.current_game.name}'")
         else:
             messagebox.showinfo("Add Area", f"Area '{area_filename}' is already in the game.")

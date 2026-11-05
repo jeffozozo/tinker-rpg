@@ -1,0 +1,13 @@
+{
+  "name": "Untitled Game",
+  "areas": [],
+  "used_tiles": [],
+  "used_npcs": [],
+  "used_objects": [],
+  "used_triggers": [],
+  "properties": {},
+  "object_definitions": {},
+  "intro_message": "",
+  "instructions_message": "",
+  "game_end_message": ""
+}

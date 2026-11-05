@@ -42,7 +42,7 @@ class DialogTools:
         
         def save_properties():
             self.current_game.name = game_name_var.get()
-            self.game_name_label.config(text=self.current_game.name)
+            self.game_name_var.set(self.current_game.name)
             dialog.destroy()
         
         ttk.Button(button_frame, text="Save", command=save_properties).pack(side=tk.RIGHT, padx=(5,0))
@@ -91,6 +91,8 @@ class DialogTools:
                 f"Width and height must each be between 1 and {MAX_AREA_DIMENSION}."
             )
             return False
+        if hasattr(self, "save_selected_trigger") and not self.save_selected_trigger():
+            return False
 
         from data_classes import Tile
         old_w, old_h = self.current_area.width, self.current_area.height
@@ -112,11 +114,15 @@ class DialogTools:
         self.cursor_y = min(self.cursor_y, new_height - 1)
         
         self.draw_area()
+        if hasattr(self, "refresh_trigger_editor"):
+            self.refresh_trigger_editor()
         self.update_properties_display()
         messagebox.showinfo("Resize", f"Canvas resized to {new_width}x{new_height}")
         return True
     
     def crop_canvas_to_room(self):
+        if hasattr(self, "save_selected_trigger") and not self.save_selected_trigger():
+            return
         from data_classes import Tile
         min_x = min_y = float('inf')
         max_x = max_y = float('-inf')
@@ -164,5 +170,7 @@ class DialogTools:
         self.cursor_y = max(0, self.cursor_y - int(min_y))
         
         self.draw_area()
+        if hasattr(self, "refresh_trigger_editor"):
+            self.refresh_trigger_editor()
         self.update_properties_display()
         messagebox.showinfo("Crop", f"Canvas cropped to {new_width}x{new_height}")
