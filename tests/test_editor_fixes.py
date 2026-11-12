@@ -43,6 +43,88 @@ class FileManagerHarness(FileManager):
         self.current_game_file = None
 
 
+class GameLifecycleTests(unittest.TestCase):
+    def manager(self):
+        from dataclasses import asdict
+        manager = FileManagerHarness()
+        manager.root = Mock()
+        manager._saved_game_state = asdict(manager.current_game)
+        manager._saved_area_state = asdict(manager.current_area)
+        return manager
+
+    @patch("file_manager.messagebox.askyesnocancel")
+    def test_close_clean_editor_does_not_prompt(self, prompt):
+        manager = self.manager()
+        manager.close_editor()
+        prompt.assert_not_called()
+        manager.root.destroy.assert_called_once()
+
+    @patch("file_manager.messagebox.askyesnocancel", return_value=None)
+    def test_close_cancel_keeps_dirty_editor_open(self, prompt):
+        manager = self.manager()
+        manager.current_area.tiles[0][0].type = "grass"
+        manager.close_editor()
+        prompt.assert_called_once()
+        manager.root.destroy.assert_not_called()
+
+    @patch("file_manager.messagebox.askyesnocancel", return_value=False)
+    def test_close_discard_closes_without_saving(self, prompt):
+        manager = self.manager()
+        manager.current_game.name = "Changed"
+        manager.save_all = Mock()
+        manager.close_editor()
+        manager.save_all.assert_not_called()
+        manager.root.destroy.assert_called_once()
+
+    @patch("file_manager.messagebox.askyesnocancel", return_value=True)
+    def test_close_failed_or_cancelled_save_stays_open(self, prompt):
+        manager = self.manager()
+        manager.current_game.name = "Changed"
+        manager.save_all = Mock()
+        manager.close_editor()
+        manager.save_all.assert_called_once()
+        manager.root.destroy.assert_not_called()
+
+    @patch("file_manager.messagebox.askyesnocancel", return_value=True)
+    def test_close_successful_save_closes(self, prompt):
+        from dataclasses import asdict
+        manager = self.manager()
+        manager.current_game.name = "Changed"
+        manager.save_all = Mock(side_effect=lambda: setattr(
+            manager, "_saved_game_state", asdict(manager.current_game)
+        ))
+        manager.close_editor()
+        manager.root.destroy.assert_called_once()
+
+    @patch("file_manager.messagebox.showerror")
+    def test_open_game_loads_start_area_instead_of_first_area(self, showerror):
+        manager = self.manager()
+        manager.game_name_var = Mock()
+        manager.area_name_var = Mock()
+        manager.refresh_game_areas_list = Mock()
+        manager.refresh_player_setup = Mock()
+        manager.draw_area = Mock()
+        manager.update_properties_display = Mock()
+        manager.show_load_message = Mock()
+        manager._remember_recent_game = Mock()
+        manager._load_area_from_file = Mock()
+        with tempfile.TemporaryDirectory() as directory:
+            manager._project_path = lambda *parts: os.path.join(directory, *parts)
+            os.mkdir(os.path.join(directory, "areas"))
+            for name in ("first.json", "main.json"):
+                with open(os.path.join(directory, "areas", name), "w") as handle:
+                    handle.write("{}")
+            game_path = os.path.join(directory, "game.json")
+            with open(game_path, "w") as handle:
+                json.dump({"areas": ["first.json", "main.json"],
+                           "properties": {"start_area": "main.json"}}, handle)
+            manager.open_game(game_path)
+            manager._load_area_from_file.assert_called_once_with(
+                os.path.join(directory, "areas", "main.json"), show_message=False
+            )
+        showerror.assert_not_called()
+
+
 class EnemyEditorHarness(EnemyEditor):
     def __init__(self):
         self.current_game = Game()
@@ -701,6 +783,7 @@ class EditorFixTests(unittest.TestCase):
         manager._save_game_to_file = Mock(return_value=False)
 
         manager.save_game_as()
+        self.assertEqual(ask_save.call_args.kwargs["initialdir"], manager._project_path("games"))
         self.assertIsNone(manager.current_game_file)
         self.assertEqual(
             manager._save_game_to_file.call_args.args[0], "/tmp/My_Game.json"
@@ -1033,8 +1116,12 @@ class EditorFixTests(unittest.TestCase):
         editor.enemy_health_var = Mock(get=Mock(return_value="18"))
         editor.enemy_speed_var = Mock(get=Mock(return_value="0.25"))
         editor.enemy_ranged_attack_var = Mock(get=Mock(return_value="lightning"))
+        editor.enemy_behavior_var = Mock(get=Mock(return_value="chase"))
+        editor.enemy_damage_var = Mock(get=Mock(return_value="4"))
 
         self.assertTrue(editor.save_enemy_definition())
+        self.assertEqual(definition["behavior"], "chase")
+        self.assertEqual(definition["contact_damage"], 4)
 
         self.assertEqual(definition["name"], "Storm Caster")
         self.assertEqual(definition["sprite"], "wizard")
@@ -1315,6 +1402,7 @@ class EditorFixTests(unittest.TestCase):
         editor = object.__new__(EditorMethods)
         editor.current_game = Game()
         editor.current_area_file = "/project/areas/main_map.json"
+        editor.current_area = Area()
         editor.selected_tile = "wizard_npc"
         editor._is_project_area = Mock(return_value=True)
         editor.is_tile_blocked = Mock(return_value=False)
@@ -1335,17 +1423,35 @@ class EditorFixTests(unittest.TestCase):
         editor.refresh_game_areas_list.assert_called_once_with()
         editor.draw_area.assert_called_once_with()
 
+    def test_player_start_allows_blocked_tiles_without_changing_them(self):
+        editor = object.__new__(EditorMethods)
+        editor.current_game = Game()
+        editor.current_area = Area()
+        editor.current_area.tiles[6][4].walkable_override = False
+        editor.current_area_file = "/project/areas/main_map.json"
+        editor.selected_tile = "wizard_npc"
+        editor._is_project_area = Mock(return_value=True)
+        editor.is_tile_blocked = Mock(return_value=True)
+        editor.refresh_game_areas_list = Mock()
+        editor.refresh_player_setup = Mock()
+        editor.draw_area = Mock()
+        editor.update_properties_display = Mock()
+        self.assertTrue(editor.set_player_start(4, 6))
+        self.assertIs(editor.current_area.tiles[6][4].walkable_override, False)
+        editor.is_tile_blocked.assert_not_called()
+
     @patch("editor_methods.messagebox.showwarning")
-    def test_player_start_rejects_blocked_tile(self, showwarning):
+    def test_player_start_rejects_out_of_bounds_tile(self, showwarning):
         editor = object.__new__(EditorMethods)
         editor.current_game = Game()
         editor.current_area_file = "/project/areas/main_map.json"
+        editor.current_area = Area()
         editor.selected_tile = "wizard_npc"
         editor._is_project_area = Mock(return_value=True)
         editor.is_tile_blocked = Mock(return_value=True)
         editor.draw_area = Mock()
 
-        self.assertFalse(editor.set_player_start(4, 6))
+        self.assertFalse(editor.set_player_start(40, 60))
 
         self.assertEqual(editor.current_game.properties, {})
         showwarning.assert_called_once()
@@ -1470,6 +1576,24 @@ class EditorFixTests(unittest.TestCase):
 
         self.assertFalse(editor.save_player_setup())
         showerror.assert_called_once()
+
+    def test_area_loader_populates_name_from_filename_for_unnamed_areas(self):
+        from dataclasses import asdict
+        for stored_name in (None, "", "  ", "Untitled Area", "Blob Arena"):
+            with self.subTest(name=stored_name), tempfile.TemporaryDirectory() as directory:
+                area_path = os.path.join(directory, "blob_battle.json")
+                data = asdict(Area(width=2, height=2))
+                if stored_name is None:
+                    data.pop("name")
+                else:
+                    data["name"] = stored_name
+                with open(area_path, "w") as area_file:
+                    json.dump(data, area_file)
+                manager = AreaLoadingHarness()
+                manager._load_area_from_file(area_path, show_message=False)
+                expected = "Blob Arena" if stored_name == "Blob Arena" else "blob_battle"
+                self.assertEqual(manager.current_area.name, expected)
+                manager.area_name_var.set.assert_called_with(expected)
 
     @patch("file_manager.messagebox.showerror")
     def test_area_loader_rejects_dimensions_over_the_limit(self, showerror):
@@ -1696,6 +1820,89 @@ class EditorFixTests(unittest.TestCase):
         })
         editor.draw_area.assert_called_once()
         editor.update_properties_display.assert_called_once()
+
+    @patch("editor_methods.messagebox.showerror")
+    def test_weapon_settings_save_reload_and_reject_invalid_damage(self, showerror):
+        editor = object.__new__(EditorMethods)
+        editor.selected_mode = "object"
+        editor.selected_tile = "club_object"
+        editor.current_game = Game()
+        editor.draw_area = Mock()
+        editor.update_properties_display = Mock()
+        editor.object_gettable_var = Mock(get=Mock(return_value=True))
+        editor.object_walkable_var = Mock(get=Mock(return_value=True))
+        editor.object_effect_mode_var = Mock(get=Mock(return_value="passive"))
+        editor.object_effect_vars = {}
+        editor.object_item_type_var = Mock(get=Mock(return_value="weapon"))
+        editor.object_weapon_damage_var = Mock(get=Mock(return_value="7"))
+        editor.save_object_definition_changes()
+        definition = editor.current_game.get_object_definition("club_object")
+        self.assertEqual(definition["item_type"], "weapon")
+        self.assertEqual(definition["weapon_damage"], 7)
+        self.assertTrue(definition["gettable"])
+        editor.on_object_item_type_change = Mock()
+        editor.on_object_gettable_change = Mock()
+        editor.load_object_definition_editor()
+        editor.object_weapon_damage_var.set.assert_called_with("7")
+        editor.object_item_type_var.set.assert_called_with("weapon")
+        editor.object_weapon_damage_var.get.return_value = "-1"
+        editor.save_object_definition_changes()
+        showerror.assert_called_once()
+        self.assertEqual(editor.current_game.get_object_definition("club_object")["weapon_damage"], 7)
+
+    @patch("editor_methods.messagebox.showerror")
+    def test_right_panel_saves_armor_and_ranged_item_settings(self, showerror):
+        editor = object.__new__(EditorMethods)
+        editor.selected_mode = "object"
+        editor.selected_tile = "helmet_object"
+        editor.current_game = Game()
+        editor.draw_area = Mock()
+        editor.update_properties_display = Mock()
+        editor.object_gettable_var = Mock(get=Mock(return_value=True))
+        editor.object_walkable_var = Mock(get=Mock(return_value=True))
+        editor.object_effect_mode_var = Mock(get=Mock(return_value="passive"))
+        editor.object_effect_vars = {}
+        editor.object_item_type_var = Mock(get=Mock(return_value="armor"))
+        editor.object_weapon_damage_var = Mock(get=Mock(return_value="6"))
+        editor.item_detail_vars = {
+            key: Mock(get=Mock(return_value=value)) for key, value in {
+                "armor_bonus": "5", "equipment_slot": "head", "ranged": "no",
+                "attack_range": "6", "energy_cost": "2", "ammo_item": "", "read_text": "A book",
+            }.items()
+        }
+        editor.save_object_definition_changes()
+        definition = editor.current_game.get_object_definition("helmet_object")
+        self.assertEqual(definition["armor_bonus"], 5)
+        self.assertEqual(definition["equipment_slot"], "head")
+        editor.selected_tile = "magic_wand_object"
+        editor.object_item_type_var.get.return_value = "weapon"
+        editor.item_detail_vars["ranged"].get.return_value = "yes"
+        editor.save_object_definition_changes()
+        definition = editor.current_game.get_object_definition("magic_wand_object")
+        self.assertTrue(definition["ranged"])
+        self.assertEqual(definition["weapon_damage"], 6)
+        self.assertEqual(definition["energy_cost"], 2)
+        editor.item_detail_vars["energy_cost"].get.return_value = "-2"
+        editor.save_object_definition_changes()
+        showerror.assert_called_once()
+        self.assertEqual(editor.current_game.get_object_definition("magic_wand_object")["energy_cost"], 2)
+
+    def test_trigger_reordering_changes_only_triggers_at_selected_tile(self):
+        editor = object.__new__(EditorMethods)
+        first = Trigger(1, 1, "area_object", "hide")
+        elsewhere = Trigger(4, 4, "show_message", "elsewhere")
+        second = Trigger(1, 1, "inventory", "pickup")
+        editor.current_area = Area(triggers=[first, elsewhere, second])
+        editor.cursor_x = editor.cursor_y = 1
+        editor.selected_trigger_index = 1
+        editor.save_selected_trigger = Mock(return_value=True)
+        editor.refresh_trigger_editor = Mock()
+        editor.draw_area = Mock()
+        editor.update_properties_display = Mock()
+        self.assertTrue(editor.move_selected_trigger(-1))
+        self.assertEqual([trigger.name for trigger in editor.current_area.triggers], ["pickup", "elsewhere", "hide"])
+        self.assertEqual(editor.selected_trigger_index, 0)
+        self.assertFalse(editor.move_selected_trigger(-1))
 
     def test_non_gettable_object_save_clears_inventory_effects(self):
         editor = object.__new__(EditorMethods)

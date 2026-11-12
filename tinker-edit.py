@@ -15,6 +15,7 @@ from enemy_editor import EnemyEditor
 from editor_methods import EditorMethods
 from file_manager import FileManager
 from dialog_tools import DialogTools
+from item_rules import ITEM_TYPES
 from project_paths import asset_root, project_root
 
 class TinkerEditor(EnemyEditor, EditorMethods, FileManager, DialogTools):
@@ -51,6 +52,9 @@ class TinkerEditor(EnemyEditor, EditorMethods, FileManager, DialogTools):
         
         self.create_directories()
         self.setup_ui()
+        self._saved_game_state = asdict(self.current_game)
+        self._saved_area_state = asdict(self.current_area)
+        self.root.protocol("WM_DELETE_WINDOW", self.close_editor)
         self.bind_events()
         self.show_startup_message()
 
@@ -117,7 +121,7 @@ class TinkerEditor(EnemyEditor, EditorMethods, FileManager, DialogTools):
         # File menu (legacy support)
         file_menu = tk.Menu(menubar, tearoff=0)
         menubar.add_cascade(label="File", menu=file_menu)
-        file_menu.add_command(label="Exit", command=self.root.quit)
+        file_menu.add_command(label="Exit", command=self.close_editor)
         
         # Main container
         main_frame = ttk.Frame(self.root)
@@ -241,9 +245,18 @@ class TinkerEditor(EnemyEditor, EditorMethods, FileManager, DialogTools):
         self.update_tile_display()
 
     def setup_properties_panel(self, parent):
-        props_frame = ttk.LabelFrame(parent, text="Properties", width=300)
-        props_frame.pack(side=tk.RIGHT, fill=tk.Y)
-        props_frame.pack_propagate(False)
+        panel = ttk.Frame(parent, width=320)
+        panel.pack(side=tk.RIGHT, fill=tk.Y)
+        panel.pack_propagate(False)
+        viewport = tk.Canvas(panel, width=300, highlightthickness=0)
+        scrollbar = ttk.Scrollbar(panel, orient=tk.VERTICAL, command=viewport.yview)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        viewport.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        viewport.configure(yscrollcommand=scrollbar.set)
+        props_frame = ttk.LabelFrame(viewport, text="Properties")
+        window = viewport.create_window((0, 0), window=props_frame, anchor=tk.NW)
+        props_frame.bind("<Configure>", lambda event: viewport.configure(scrollregion=viewport.bbox("all")))
+        viewport.bind("<Configure>", lambda event: viewport.itemconfigure(window, width=event.width))
 
         areas_frame = ttk.LabelFrame(props_frame, text="Areas in Game")
         areas_frame.pack(fill=tk.X, padx=5, pady=5)
@@ -346,6 +359,52 @@ class TinkerEditor(EnemyEditor, EditorMethods, FileManager, DialogTools):
             variable=self.object_walkable_var,
         ).pack(anchor=tk.W, padx=5, pady=3)
 
+        type_row = ttk.Frame(self.object_definition_frame)
+        type_row.pack(fill=tk.X, padx=5, pady=3)
+        ttk.Label(type_row, text="Item type:").pack(side=tk.LEFT)
+        self.object_item_type_var = tk.StringVar(value="object")
+        item_type_selector = ttk.Combobox(
+            type_row, textvariable=self.object_item_type_var,
+            values=ITEM_TYPES, state="readonly", width=13,
+        )
+        item_type_selector.pack(side=tk.RIGHT)
+        item_type_selector.bind("<<ComboboxSelected>>", self.on_object_item_type_change)
+        self.object_weapon_frame = ttk.Frame(self.object_definition_frame)
+        ttk.Label(self.object_weapon_frame, text="Weapon damage bonus:").pack(side=tk.LEFT)
+        self.object_weapon_damage_var = tk.StringVar(value="0")
+        ttk.Entry(
+            self.object_weapon_frame, textvariable=self.object_weapon_damage_var, width=8,
+        ).pack(side=tk.RIGHT)
+        ttk.Label(
+            self.object_definition_frame,
+            text="Equip items in the runner to activate them. Weapon damage adds to strength; armor reduces incoming damage.",
+            wraplength=260,
+        ).pack(anchor=tk.W, padx=5, pady=3)
+
+        self.item_detail_vars = {}
+        self.item_detail_frames = {}
+        for group, fields in (
+            ("weapon", (("ranged", "Ranged attack", ("no", "yes")),
+                        ("attack_range", "Range (tiles)", None),
+                        ("energy_cost", "Energy per shot", None),
+                        ("ammo_item", "Ammo object ID (optional)", None))),
+            ("armor", (("equipment_slot", "Armor slot", ("head", "offhand")),
+                       ("armor_bonus", "Armor bonus", None))),
+            ("readable", (("read_text", "Text to read", None),)),
+        ):
+            frame = ttk.Frame(self.object_definition_frame)
+            self.item_detail_frames[group] = frame
+            for key, label, choices in fields:
+                row = ttk.Frame(frame)
+                row.pack(fill=tk.X, padx=5, pady=2)
+                ttk.Label(row, text=label).pack(anchor=tk.W)
+                variable = tk.StringVar(value="")
+                self.item_detail_vars[key] = variable
+                if choices:
+                    ttk.Combobox(row, textvariable=variable, values=choices, state="readonly").pack(fill=tk.X)
+                else:
+                    ttk.Entry(row, textvariable=variable).pack(fill=tk.X)
+
         self.object_effects_frame = ttk.Frame(self.object_definition_frame)
         effect_mode_frame = ttk.Frame(self.object_effects_frame)
         effect_mode_frame.pack(fill=tk.X, padx=5, pady=3)
@@ -374,7 +433,7 @@ class TinkerEditor(EnemyEditor, EditorMethods, FileManager, DialogTools):
 
         ttk.Label(
             self.object_effects_frame,
-            text="Passive health changes maximum health. Consumable health restores current health.",
+            text="Consumables change current health/energy and are consumed. Items have no effect when already full.",
             wraplength=260,
         ).pack(anchor=tk.W, padx=5, pady=5)
         self.object_effects_frame.pack(fill=tk.X, padx=5, pady=3)
@@ -407,6 +466,11 @@ class TinkerEditor(EnemyEditor, EditorMethods, FileManager, DialogTools):
         ttk.Button(
             navigation_frame, text="Next", command=lambda: self.cycle_selected_trigger(1)
         ).pack(side=tk.LEFT, expand=True, fill=tk.X)
+
+        order_frame = ttk.Frame(self.trigger_editor_frame)
+        order_frame.pack(fill=tk.X, padx=5, pady=2)
+        ttk.Button(order_frame, text="Move Up", command=lambda: self.move_selected_trigger(-1)).pack(side=tk.LEFT, expand=True, fill=tk.X)
+        ttk.Button(order_frame, text="Move Down", command=lambda: self.move_selected_trigger(1)).pack(side=tk.LEFT, expand=True, fill=tk.X)
 
         self.trigger_form_frame = ttk.Frame(self.trigger_editor_frame)
         self.trigger_form_frame.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)

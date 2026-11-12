@@ -1,3 +1,4 @@
+from item_rules import ITEM_TYPES, compatible_slot, validate_item
 """
 Updated editor_methods.py with enhanced trigger system
 """
@@ -199,16 +200,15 @@ class EditorMethods:
                 "Save this area in the project's areas folder before setting it as the start area.",
             )
             return False
-        if self.is_tile_blocked(x, y):
+        if not (0 <= x < self.current_area.width and 0 <= y < self.current_area.height):
             messagebox.showwarning(
-                "Player Start", "Choose a walkable, unoccupied tile for the player start."
+                "Player Start", "Choose a tile inside the area for the player start."
             )
             return False
 
         area_filename = os.path.basename(self.current_area_file)
         if area_filename not in self.current_game.areas:
             self.current_game.areas.append(area_filename)
-            self.refresh_game_areas_list()
 
         properties = self.current_game.properties
         properties["start_area"] = area_filename
@@ -216,6 +216,7 @@ class EditorMethods:
         properties["start_y"] = y
         player = self.get_player_settings()
         player["sprite"] = self.selected_tile
+        self.refresh_game_areas_list()
         self.refresh_player_setup()
         self.draw_area()
         self.update_properties_display()
@@ -767,6 +768,14 @@ class EditorMethods:
         if self.selected_mode != "object":
             return
         definition = self.current_game.get_object_definition(self.selected_tile)
+        if hasattr(self, "object_item_type_var"):
+            self.object_item_type_var.set(definition["item_type"])
+            self.object_weapon_damage_var.set(str(definition["weapon_damage"]))
+            if hasattr(self, "item_detail_vars"):
+                for key, variable in self.item_detail_vars.items():
+                    value = definition[key]
+                    variable.set(("yes" if value else "no") if key == "ranged" else str(value))
+            self.on_object_item_type_change()
         self.object_gettable_var.set(definition["gettable"])
         self.object_walkable_var.set(definition["walkable"])
         self.object_effect_mode_var.set(definition["effect_mode"])
@@ -774,8 +783,30 @@ class EditorMethods:
             value_var.set(str(definition["effects"].get(stat, 0)))
         self.on_object_gettable_change()
 
+    def on_object_item_type_change(self, _event=None):
+        kind = self.object_item_type_var.get()
+        if kind not in ("object", "openable"):
+            self.object_gettable_var.set(True)
+        self.on_object_gettable_change()
+        if kind == "weapon":
+            self.object_weapon_frame.pack(fill=tk.X, padx=5, pady=3, before=self.object_save_button)
+        else:
+            self.object_weapon_frame.pack_forget()
+        for group, frame in getattr(self, "item_detail_frames", {}).items():
+            if group == kind:
+                frame.pack(fill=tk.X, padx=5, pady=3, before=self.object_save_button)
+            else:
+                frame.pack_forget()
+        if kind == "consumable":
+            self.object_effect_mode_var.set("consumable")
+        if kind == "armor" and hasattr(self, "item_detail_vars"):
+            variable = self.item_detail_vars["equipment_slot"]
+            if variable.get() not in ("head", "offhand"):
+                variable.set("head")
+
     def on_object_gettable_change(self):
-        if self.object_gettable_var.get():
+        kind = self.object_item_type_var.get() if hasattr(self, "object_item_type_var") else "object"
+        if self.object_gettable_var.get() and kind in ("object", "consumable"):
             self.object_effects_frame.pack(fill=tk.X, padx=5, pady=3)
         else:
             self.object_effects_frame.pack_forget()
@@ -784,6 +815,34 @@ class EditorMethods:
         object_type = self.selected_tile
         if self.selected_mode != "object":
             return
+
+        weapon_settings = {}
+        if hasattr(self, "object_item_type_var"):
+            item_type = self.object_item_type_var.get()
+            try:
+                weapon_damage = int(self.object_weapon_damage_var.get()) if item_type == "weapon" else 0
+            except ValueError:
+                messagebox.showerror("Invalid Weapon", "Weapon damage bonus must be a whole number.")
+                return
+            if item_type not in ITEM_TYPES or weapon_damage < 0:
+                messagebox.showerror("Invalid Weapon", "Choose an item type and a non-negative damage bonus.")
+                return
+            weapon_settings = {"item_type": item_type, "weapon_damage": weapon_damage}
+            if item_type not in ("object", "openable"):
+                self.object_gettable_var.set(True)
+            if hasattr(self, "item_detail_vars"):
+                try:
+                    for key, variable in self.item_detail_vars.items():
+                        value = variable.get()
+                        weapon_settings[key] = (value == "yes") if key == "ranged" else (
+                            int(value) if key in ("armor_bonus", "attack_range", "energy_cost") else value
+                        )
+                    if item_type == "armor" and not weapon_settings.get("equipment_slot"):
+                        weapon_settings["equipment_slot"] = "head"
+                    validate_item(weapon_settings)
+                except (ValueError, TypeError) as error:
+                    messagebox.showerror("Invalid Item", str(error))
+                    return
 
         if self.object_gettable_var.get():
             try:
@@ -798,9 +857,11 @@ class EditorMethods:
             effects = {stat: 0 for stat in self.object_effect_vars}
 
         self.current_game.object_definitions[object_type] = {
+            **self.current_game.object_definitions.get(object_type, {}),
+            **weapon_settings,
             "gettable": self.object_gettable_var.get(),
             "walkable": self.object_walkable_var.get(),
-            "effect_mode": self.object_effect_mode_var.get(),
+            "effect_mode": "consumable" if weapon_settings.get("item_type") == "consumable" else self.object_effect_mode_var.get(),
             "effects": effects,
         }
         self.draw_area()
@@ -811,7 +872,7 @@ class EditorMethods:
             "teleport": "Moves the player to another area.",
             "inventory": "Adds or removes an item from the player's inventory.",
             "tile_update": "Changes a tile in the current area.",
-            "area_object": "Adds an object to an area.",
+            "area_object": "Adds or removes an object on an area map.",
             "game_end": "Ends the game with a win or loss.",
             "show_message": "Displays a message to the player.",
             "custom": "Runs a custom script.",
@@ -1222,6 +1283,13 @@ class EditorMethods:
             info += f"Object definition: {self.selected_tile}\n"
             info += f"Gettable: {definition['gettable']}\n"
             info += f"Walkable: {definition['walkable']}\n"
+            info += f"Item type: {definition['item_type']}\n"
+            if definition["item_type"] == "weapon":
+                info += f"Weapon damage bonus: +{definition['weapon_damage']}\n"
+                if definition["ranged"]:
+                    info += f"Ranged: {definition['attack_range']} tiles; energy cost {definition['energy_cost']}\n"
+            elif definition["item_type"] == "armor":
+                info += f"Armor: +{definition['armor_bonus']} ({definition['equipment_slot']})\n"
             if definition["gettable"]:
                 info += f"Effect mode: {definition['effect_mode']}\n"
                 info += f"Effects: {self._format_object_effects(definition['effects'])}\n\n"
@@ -1336,6 +1404,24 @@ class EditorMethods:
                 wraplength=245,
             ).pack(anchor=tk.W, pady=5)
 
+    def move_selected_trigger(self, direction):
+        if not self.save_selected_trigger(refresh=False):
+            return False
+        positions = [index for index, trigger in enumerate(self.current_area.triggers)
+                     if (trigger.x, trigger.y) == (self.cursor_x, self.cursor_y)]
+        selected = self.selected_trigger_index
+        target = selected + direction
+        if not (0 <= selected < len(positions) and 0 <= target < len(positions)):
+            return False
+        first, second = positions[selected], positions[target]
+        triggers = self.current_area.triggers
+        triggers[first], triggers[second] = triggers[second], triggers[first]
+        self.selected_trigger_index = target
+        self.refresh_trigger_editor()
+        self.draw_area()
+        self.update_properties_display()
+        return True
+
     def _change_trigger_editor_type(self, trigger, trigger_type, name):
         if trigger_type == getattr(self, "_trigger_editor_draft_type", trigger.trigger_type):
             return
@@ -1448,9 +1534,13 @@ class EditorMethods:
             y_var = add_entry("y", "Target Y:", params.get("y", 0))
             add_coordinate_picker(x_var, y_var, destination_area_var)
         elif trigger_type == "inventory":
-            items = [""] + self.current_game.used_objects
+            items = [""] + sorted(set(self.tile_manager.get_object_names())
+                                    | set(self.current_game.used_objects)
+                                    | set(self.current_game.object_definitions)
+                                    | {value for key in ("add", "remove") if (value := params.get(key, ""))})
             add_combo("add", "Add item:", items, params.get("add", ""))
             add_combo("remove", "Remove item:", items, params.get("remove", ""))
+            ttk.Label(form, text="Changes inventory only. Use a separate Area Object trigger to add/remove the map object.", wraplength=245).pack(anchor=tk.W, pady=4)
         elif trigger_type == "tile_update":
             x_var = add_entry("x", "Target X:", params.get("x", 0))
             y_var = add_entry("y", "Target Y:", params.get("y", 0))
@@ -1498,11 +1588,17 @@ class EditorMethods:
             ttk.Checkbutton(form, text="Walkable", variable=walkable_var).pack(anchor=tk.W)
             self._trigger_editor_vars["walkable"] = walkable_var
         elif trigger_type == "area_object":
-            area_names = [os.path.splitext(area)[0] for area in self.current_game.areas]
-            add_combo("area", "Area:", area_names, params.get("area", ""))
-            add_combo(
-                "object", "Object:", self.current_game.used_objects, params.get("object", "")
-            )
+            area_names = [""] + [os.path.splitext(area)[0] for area in self.current_game.areas]
+            destination = add_combo("area", "Area:", area_names, params.get("area", ""))
+            add_combo("action", "Action:", ("add", "remove"), params.get("action", "add"))
+            objects = sorted(set(self.tile_manager.get_object_names())
+                             | set(self.current_game.used_objects)
+                             | {value for value in (params.get("object", ""),) if value})
+            add_combo("object", "Object:", objects, params.get("object", ""))
+            x_var = add_entry("x", "Target X:", params.get("x", trigger.x))
+            y_var = add_entry("y", "Target Y:", params.get("y", trigger.y))
+            add_coordinate_picker(x_var, y_var, destination)
+            ttk.Label(form, text="Blank area means this area. Only the matching object at the target coordinates changes.", wraplength=245).pack(anchor=tk.W, pady=4)
         elif trigger_type == "game_end":
             add_combo("win_lose", "Result:", ("win", "lose"), params.get("win_lose", "win"))
             add_text("message", "Message:", params.get("message", ""), height=3)
@@ -1527,6 +1623,12 @@ class EditorMethods:
                 params.get("code", default_code),
                 height=7,
             )
+
+        if trigger_type in ("inventory", "area_object"):
+            once_var = tk.BooleanVar(value=params.get("once", False))
+            self._trigger_editor_vars["once"] = once_var
+            ttk.Checkbutton(form, text="Run once per game", variable=once_var).pack(anchor=tk.W, pady=3)
+            ttk.Label(form, text="Triggers run in list order. A failed trigger stops the remaining actions on this tile.", wraplength=245).pack(anchor=tk.W, pady=3)
 
     def save_selected_trigger(self, show_error=True, refresh=True):
         if getattr(self, "selected_mode", "trigger") != "trigger":
@@ -1615,11 +1717,16 @@ class EditorMethods:
         return True
 
     def _trigger_coordinate_error(self, trigger_type, parameters):
-        if trigger_type == "teleport":
+        if trigger_type == "area_object" and not parameters.get("area"):
+            x, y = parameters["x"], parameters["y"]
+            if not (0 <= x < self.current_area.width and 0 <= y < self.current_area.height):
+                return "Object coordinates must be within this area."
+            return None
+        if trigger_type in ("teleport", "area_object"):
             selected_area = parameters.get("area", "")
             area_filename = next(
                 (area for area in self.current_game.areas
-                 if os.path.splitext(os.path.basename(area))[0] == selected_area),
+                 if area == selected_area or os.path.splitext(os.path.basename(area))[0] == selected_area),
                 None
             )
             if not area_filename:

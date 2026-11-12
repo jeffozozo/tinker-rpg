@@ -21,6 +21,19 @@ class DialogTools:
         game_name_var = tk.StringVar(value=self.current_game.name)
         ttk.Entry(dialog, textvariable=game_name_var, width=40).pack(pady=5)
         
+        ttk.Label(dialog, text="Player start area:").pack(pady=(10, 2))
+        start_area_var = tk.StringVar(
+            value=self.current_game.properties.get("start_area", "")
+        )
+        ttk.Combobox(
+            dialog, textvariable=start_area_var,
+            values=self.current_game.areas, state="readonly", width=38,
+        ).pack(pady=2)
+        ttk.Label(
+            dialog, text="Set the start tile by clicking the map in Player mode.",
+            wraplength=360,
+        ).pack(pady=2)
+
         # Areas in game
         ttk.Label(dialog, text="Areas in Game:").pack(pady=(10,5))
         areas_frame = ttk.Frame(dialog)
@@ -43,6 +56,12 @@ class DialogTools:
         def save_properties():
             self.current_game.name = game_name_var.get()
             self.game_name_var.set(self.current_game.name)
+            self.current_game.properties["start_area"] = start_area_var.get()
+            self.current_game.properties.setdefault("start_x", 0)
+            self.current_game.properties.setdefault("start_y", 0)
+            self.refresh_game_areas_list()
+            self.refresh_player_setup()
+            self.draw_area()
             dialog.destroy()
         
         ttk.Button(button_frame, text="Save", command=save_properties).pack(side=tk.RIGHT, padx=(5,0))

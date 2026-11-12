@@ -2,6 +2,7 @@
 Updated data_classes.py with enhanced trigger system
 """
 
+from item_rules import item_defaults
 from dataclasses import dataclass, asdict
 from typing import Dict, List, Optional, Any
 
@@ -78,7 +79,9 @@ class Trigger:
         elif self.trigger_type == "area_object":
             area = self.parameters.get("area", "")
             obj = self.parameters.get("object", "")
-            return f"Add {obj} to {area}"
+            action = "Remove" if self.parameters.get("action") == "remove" else "Add"
+            relation = "from" if action == "Remove" else "to"
+            return f"{action} {obj} {relation} {area or 'this area'}"
         elif self.trigger_type == "game_end":
             result = self.parameters.get("win_lose", "win")
             return f"Game {result}"
@@ -150,8 +153,22 @@ class Game:
                 "attack": 0,
             },
         }
+        definition.update(item_defaults(object_type))
         stored_definition = self.object_definitions.get(object_type, {})
         definition.update(stored_definition)
+        # Recognize helmets/shields authored before dedicated equipment fields existed.
+        stored_effects = stored_definition.get("effects", {})
+        if not isinstance(stored_effects, dict):
+            raise ValueError("Item effects must be an object.")
+        legacy_armor = stored_effects.get("armor", 0)
+        if (object_type in ("helmet_object", "shield_object")
+                and "armor_bonus" not in stored_definition
+                and stored_definition.get("item_type", "object") == "object"
+                and type(legacy_armor) is int and legacy_armor > 0):
+            definition["item_type"] = "armor"
+            definition["armor_bonus"] = legacy_armor
+        if stored_definition.get("item_type", "object") == "object" and stored_definition.get("effect_mode") == "consumable":
+            definition["item_type"] = "consumable"
         definition["effects"] = {
             **{"health": 0, "energy": 0, "armor": 0, "attack": 0},
             **stored_definition.get("effects", {}),

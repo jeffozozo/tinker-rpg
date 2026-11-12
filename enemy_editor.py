@@ -49,6 +49,8 @@ class EnemyEditor:
         self.enemy_health_var = tk.StringVar()
         self.enemy_speed_var = tk.StringVar()
         self.enemy_ranged_attack_var = tk.StringVar()
+        self.enemy_behavior_var = tk.StringVar()
+        self.enemy_damage_var = tk.StringVar()
         self.enemy_sprite_selector = None
 
         self._enemy_field("Name:", self.enemy_name_var)
@@ -57,6 +59,8 @@ class EnemyEditor:
         )
         self._enemy_field("Health:", self.enemy_health_var)
         self._enemy_field("Movement speed (tiles/turn):", self.enemy_speed_var)
+        self._enemy_choice("Behavior:", self.enemy_behavior_var, ("stationary", "chase"))
+        self._enemy_field("Contact damage:", self.enemy_damage_var)
         self._enemy_choice(
             "Ranged attack:",
             self.enemy_ranged_attack_var,
@@ -129,6 +133,8 @@ class EnemyEditor:
             "sprite": sprites[0],
             "health": 10,
             "movement_speed": 1.0,
+            "behavior": "chase",
+            "contact_damage": 1,
             "ranged_attack": "none",
         }
         self.selected_enemy_id = enemy_id
@@ -223,6 +229,9 @@ class EnemyEditor:
                 self.enemy_ranged_attack_var,
             ):
                 variable.set("")
+            if hasattr(self, "enemy_behavior_var"):
+                self.enemy_behavior_var.set("")
+                self.enemy_damage_var.set("")
         if hasattr(self, "tile_canvas"):
             self.update_tile_display()
 
@@ -232,6 +241,9 @@ class EnemyEditor:
         self.enemy_name_var.set(definition.get("name", ""))
         self.enemy_sprite_var.set(definition.get("sprite", ""))
         self.enemy_health_var.set(str(definition.get("health", 10)))
+        if hasattr(self, "enemy_behavior_var"):
+            self.enemy_behavior_var.set(definition.get("behavior", "stationary"))
+            self.enemy_damage_var.set(str(definition.get("contact_damage", 1)))
         self.enemy_speed_var.set(
             format(float(definition.get("movement_speed", 1.0)), ".12g")
         )
@@ -297,6 +309,19 @@ class EnemyEditor:
             )
             return False
 
+        behavior = definition.get("behavior", "stationary")
+        contact_damage = definition.get("contact_damage", 1)
+        if hasattr(self, "enemy_behavior_var"):
+            behavior = self.enemy_behavior_var.get()
+            try:
+                contact_damage = int(self.enemy_damage_var.get())
+            except ValueError:
+                messagebox.showerror("Invalid Enemy Stats", "Contact damage must be a whole number.")
+                return False
+        if behavior not in ("stationary", "chase") or type(contact_damage) is not int or contact_damage < 0:
+            messagebox.showerror("Invalid Enemy Stats", "Choose a behavior and non-negative contact damage.")
+            return False
+
         previous_definition = deepcopy(definition)
         definition.update({
             "id": enemy_id,
@@ -304,6 +329,8 @@ class EnemyEditor:
             "sprite": sprite,
             "health": health,
             "movement_speed": movement_speed,
+            "behavior": behavior,
+            "contact_damage": contact_damage,
             "ranged_attack": ranged_attack,
         })
         self.sync_enemy_instances()

@@ -1,0 +1,1623 @@
+{
+  "name": "blob_battle",
+  "width": 20,
+  "height": 15,
+  "tiles": [
+    [
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ]
+  ],
+  "objects": [
+    {
+      "type": "black_blob_npc",
+      "x": 4,
+      "y": 9,
+      "properties": {
+        "enemy_id": "enemy_42f567a5a79143e8b47f88c786d22ae0",
+        "enemy_data": {
+          "id": "enemy_42f567a5a79143e8b47f88c786d22ae0",
+          "name": "Black Blob",
+          "sprite": "black_blob_npc",
+          "health": 10,
+          "movement_speed": 0.75,
+          "ranged_attack": "none",
+          "starter_key": "example:black_blob",
+          "behavior": "chase",
+          "contact_damage": 1
+        },
+        "walkable": false
+      }
+    },
+    {
+      "type": "sword_object",
+      "x": 6,
+      "y": 1,
+      "properties": {}
+    },
+    {
+      "type": "helmet_object",
+      "x": 10,
+      "y": 3,
+      "properties": {}
+    }
+  ],
+  "triggers": [
+    {
+      "x": 6,
+      "y": 1,
+      "trigger_type": "inventory",
+      "name": "trigger_1",
+      "parameters": {
+        "add": "sword_object",
+        "remove": "",
+        "once": false
+      }
+    },
+    {
+      "x": 6,
+      "y": 1,
+      "trigger_type": "area_object",
+      "name": "trigger_2",
+      "parameters": {
+        "area": "",
+        "action": "remove",
+        "object": "sword_object",
+        "x": 6,
+        "y": 1,
+        "once": false
+      }
+    },
+    {
+      "x": 10,
+      "y": 3,
+      "trigger_type": "inventory",
+      "name": "trigger_3",
+      "parameters": {
+        "add": "helmet_object",
+        "remove": "",
+        "once": false
+      }
+    },
+    {
+      "x": 10,
+      "y": 3,
+      "trigger_type": "area_object",
+      "name": "trigger_4",
+      "parameters": {
+        "area": "",
+        "action": "remove",
+        "object": "helmet_object",
+        "x": 10,
+        "y": 3,
+        "once": false
+      }
+    }
+  ]
+}

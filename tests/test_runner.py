@@ -345,11 +345,258 @@ class RunnerEngineTests(unittest.TestCase):
         self.assertEqual(engine.inventory[:2], ["key_object", ""])
         self.assertEqual(len(engine.inventory), 8)
 
+    def combat_engine(self, speed=1.0, damage=3, health=4, position=(4, 1), behavior="chase"):
+        self.area = self._area(width=6, height=4)
+        self.area["objects"] = [{
+            "type": "hero", "x": position[0], "y": position[1],
+            "properties": {"enemy_id": "blob", "enemy_data": {"health": 999}},
+        }]
+        self.game["properties"]["enemies"] = {"blob": {
+            "name": "Blob", "sprite": "hero", "health": health,
+            "behavior": behavior, "movement_speed": speed, "contact_damage": damage,
+        }}
+        self._write_json(self.area_path, self.area)
+        self._write_json(self.game_path, self.game)
+        return self.engine()
+
+    def test_chase_fractional_speed_accumulates_and_contact_damages(self):
+        engine = self.combat_engine(speed=0.5)
+        enemy = engine.current_area.objects[0]
+        engine.wait()
+        self.assertEqual((enemy.x, enemy.y), (4, 1))
+        engine.wait()
+        self.assertEqual((enemy.x, enemy.y), (3, 1))
+        engine.wait()
+        engine.wait()
+        self.assertEqual((enemy.x, enemy.y), (2, 1))
+        self.assertEqual(engine.health, 9)
+        engine.wait()
+        self.assertEqual(engine.health, 6)
+        self.assertNotEqual((enemy.x, enemy.y), (engine.player_x, engine.player_y))
+
+    def test_chase_routes_around_walls_and_other_objects(self):
+        engine = self.combat_engine()
+        engine.current_area.tiles[1][3].walkable_override = False
+        engine.current_area.objects.append(GameObject("chest_object", 3, 0, {"walkable": False}))
+        enemy = engine.current_area.objects[0]
+        for _ in range(8):
+            engine.wait()
+            self.assertNotEqual((enemy.x, enemy.y), (3, 1))
+            self.assertNotEqual((enemy.x, enemy.y), (3, 0))
+        self.assertLessEqual(abs(enemy.x-engine.player_x)+abs(enemy.y-engine.player_y), 1)
+
+    def test_fast_enemy_hits_at_most_once_per_turn(self):
+        engine = self.combat_engine(speed=4)
+        engine.wait()
+        self.assertEqual(engine.health, 9)
+        self.assertEqual((engine.current_area.objects[0].x, engine.current_area.objects[0].y), (2, 1))
+
+    def test_stationary_enemy_keeps_legacy_behavior(self):
+        engine = self.combat_engine(position=(2, 1), behavior="stationary")
+        engine.wait()
+        self.assertEqual(engine.health, 12)
+        self.assertEqual(engine.current_area.objects[0].x, 2)
+
+    def test_player_attack_kills_and_removes_enemy_without_retaliation(self):
+        engine = self.combat_engine(position=(2, 1), health=1)
+        self.assertTrue(engine.attack("right"))
+        self.assertEqual(engine.current_area.objects, [])
+        self.assertEqual(engine.health, 12)
+        self.assertTrue(engine.move("right"))
+
+    def test_player_death_ends_game_and_blocks_actions(self):
+        engine = self.combat_engine(position=(2, 1), damage=50)
+        engine.wait()
+        self.assertEqual(engine.health, 0)
+        self.assertTrue(engine.ended)
+        self.assertEqual(engine.end_result, "lose")
+        turn = engine.turn_count
+        self.assertFalse(engine.move("up"))
+        self.assertFalse(engine.attack("right"))
+        self.assertFalse(engine.wait())
+        self.assertEqual(engine.turn_count, turn)
+
+    def test_combat_health_and_movement_credit_survive_save(self):
+        engine = self.combat_engine(speed=0.5, position=(2, 1))
+        engine.attack("right")
+        path = self.root / "combat.save.json"
+        engine.save_to_file(path, "Combat")
+        loaded = RunnerEngine.load_save(path, project_root=self.root)
+        self.assertEqual(loaded.health, engine.health)
+        self.assertEqual(loaded.current_area.objects[0].properties["enemy_health"], 3)
+        self.assertEqual(loaded.current_area.objects[0].properties["movement_credit"], 0.5)
+
+    def test_equipped_sword_adds_damage_and_names_weapon(self):
+        engine = self.combat_engine(position=(2, 1), health=20)
+        engine.inventory[0] = "sword_object"
+        engine.equip(0)
+        engine.attack("right")
+        self.assertEqual(engine.current_area.objects[0].properties["enemy_health"], 15)
+        self.assertIn("You attack Blob with a sword.", engine.events)
+        self.assertEqual(engine.feedback[0]["damage"], 5)
+
+    def test_only_selected_weapon_is_used_and_bonuses_do_not_stack(self):
+        engine = self.combat_engine(position=(2, 1), health=20)
+        engine.inventory[:4] = ["sword_object", "sword_object", "club_object", "book_object"]
+        engine.object_definitions.update({
+            "club_object": {"item_type": "weapon", "weapon_damage": 7},
+            "book_object": {"item_type": "object", "weapon_damage": 99},
+        })
+        engine.equip(2)
+        engine.attack("right")
+        self.assertEqual(engine.feedback[0]["damage"], 8)
+        self.assertIn("You attack Blob with a club.", engine.events)
+
+    def test_removing_sword_returns_to_unarmed_damage(self):
+        engine = self.combat_engine(position=(2, 1), health=20)
+        engine.inventory[0] = "sword_object"
+        engine.equip(0)
+        engine.attack("right")
+        engine._remove_inventory_item(0)
+        engine.feedback.clear()
+        engine.attack("right")
+        self.assertEqual(engine.feedback[0]["damage"], 1)
+        self.assertIn("You attack Blob unarmed.", engine.events)
+
+    def test_sword_pickup_and_saved_weapon_settings_affect_attacks(self):
+        engine = self.combat_engine(position=(2, 1), health=20)
+        engine.current_area.objects.append(GameObject("sword_object", 1, 1))
+        self.assertTrue(engine.interact())
+        self.assertIn("sword_object", engine.inventory)
+        engine.equip(engine.inventory.index("sword_object"))
+        # Game-authored weapon values override the built-in sword default.
+        engine.object_definitions["sword_object"] = {"item_type": "weapon", "weapon_damage": 9}
+        engine.game["object_definitions"] = engine.object_definitions
+        Image.new("RGBA", (32, 32)).save(self.root / "objects" / "sword_object.png")
+        save_path = self.root / "weapon.save.json"
+        engine.save_to_file(save_path, "Weapon")
+        loaded = RunnerEngine.load_save(save_path, project_root=self.root)
+        loaded.attack("right")
+        self.assertEqual(loaded.feedback[0]["damage"], 10)
+
+    def test_negative_weapon_damage_is_rejected(self):
+        self.game["object_definitions"] = {"chest_object": {
+            "item_type": "weapon", "weapon_damage": -2,
+        }}
+        self._write_json(self.game_path, self.game)
+        with self.assertRaisesRegex(RunnerError, "weapon_damage"):
+            self.engine()
+
+    def test_attack_feedback_distinguishes_hit_miss_and_enemy_damage(self):
+        engine = self.combat_engine(position=(2, 1))
+        engine.attack("up")
+        self.assertEqual([item["kind"] for item in engine.feedback], ["miss"])
+        self.assertEqual((engine.feedback[0]["x"], engine.feedback[0]["y"]), (1, 0))
+        engine.feedback.clear()
+        engine.attack("right")
+        self.assertEqual([item["kind"] for item in engine.feedback], ["hit", "hurt"])
+        self.assertEqual(engine.feedback[0]["damage"], 1)
+        self.assertEqual(engine.feedback[1]["damage"], 3)
+
+    def test_step_feedback_only_occurs_after_successful_movement(self):
+        engine = self.engine()
+        engine.current_area.tiles[1][2].walkable_override = False
+        engine.move("right")
+        self.assertEqual(engine.feedback, [])
+        engine.move("up")
+        self.assertEqual([item["kind"] for item in engine.feedback], ["step"])
+
+    def test_feedback_is_consumed_and_markers_clear_after_delay(self):
+        runner = tinker_runner.TinkerRunner.__new__(tinker_runner.TinkerRunner)
+        runner.engine = self.combat_engine(position=(2, 1))
+        runner.engine.attack("right")
+        runner.sounds = Mock()
+        runner.canvas = Mock()
+        runner.root = Mock()
+        runner.marker_generation = 0
+        runner._draw_attack_markers = Mock()
+        runner._present_feedback()
+        self.assertEqual(runner.engine.feedback, [])
+        self.assertEqual(len(runner.attack_markers), 2)
+        runner.sounds.play.assert_called_once_with("hit")
+        self.assertEqual(runner.root.after.call_args.args[0], 300)
+        runner.root.after.call_args.args[1]()
+        self.assertEqual(runner.attack_markers, [])
+        runner.sounds.play.reset_mock()
+        runner._present_feedback()
+        runner.sounds.play.assert_not_called()
+
+    def test_action_dispatches_audio_before_map_redraw(self):
+        runner = tinker_runner.TinkerRunner.__new__(tinker_runner.TinkerRunner)
+        sequence = Mock()
+        runner._present_feedback = sequence.feedback
+        runner.redraw = sequence.redraw
+        runner._flush_events = sequence.log
+        runner.refresh_inventory = sequence.inventory
+        runner.refresh_active_bar = sequence.bar
+        runner._after_action()
+        self.assertEqual(sequence.mock_calls[:2], [unittest.mock.call.feedback(), unittest.mock.call.redraw()])
+
+    def test_player_damage_preserves_footstep_in_one_immediate_cue(self):
+        runner = tinker_runner.TinkerRunner.__new__(tinker_runner.TinkerRunner)
+        runner.engine = self.combat_engine(speed=0, position=(2, 1))
+        runner.engine.feedback = [
+            {"kind": "step", "area": "start.json", "x": 1, "y": 1, "damage": 0},
+            {"kind": "hurt", "area": "start.json", "x": 1, "y": 1, "damage": 3},
+        ]
+        runner.sounds = Mock()
+        runner.canvas = Mock()
+        runner.root = Mock()
+        runner.marker_generation = 0
+        runner._draw_attack_markers = Mock()
+        runner._present_feedback()
+        runner.sounds.play.assert_called_once_with("step_hurt")
+
+    def test_stale_marker_timer_does_not_clear_newer_attack(self):
+        runner = tinker_runner.TinkerRunner.__new__(tinker_runner.TinkerRunner)
+        runner.marker_generation = 2
+        runner.attack_markers = [{"kind": "hit"}]
+        runner.canvas = Mock()
+        runner._clear_attack_markers(1)
+        self.assertEqual(len(runner.attack_markers), 1)
+        runner.canvas.delete.assert_not_called()
+
+    def test_bundled_sounds_are_short_valid_distinct_wavs(self):
+        import wave
+        sounds = Path(__file__).resolve().parents[1] / "sounds"
+        data = set()
+        for name in ("step", "hit", "miss", "hurt"):
+            with wave.open(str(sounds / f"{name}.wav")) as sound:
+                self.assertEqual(sound.getnchannels(), 1)
+                self.assertEqual(sound.getsampwidth(), 2)
+                self.assertLess(sound.getnframes() / sound.getframerate(), 0.2)
+                data.add(sound.readframes(sound.getnframes()))
+        self.assertEqual(len(data), 4)
+
+    def test_invalid_enemy_combat_values_are_rejected(self):
+        for setting in ({"speed": float("nan")}, {"damage": -1}, {"health": 0}):
+            with self.subTest(setting=setting), self.assertRaises(RunnerError):
+                self.combat_engine(**setting)
+
     def test_missing_start_settings_are_actionable(self):
         self.game["properties"].pop("start_area")
         self._write_json(self.game_path, self.game)
         with self.assertRaisesRegex(RunnerError, "properties.start_area"):
             self.engine()
+
+    def test_blocked_start_allows_leaving_but_not_returning(self):
+        self.area["tiles"][1][1]["walkable_override"] = False
+        self._write_json(self.area_path, self.area)
+        engine = self.engine()
+        self.assertTrue(engine.move("right"))
+        self.assertFalse(engine.move("left"))
+        self.assertIs(engine.current_area.tiles[1][1].walkable_override, False)
+
+    def test_save_can_resume_on_blocked_start(self):
+        self.area["tiles"][1][1]["walkable_override"] = False
+        self._write_json(self.area_path, self.area)
+        engine = self.engine()
+        save_path = self.root / "blocked-start.save.json"
+        engine.save_to_file(save_path, "Blocked start")
+        loaded = RunnerEngine.load_save(save_path, project_root=self.root)
+        self.assertEqual((loaded.player_x, loaded.player_y), (1, 1))
+        self.assertTrue(loaded.move("right"))
+        self.assertFalse(loaded.move("left"))
 
     def test_movement_blocks_edges_and_non_walkable_override(self):
         self.area["tiles"][1][2]["walkable_override"] = False

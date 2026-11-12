@@ -608,9 +608,9 @@
       "trigger_type": "teleport",
       "name": "go_to_fountain_room",
       "parameters": {
-        "area": "fountain_room",
-        "x": 3,
-        "y": 4
+        "area": "fountain_room.json",
+        "x": 8,
+        "y": 5
       }
     },
     {

@@ -11,6 +11,8 @@ from tkinter import filedialog, messagebox, ttk
 from PIL import Image, ImageTk
 
 from runner_engine import RunnerEngine, RunnerError
+from item_rules import EQUIPMENT_SLOTS, SLOT_LABELS, compatible_slot
+from sound_effects import SoundEffects
 from project_paths import asset_root, project_root
 
 
@@ -29,6 +31,10 @@ class TinkerRunner:
         self.save_path = None
         self.save_name = self.engine.game.get("name", "Saved Game")
         self.dirty = False
+        self.sounds = SoundEffects()
+        self.sound_enabled = tk.BooleanVar(master=root, value=True)
+        self.attack_markers = []
+        self.marker_generation = 0
 
         self.root.title(self.engine.game.get("name", "Tinker Runner"))
         self.root.geometry("1000x740")
@@ -79,6 +85,10 @@ class TinkerRunner:
         game_menu.add_command(label="Load", command=self.load_game)
         game_menu.add_separator()
         game_menu.add_command(label="Restart", command=self.restart_game)
+        game_menu.add_checkbutton(
+            label="Sound effects", variable=self.sound_enabled,
+            command=lambda: setattr(self.sounds, "enabled", self.sound_enabled.get()),
+        )
         game_menu.add_command(label="Quit", command=self.quit_game)
         menu_bar.add_cascade(label="Game", menu=game_menu)
 
@@ -137,11 +147,26 @@ class TinkerRunner:
         self.message_log.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
+        active_bar = ttk.Frame(self.root)
+        active_bar.pack(anchor=tk.W, padx=8, pady=(0, 6))
+        self.active_buttons = {}
+        for number, (slot, label) in enumerate(zip(EQUIPMENT_SLOTS, SLOT_LABELS), 1):
+            cell = ttk.Frame(active_bar)
+            cell.pack(side=tk.LEFT, padx=(0, 10))
+            icon = tk.Canvas(cell, width=32, height=32, highlightthickness=0,
+                             borderwidth=0, background="#242830", cursor="hand2")
+            icon.pack()
+            icon.bind("<Button-1>", lambda event, slot=slot: self.activate_slot(slot))
+            icon.bind("<Button-3>", lambda event, slot=slot: self.unequip_slot(slot))
+            icon.bind("<Button-2>", lambda event, slot=slot: self.unequip_slot(slot))
+            ttk.Label(cell, text=f"{number} {label}", font=("TkDefaultFont", 9)).pack()
+            self.active_buttons[slot] = icon
+
         controls = ttk.Frame(self.root, padding=(8, 0, 8, 8))
         controls.pack(fill=tk.X)
         ttk.Label(
             controls,
-            text="Move: WASD / arrows    Inventory: I    Interact: Space    Help: H / ?    Quit: Q",
+            text="Move: WASD / arrows    Inventory: I    Interact: Space    Attack: F    Slots: 1–5    Wait: .    Help: H / ?    Quit: Q",
         ).pack(side=tk.LEFT)
 
         self.redraw()
@@ -157,8 +182,8 @@ class TinkerRunner:
             for obj in area.objects
         ):
             self._append_log(
-                "Enemies are visible and block movement, but enemy movement and "
-                "combat are not implemented yet."
+                "Enemies act after each turn. F attacks in the last direction pressed; "
+                "press . to wait. Contact with chasing enemies causes damage."
             )
         self.engine.process_entry_triggers()
         self._after_action()
@@ -232,6 +257,9 @@ class TinkerRunner:
                     fill="white",
                 )
 
+            if obj.properties.get("open"):
+                self.canvas.create_text(x1 + 16, y1 + 28, text="OPEN", fill="#ffe16b", font=("TkDefaultFont", 7, "bold"))
+
         player = self.engine.player_settings
         sprite = player.get("sprite", "fighter_npc")
         image = self._get_image("npcs", sprite)
@@ -252,8 +280,63 @@ class TinkerRunner:
             max(area.width * TILE_SIZE, viewport_width),
             max(area.height * TILE_SIZE, viewport_height),
         ))
+        if self.engine.active_items:
+            self.canvas.create_oval(x1 - 3, y1 - 3, x1 + 35, y1 + 35,
+                                    outline="#ffd56b", width=2)
+        self._draw_attack_markers()
         self.root.after_idle(self.center_player)
         self.refresh_status()
+
+    def _draw_attack_markers(self):
+        origin_x, origin_y = self._map_origin()
+        for marker in getattr(self, "attack_markers", []):
+            if marker["area"] != self.engine.current_area_filename:
+                continue
+            # Keep misses at the map edge visible rather than drawing off-map.
+            area = self.engine.current_area
+            x = origin_x + min(max(marker["x"], 0), area.width - 1) * TILE_SIZE
+            y = origin_y + min(max(marker["y"], 0), area.height - 1) * TILE_SIZE
+            if "from_x" in marker:
+                self.canvas.create_line(
+                    origin_x + marker["from_x"] * TILE_SIZE + 16,
+                    origin_y + marker["from_y"] * TILE_SIZE + 16,
+                    x + 16, y + 16, fill="#b686ff", width=3, tags="attack_feedback",
+                )
+            color = "#ffe16b" if marker["kind"] == "miss" else "#ff5353"
+            self.canvas.create_oval(
+                x + 2, y + 2, x + 30, y + 30,
+                outline=color, width=3, tags="attack_feedback",
+            )
+            if marker["kind"] != "miss":
+                self.canvas.create_text(
+                    x + 16, y + 4, text=f"-{marker['damage']}", fill=color,
+                    font=("TkDefaultFont", 10, "bold"), tags="attack_feedback",
+                )
+
+    def _clear_attack_markers(self, generation):
+        if generation == self.marker_generation:
+            self.attack_markers = []
+            self.canvas.delete("attack_feedback")
+
+    def _present_feedback(self):
+        feedback, self.engine.feedback = self.engine.feedback, []
+        if not feedback:
+            return
+        # Give this action one cue; a footstep must not queue ahead of combat.
+        kinds = {item["kind"] for item in feedback}
+        cue = next((kind for kind in ("hit", "miss", "hurt", "step") if kind in kinds), None)
+        if cue == "hurt" and "step" in kinds:
+            cue = "step_hurt"
+        if cue:
+            self.sounds.play(cue)
+        markers = [item for item in feedback if item["kind"] != "step"]
+        if markers:
+            self.attack_markers = markers
+            self.marker_generation = getattr(self, "marker_generation", 0) + 1
+            generation = self.marker_generation
+            self.canvas.delete("attack_feedback")
+            self._draw_attack_markers()
+            self.root.after(300, lambda: self._clear_attack_markers(generation))
 
     def _map_origin(self):
         area = self.engine.current_area
@@ -288,7 +371,7 @@ class TinkerRunner:
 
     def refresh_status(self):
         self.health_label.config(
-            text=f"Health: {self.engine.health}/{self.engine.stats['max_health']}"
+            text=f"Health: {self.engine.health}/{self.engine.stats['max_health']}  Armor: {self.engine.armor()}"
         )
         if self.engine.stats["max_energy"] > 0:
             self.energy_label.config(
@@ -301,7 +384,7 @@ class TinkerRunner:
             else ""
         )
         self.area_label.config(
-            text=f"{self.engine.area_name}  |  Turn {self.engine.turn_count}{result}"
+            text=f"{self.engine.area_name}  |  Facing {self.engine.facing}  |  Turn {self.engine.turn_count}{result}"
         )
 
     def _append_log(self, message):
@@ -315,9 +398,11 @@ class TinkerRunner:
             self._append_log(self.engine.events.pop(0))
 
     def _after_action(self):
+        self._present_feedback()
         self.redraw()
         self._flush_events()
         self.refresh_inventory()
+        self.refresh_active_bar()
 
     def show_dialog(self, message):
         if self.engine.events and self.engine.events[-1] == message:
@@ -419,6 +504,8 @@ class TinkerRunner:
             return
 
         self.engine = engine
+        self.attack_markers = []
+        self.marker_generation = getattr(self, "marker_generation", 0) + 1
         self.save_path = Path(filename).resolve()
         self.save_name = engine.save_name
         self.dirty = False
@@ -453,6 +540,8 @@ class TinkerRunner:
             self.inventory_window.destroy()
         self.inventory_window = None
         self.engine = engine
+        self.attack_markers = []
+        self.marker_generation = getattr(self, "marker_generation", 0) + 1
         self.save_path = None
         self.save_name = engine.game.get("name", "Saved Game")
         self.dirty = False
@@ -474,24 +563,110 @@ class TinkerRunner:
             text=f"Inventory ({len(self.engine.inventory)} slots)",
             font=("", 12, "bold"),
         ).pack(anchor=tk.W, padx=12, pady=(10, 4))
+        equipment = ttk.LabelFrame(window, text="Active slots")
+        equipment.pack(fill=tk.X, padx=12, pady=6)
+        self.inventory_selectors = {}
+        self.inventory_slot_choices = {}
+        for slot, label in zip(EQUIPMENT_SLOTS, SLOT_LABELS):
+            frame = ttk.Frame(equipment)
+            frame.pack(fill=tk.X, padx=6, pady=3)
+            ttk.Label(frame, text=label, width=12).pack(side=tk.LEFT)
+            chooser = ttk.Combobox(frame, state="readonly", width=30)
+            chooser.pack(side=tk.LEFT, fill=tk.X, expand=True)
+            chooser.bind("<<ComboboxSelected>>", lambda event, slot=slot: self.choose_inventory_equipment(slot))
+            self.inventory_selectors[slot] = chooser
+
         self.inventory_rows = []
+        self.inventory_actions = []
         for index in range(len(self.engine.inventory)):
-            row = ttk.Label(window)
-            row.pack(anchor=tk.W, padx=12, pady=2)
+            frame = ttk.Frame(window)
+            frame.pack(fill=tk.X, padx=12, pady=3)
+            row = ttk.Label(frame, width=34)
+            row.pack(side=tk.LEFT)
+            use = ttk.Button(frame, text="Use", command=lambda index=index: self.inventory_action(index, "use"))
+            use.pack(side=tk.LEFT, padx=3)
             self.inventory_rows.append(row)
-        ttk.Button(
-            window, text="Close", command=self.toggle_inventory
-        ).pack(anchor=tk.E, padx=12, pady=10)
+            self.inventory_actions.append(use)
+        ttk.Label(window, text="Choose equipment above. Select (empty) to unequip. Items stay in inventory.").pack(padx=12, pady=5)
+        ttk.Button(window, text="Close", command=self.toggle_inventory).pack(anchor=tk.E, padx=12, pady=10)
         self.refresh_inventory()
+
+    def inventory_action(self, index, action):
+        before = (dict(self.engine.equipment), set(self.engine.active_items), list(self.engine.inventory),
+                  self.engine.turn_count, self.engine.health, self.engine.energy)
+        changed = self.engine.equip(index) if action == "equip" else self.engine.use_item(index)
+        after = (self.engine.equipment, self.engine.active_items, self.engine.inventory,
+                 self.engine.turn_count, self.engine.health, self.engine.energy)
+        self.dirty = self.dirty or changed or before != after
+        self._after_action()
 
     def refresh_inventory(self):
         if self.inventory_window is None or not self.inventory_window.winfo_exists():
             return
         for index, row in enumerate(self.inventory_rows):
             item = self.engine.inventory[index]
-            row.config(text=f"Slot {index + 1}: {item or '(empty)'}")
+            slots = [slot for slot, equipped in self.engine.equipment.items() if equipped == index]
+            suffix = f" [{slots[0]}]" if slots else ""
+            row.config(text=f"{index + 1}: {self.engine.item_name(item) if item else '(empty)'}{suffix}")
+            definition = self.engine._item_definition(item) if item else {}
+            ended = self.engine.ended
+            self.inventory_actions[index].config(state=tk.NORMAL if item and definition.get("item_type") not in ("object", "openable") and not ended else tk.DISABLED)
+
+        for slot, chooser in self.inventory_selectors.items():
+            choices = [None] + [index for index, item in enumerate(self.engine.inventory)
+                                if item and compatible_slot(self.engine._item_definition(item)) == slot]
+            self.inventory_slot_choices[slot] = choices
+            labels = ["(empty)"] + [f"{index + 1}: {self.engine.item_name(self.engine.inventory[index])}" for index in choices[1:]]
+            chooser.configure(values=labels, state=tk.DISABLED if self.engine.ended else "readonly")
+            equipped = self.engine.equipment[slot]
+            chooser.current(choices.index(equipped) if equipped in choices else 0)
+
+    def choose_inventory_equipment(self, slot):
+        selected = self.inventory_selectors[slot].current()
+        choices = self.inventory_slot_choices[slot]
+        if not 0 <= selected < len(choices):
+            return
+        index = choices[selected]
+        if index is None:
+            self.unequip_slot(slot)
+        else:
+            self.inventory_action(index, "equip")
+
+    def refresh_active_bar(self):
+        for slot, icon in getattr(self, "active_buttons", {}).items():
+            index = self.engine.equipment[slot]
+            item = self.engine.inventory[index] if index is not None else None
+            image = self._get_image("objects", item) if item else None
+            icon.delete("all")
+            if image:
+                icon.create_image(0, 0, image=image, anchor=tk.NW)
+            elif item:
+                icon.create_text(16, 16, text="?", fill="#eef0f5")
+            else:
+                icon.create_text(16, 16, text="+", fill="#747d8e")
+            color = "#ffd56b" if index in self.engine.active_items else "#515b6c"
+            icon.create_rectangle(0, 0, 31, 31, outline=color)
+
+    def activate_slot(self, slot):
+        if self.engine.ended:
+            return
+        index = self.engine.equipment[slot]
+        if index is not None:
+            self.inventory_action(index, "use")
+            return
+        if self.inventory_window is None or not self.inventory_window.winfo_exists():
+            self.toggle_inventory()
+        self.inventory_window.lift()
+        self.inventory_selectors[slot].focus_set()
+
+    def unequip_slot(self, slot):
+        self.dirty = self.engine.unequip(slot) or self.dirty
+        self._after_action()
+        return "break"
 
     def on_key_press(self, event):
+        if isinstance(event.widget, ttk.Combobox):
+            return
         if self.engine.ended and event.keysym.lower() not in ("q", "i", "h", "question"):
             return "break"
         key = event.keysym.lower()
@@ -506,6 +681,16 @@ class TinkerRunner:
             self.engine.move(movement[key])
             self.dirty = self.dirty or self.engine.turn_count != previous_turn
             self._after_action()
+        elif key in ("f", "period"):
+            previous_turn = self.engine.turn_count
+            if key == "f":
+                self.engine.attack()
+            else:
+                self.engine.wait()
+            self.dirty = self.dirty or self.engine.turn_count != previous_turn
+            self._after_action()
+        elif key in ("1", "2", "3", "4", "5"):
+            self.activate_slot(EQUIPMENT_SLOTS[int(key) - 1])
         elif key == "i":
             self.toggle_inventory()
         elif key == "space":

@@ -3,8 +3,22 @@
   "areas": [
     "main-map-a.json"
   ],
-  "used_tiles": [],
-  "used_npcs": [],
+  "used_tiles": [
+    "castle",
+    "forest",
+    "mountains",
+    "swamp",
+    "town"
+  ],
+  "used_npcs": [
+    "black_blob_npc",
+    "dog_npc",
+    "dragon_npc",
+    "gargoyle_npc",
+    "orc_npc",
+    "skeleton_npc",
+    "spider_npc"
+  ],
   "used_objects": [],
   "used_triggers": [],
   "properties": {
@@ -87,8 +101,8 @@
       }
     },
     "start_area": "main-map-a.json",
-    "start_x": 10,
-    "start_y": 10
+    "start_x": 11,
+    "start_y": 8
   },
   "object_definitions": {},
   "intro_message": "",

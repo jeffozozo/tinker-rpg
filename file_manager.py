@@ -16,6 +16,34 @@ MAX_RECENT_GAMES = 10
 class FileManager:
     """Mixin class containing file management methods"""
 
+    def has_unsaved_changes(self):
+        return (
+            asdict(self.current_game) != self._saved_game_state
+            or asdict(self.current_area) != self._saved_area_state
+        )
+
+    def close_editor(self):
+        # Commit pending form fields before comparing with the saved state.
+        if hasattr(self, "save_selected_trigger") and not self.save_selected_trigger():
+            return
+        if hasattr(self, "save_enemy_definition") and not self.save_enemy_definition():
+            return
+        if hasattr(self, "player_stat_vars") and not self.save_player_setup():
+            return
+        if self.has_unsaved_changes():
+            answer = messagebox.askyesnocancel(
+                "Unsaved Changes",
+                "Save changes to the game and area before closing?",
+                parent=self.root,
+            )
+            if answer is None:
+                return
+            if answer:
+                self.save_all()
+                if self.has_unsaved_changes():
+                    return
+        self.root.destroy()
+
     def _project_path(self, *parts):
         return os.path.join(project_root(), *parts)
 
@@ -133,6 +161,8 @@ class FileManager:
         if self.current_game.areas:
             for area_filename in self.current_game.areas:
                 area_name = os.path.splitext(os.path.basename(area_filename))[0]
+                if area_filename == self.current_game.properties.get("start_area"):
+                    area_name += " (Start)"
                 self.game_areas_listbox.insert(tk.END, area_name)
         else:
             self.game_areas_listbox.insert(tk.END, "(No areas in this game)")
@@ -173,6 +203,8 @@ class FileManager:
             if hasattr(self, "refresh_trigger_editor"):
                 self.refresh_trigger_editor()
             self.update_properties_display()
+            self._saved_game_state = asdict(self.current_game)
+            self._saved_area_state = asdict(self.current_area)
     
     def save_game(self):
         if self.current_game_file:
@@ -182,6 +214,7 @@ class FileManager:
     
     def save_game_as(self):
         filename = filedialog.asksaveasfilename(
+            initialdir=self._project_path("games"),
             defaultextension=".json",
             filetypes=[("Game files", "*.json"), ("All files", "*.*")],
             initialfile=f"{self.current_game.name.replace(' ', '_')}.json",
@@ -202,6 +235,7 @@ class FileManager:
                 return False
             with open(filename, 'w') as f:
                 json.dump(asdict(self.current_game), f, indent=2)
+            self._saved_game_state = asdict(self.current_game)
             messagebox.showinfo("Save Game", f"Game saved to {filename}")
             return True
         except Exception as e:
@@ -235,9 +269,16 @@ class FileManager:
                 
                 loaded_areas = []
                 
-                # Load the first area if available
-                if self.current_game.areas:
-                    first_area_file = self._project_path("areas", self.current_game.areas[0])
+                # Open the explicit start area, with a fallback for older games.
+                from data_classes import Area
+                self.current_area = Area()
+                self.current_area_file = None
+                self._saved_area_state = asdict(self.current_area)
+                start_area = self.current_game.properties.get("start_area")
+                if self.current_game.areas or start_area:
+                    first_area_file = self._project_path(
+                        "areas", start_area or self.current_game.areas[0]
+                    )
                     if os.path.exists(first_area_file):
                         self._load_area_from_file(first_area_file, show_message=False)
                         loaded_areas = [
@@ -245,6 +286,11 @@ class FileManager:
                             if os.path.exists(self._project_path("areas", area))
                         ]
                 
+                self._saved_game_state = asdict(self.current_game)
+                self.area_name_var.set(self.current_area.name)
+                self.draw_area()
+                self.update_properties_display()
+
                 # Show consolidated load message
                 self.show_load_message(
                     loaded_areas=loaded_areas,
@@ -318,6 +364,7 @@ class FileManager:
                 else:
                     # Need to prompt for game filename
                     game_filename = filedialog.asksaveasfilename(
+                        initialdir=self._project_path("games"),
                         defaultextension=".json",
                         filetypes=[("Game files", "*.json"), ("All files", "*.*")],
                         initialfile=f"{self.current_game.name.replace(' ', '_')}.json",
@@ -355,6 +402,7 @@ class FileManager:
             self.current_area_file = None
             self.cursor_x = self.cursor_y = 0
             self.area_name_var.set(self.current_area.name)
+            self._saved_area_state = asdict(self.current_area)
             self.draw_area()
             if hasattr(self, "refresh_trigger_editor"):
                 self.refresh_trigger_editor()
@@ -409,6 +457,7 @@ class FileManager:
                 self.sync_enemy_instances()
             with open(filename, 'w') as f:
                 json.dump(asdict(self.current_area), f, indent=2)
+            self._saved_area_state = asdict(self.current_area)
             messagebox.showinfo("Save Area", f"Area saved to {filename}")
             return True
         except Exception as e:
@@ -434,6 +483,7 @@ class FileManager:
                 self.sync_enemy_instances()
             
             self.current_area_file = filename
+            self._saved_area_state = asdict(self.current_area)
             self.cursor_x = self.cursor_y = 0
             self.area_name_var.set(self.current_area.name)
             self.draw_area()
@@ -464,6 +514,8 @@ class FileManager:
             )
 
         area = Area(**area_dict)
+        if not area.name or not area.name.strip() or area.name == "Untitled Area":
+            area.name = os.path.splitext(os.path.basename(filename))[0]
         if (len(area.tiles) != height or
                 any(not isinstance(row, list) or len(row) != width
                     for row in area.tiles)):

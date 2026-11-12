@@ -1,0 +1,168 @@
+{
+  "name": "another_test",
+  "areas": [
+    "blob_battle.json"
+  ],
+  "used_tiles": [
+    "cobblestone_floor"
+  ],
+  "used_npcs": [
+    "spider_npc",
+    "black_blob_npc",
+    "orc_npc",
+    "skeleton_npc",
+    "dragon_npc",
+    "gargoyle_npc"
+  ],
+  "used_objects": [
+    "helmet_object",
+    "sword_object"
+  ],
+  "used_triggers": [
+    "trigger"
+  ],
+  "properties": {
+    "enemies": {
+      "enemy_e460d06eff9843d4b71e9523b8d44560": {
+        "id": "enemy_e460d06eff9843d4b71e9523b8d44560",
+        "name": "Gargoyle",
+        "sprite": "gargoyle_npc",
+        "health": 24,
+        "movement_speed": 0.5,
+        "ranged_attack": "none",
+        "starter_key": "example:gargoyle",
+        "behavior": "stationary",
+        "contact_damage": 1
+      },
+      "enemy_895c7c1a870e4c45a929a6c60ed06961": {
+        "id": "enemy_895c7c1a870e4c45a929a6c60ed06961",
+        "name": "Orc",
+        "sprite": "orc_npc",
+        "health": 16,
+        "movement_speed": 1.0,
+        "ranged_attack": "none",
+        "starter_key": "example:orc"
+      },
+      "enemy_99c2632e0d3b4f43bfe8497350686aa1": {
+        "id": "enemy_99c2632e0d3b4f43bfe8497350686aa1",
+        "name": "Dragon",
+        "sprite": "dragon_npc",
+        "health": 50,
+        "movement_speed": 0.5,
+        "ranged_attack": "flame",
+        "starter_key": "example:dragon"
+      },
+      "enemy_702dde27c5b3407e826772847f0af869": {
+        "id": "enemy_702dde27c5b3407e826772847f0af869",
+        "name": "Spider",
+        "sprite": "spider_npc",
+        "health": 8,
+        "movement_speed": 1.5,
+        "ranged_attack": "none",
+        "starter_key": "example:spider"
+      },
+      "enemy_5e5c77b68ea24175b8df8f43455ee5e8": {
+        "id": "enemy_5e5c77b68ea24175b8df8f43455ee5e8",
+        "name": "Skeleton",
+        "sprite": "skeleton_npc",
+        "health": 12,
+        "movement_speed": 1.0,
+        "ranged_attack": "none",
+        "starter_key": "example:skeleton"
+      },
+      "enemy_42f567a5a79143e8b47f88c786d22ae0": {
+        "id": "enemy_42f567a5a79143e8b47f88c786d22ae0",
+        "name": "Black Blob",
+        "sprite": "black_blob_npc",
+        "health": 10,
+        "movement_speed": 0.75,
+        "ranged_attack": "none",
+        "starter_key": "example:black_blob",
+        "behavior": "chase",
+        "contact_damage": 1
+      }
+    },
+    "player": {
+      "sprite": "frog_npc",
+      "starting_inventory": [
+        "sword_object",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        ""
+      ],
+      "stats": {
+        "starting_health": 20,
+        "max_health": 20,
+        "starting_energy": 10,
+        "max_energy": 10,
+        "strength": 1,
+        "intelligence": 1,
+        "gold": 0
+      }
+    },
+    "start_area": "blob_battle.json",
+    "start_x": 0,
+    "start_y": 0
+  },
+  "object_definitions": {
+    "helmet_object": {
+      "item_type": "armor",
+      "weapon_damage": 0,
+      "gettable": true,
+      "walkable": true,
+      "effect_mode": "passive",
+      "effects": {
+        "health": 0,
+        "energy": 0,
+        "armor": 5,
+        "attack": 0
+      },
+      "equipment_slot": "head",
+      "armor_bonus": 5
+    },
+    "sword_object": {
+      "item_type": "weapon",
+      "weapon_damage": 4,
+      "gettable": true,
+      "walkable": true,
+      "effect_mode": "passive",
+      "effects": {
+        "health": 0,
+        "energy": 0,
+        "armor": 0,
+        "attack": 0
+      }
+    },
+    "magic_wand_object": {
+      "item_type": "weapon",
+      "gettable": true,
+      "weapon_damage": 5,
+      "ranged": true,
+      "attack_range": 6,
+      "energy_cost": 1
+    },
+    "blue_gem_object": {
+      "item_type": "consumable",
+      "gettable": true,
+      "effect_mode": "consumable",
+      "effects": {
+        "health": 8,
+        "energy": 3,
+        "armor": 0,
+        "attack": 0
+      }
+    },
+    "book_object": {
+      "item_type": "readable",
+      "gettable": true,
+      "read_text": "Equip a weapon, helmet, and shield from inventory (I). Click active slots or press 1\u20135 to use them. F attacks in your facing direction. A wand fires up to six tiles and uses one energy. The blue gem restores eight health and three energy. Right-click an active slot to unequip it."
+    }
+  },
+  "intro_message": "",
+  "instructions_message": "I opens inventory: Equip an item to activate it, or Use it directly. The five bottom slots are weapon, head, off hand, light, and quick item. Click a slot (or press 1\u20135) to use it; click an empty slot to choose equipment; right-click to unequip. F attacks with your equipped weapon in the last direction pressed. Arrows/WASD move, . waits, Space interacts with nearby objects. Equipment changes and reading are free; firing, consuming, and toggling a light take a turn. The blob chases after each turn. Zero health means game over.",
+  "game_end_message": ""
+}

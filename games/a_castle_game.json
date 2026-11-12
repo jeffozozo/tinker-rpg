@@ -8,34 +8,36 @@
     "cave.json"
   ],
   "used_tiles": [
-    "cobblestone_floor",
-    "mountains",
-    "grass",
-    "swamp",
-    "gray_brick_wall",
-    "castle",
     "blue_brick_wall",
-    "forest",
-    "gray_brick_door",
-    "lake_center",
     "brown_brick_wall",
-    "town"
+    "castle",
+    "cobblestone_floor",
+    "forest",
+    "grass",
+    "gray_brick_door",
+    "gray_brick_wall",
+    "lake_center",
+    "mountains",
+    "swamp",
+    "town",
+    "up_stairs"
   ],
   "used_npcs": [
     "black_blob_npc",
+    "dragon_npc",
+    "gargoyle_npc",
     "oldwoman_npc",
     "orc_npc",
-    "spider_npc",
-    "dragon_npc",
+    "peasant_npc",
     "skeleton_npc",
-    "gargoyle_npc"
+    "spider_npc"
   ],
   "used_objects": [
-    "lever_object",
-    "gargoyle_object",
     "candles_object",
-    "throne_object",
-    "fountain_object"
+    "fountain_object",
+    "gargoyle_object",
+    "lever_object",
+    "throne_object"
   ],
   "used_triggers": [
     "trigger"

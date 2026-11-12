@@ -1,6 +1,8 @@
 """Game loading and turn-based state for the Tinker runner."""
 
 import json
+import math
+from collections import deque
 import os
 import sys
 import tempfile
@@ -14,11 +16,13 @@ from data_classes import (
     MAX_PLAYER_INVENTORY_SLOTS,
     Area,
     GameObject,
+    Game,
     Tile,
     Trigger,
 )
 from project_paths import asset_root as get_asset_root
 from project_paths import project_root as get_project_root
+from item_rules import EQUIPMENT_SLOTS, compatible_slot, validate_item
 from tile_manager import default_tile_walkable
 
 
@@ -128,7 +132,9 @@ class RunnerEngine:
     def _initialize_runtime(self, dialog_handler=None):
         self.dialog_handler = dialog_handler
         self.events = []
+        self.feedback = []
         self.validation_issues = []
+        self.facing = "down"
         self.turn_count = 0
         self.ended = False
         self.end_result = None
@@ -166,6 +172,12 @@ class RunnerEngine:
                     f"{self.game_path}: each object definition must be an object "
                     "keyed by its object ID."
                 )
+            try:
+                validate_item(self._item_definition(object_type))
+                if definition.get("ammo_item") == object_type:
+                    raise ValueError("A weapon cannot use itself as ammunition.")
+            except ValueError as error:
+                raise RunnerError(f"{self.game_path}: {object_type}: {error}") from error
             if "walkable" in definition and type(definition["walkable"]) is not bool:
                 raise RunnerError(
                     f"{self.game_path}: {object_type}.walkable must be true or false."
@@ -176,6 +188,25 @@ class RunnerEngine:
         self._load_player()
         if set_start:
             self._set_start_position()
+        for area in self.areas.values():
+            for obj in area.objects:
+                definition = self._enemy_definition(obj)
+                if definition is None:
+                    continue
+                speed = definition.get("movement_speed", 1.0)
+                damage = definition.get("contact_damage", 1)
+                health = definition.get("health", 10)
+                if (type(speed) not in (int, float) or not math.isfinite(speed) or speed < 0
+                        or type(damage) is not int or damage < 0
+                        or type(health) is not int or health < 1
+                        or definition.get("behavior", "stationary") not in ("stationary", "chase")):
+                    raise RunnerError(f"Invalid movement or combat settings for enemy {obj.type!r}.")
+                remaining = obj.properties.get("enemy_health", health)
+                credit = obj.properties.get("movement_credit", 0.0)
+                if (type(remaining) is not int or not 0 <= remaining <= health
+                        or type(credit) not in (int, float) or not math.isfinite(credit)
+                        or not 0 <= credit < 1):
+                    raise RunnerError(f"Invalid saved combat state for enemy {obj.type!r}.")
         self._validate_trigger_references()
         self._validate_asset_references()
 
@@ -199,6 +230,9 @@ class RunnerEngine:
                 "energy": self.energy,
                 "gold": self.stats["gold"],
                 "inventory": self.inventory,
+                "equipment": self.equipment,
+                "active_items": sorted(self.active_items),
+                "facing": self.facing,
             },
             "turn_count": self.turn_count,
             "ended": self.ended,
@@ -299,12 +333,11 @@ class RunnerEngine:
         if (
             type(engine.player_x) is not int
             or type(engine.player_y) is not int
-            or not engine._position_is_open(
-            engine.current_area, engine.player_x, engine.player_y
-            )
+            or not (0 <= engine.player_x < engine.current_area.width
+                    and 0 <= engine.player_y < engine.current_area.height)
         ):
             raise RunnerError(
-                f"{save_path}: saved player position is blocked or out of bounds."
+                f"{save_path}: saved player position is out of bounds."
             )
 
         for field, minimum, maximum in (
@@ -333,6 +366,17 @@ class RunnerEngine:
                 f"{MAX_PLAYER_INVENTORY_SLOTS} text slots."
             )
         engine.inventory = inventory
+        engine._load_equipment(player_state.get("equipment", {}))
+        active = player_state.get("active_items", [])
+        if (not isinstance(active, list) or any(type(index) is not int
+                or index not in engine.equipment.values()
+                or engine._item_definition(engine.inventory[index])["item_type"] != "toggle"
+                for index in active)):
+            raise RunnerError("Invalid saved active items.")
+        engine.active_items = set(active)
+        engine.facing = player_state.get("facing", "down")
+        if engine.facing not in DIRECTIONS:
+            raise RunnerError("Invalid saved facing direction.")
         turn_count = data.get("turn_count")
         if type(turn_count) is not int or turn_count < 0:
             raise RunnerError(f"{save_path}: turn_count must be a non-negative integer.")
@@ -627,6 +671,22 @@ class RunnerEngine:
                     "definition or project asset."
                 )
 
+        self._load_equipment(player.get("starting_equipment", {}))
+        self.active_items = set()
+
+    def _load_equipment(self, equipment):
+        if not isinstance(equipment, dict) or set(equipment) - set(EQUIPMENT_SLOTS):
+            raise RunnerError("Equipment must contain valid active slots.")
+        self.equipment = dict.fromkeys(EQUIPMENT_SLOTS)
+        for slot, index in equipment.items():
+            if index is None:
+                continue
+            if (type(index) is not int or not 0 <= index < len(self.inventory)
+                    or not self.inventory[index]
+                    or compatible_slot(self._item_definition(self.inventory[index])) != slot):
+                raise RunnerError(f"Invalid inventory item for equipment slot {slot}.")
+            self.equipment[slot] = index
+
     def _set_start_position(self):
         start_area = self.properties.get("start_area")
         if not start_area:
@@ -641,12 +701,11 @@ class RunnerEngine:
             raise RunnerError(
                 f"{self.game_path}: properties.start_x and start_y must be integers."
             )
-        if not self._position_is_open(
-            self.current_area, self.player_x, self.player_y
-        ):
+        if not (0 <= self.player_x < self.current_area.width
+                and 0 <= self.player_y < self.current_area.height):
             raise RunnerError(
                 f"{self.game_path}: player start ({self.player_x},{self.player_y}) "
-                f"in {self.current_area_filename} is blocked or out of bounds."
+                f"in {self.current_area_filename} is out of bounds."
             )
 
     @property
@@ -673,7 +732,11 @@ class RunnerEngine:
                 if obj.properties.get("walkable", False) is False:
                     return False
                 continue
-            definition = self.object_definitions.get(obj.type, {})
+            definition = self._item_definition(obj.type)
+            if definition["item_type"] == "openable":
+                if not obj.properties.get("open", False):
+                    return False
+                continue
             default_walkable = (
                 definition.get("walkable", True)
                 if isinstance(definition, dict)
@@ -682,6 +745,12 @@ class RunnerEngine:
             if obj.properties.get("walkable", default_walkable) is False:
                 return False
         return True
+
+    def _feedback(self, kind, x, y, damage=0):
+        self.feedback.append({
+            "kind": kind, "area": self.current_area_filename,
+            "x": x, "y": y, "damage": damage,
+        })
 
     def _report(self, message):
         self.events.append(message)
@@ -702,6 +771,7 @@ class RunnerEngine:
         if direction not in DIRECTIONS:
             self._report(f"Unknown direction: {direction}.")
             return False
+        self.facing = direction
         dx, dy = DIRECTIONS[direction]
         target_x, target_y = self.player_x + dx, self.player_y + dy
         if not (0 <= target_x < self.current_area.width and
@@ -712,9 +782,246 @@ class RunnerEngine:
             self._report("That way is blocked.")
             return False
         self.player_x, self.player_y = target_x, target_y
+        self._feedback("step", target_x, target_y)
         self.turn_count += 1
         self.process_entry_triggers()
+        self._enemy_turn()
         return True
+
+    def _enemy_definition(self, obj):
+        if "enemy_id" not in obj.properties and "enemy_data" not in obj.properties:
+            return None
+        definitions = self.properties.get("enemies", {})
+        if not isinstance(definitions, dict):
+            raise RunnerError("Game enemy definitions must be an object.")
+        definition = definitions.get(
+            obj.properties.get("enemy_id"), obj.properties.get("enemy_data", {})
+        )
+        if not isinstance(definition, dict):
+            raise RunnerError(f"Enemy {obj.type!r} must have an object definition.")
+        return definition
+
+    def _chase_step(self, enemy):
+        # Breadth-first search finds a shortest route around walls and objects.
+        start = (enemy.x, enemy.y)
+        target = (self.player_x, self.player_y)
+        queue = deque([(start, None)])
+        visited = {start}
+        while queue:
+            (x, y), first_step = queue.popleft()
+            for dx, dy in DIRECTIONS.values():
+                point = (x + dx, y + dy)
+                if point in visited:
+                    continue
+                step = first_step or point
+                if point == target:
+                    return step
+                if self._position_is_open(self.current_area, *point):
+                    visited.add(point)
+                    queue.append((point, step))
+        return None
+
+    def _enemy_turn(self):
+        if self.ended:
+            return
+        for enemy in list(self.current_area.objects):
+            definition = self._enemy_definition(enemy)
+            if definition is None:
+                continue
+            health = enemy.properties.setdefault("enemy_health", definition.get("health", 10))
+            if health <= 0:
+                self.current_area.objects.remove(enemy)
+                continue
+            if definition.get("behavior", "stationary") != "chase":
+                continue
+            speed = definition.get("movement_speed", 1.0)
+            credit = enemy.properties.get("movement_credit", 0.0) + speed
+            steps = int(credit)
+            enemy.properties["movement_credit"] = credit - steps
+            # More than the map size cannot improve a shortest chase this turn.
+            for _ in range(min(steps, self.current_area.width * self.current_area.height)):
+                if (enemy.x, enemy.y) == (self.player_x, self.player_y):
+                    break
+                step = self._chase_step(enemy)
+                if step is None:
+                    break
+                if step == (self.player_x, self.player_y):
+                    break
+                enemy.x, enemy.y = step
+            if abs(enemy.x - self.player_x) + abs(enemy.y - self.player_y) <= 1:
+                damage = max(0, definition.get("contact_damage", 1) - self.armor())
+                self.health = max(0, self.health - damage)
+                self._feedback("hurt", self.player_x, self.player_y, damage)
+                self._report(f"{definition.get('name', enemy.type)} hits you for {damage} damage.")
+                if self.health == 0:
+                    self.ended = True
+                    self.end_result = "lose"
+                    self._dialog("Game over. You have died.")
+                    return
+
+    def wait(self):
+        if self.ended:
+            return False
+        self.turn_count += 1
+        self._enemy_turn()
+        return True
+
+    def _item_definition(self, item):
+        return Game(object_definitions=self.object_definitions).get_object_definition(item)
+
+    def equip(self, index, slot=None):
+        if self.ended or type(index) is not int or not 0 <= index < len(self.inventory) or not self.inventory[index]:
+            return False
+        item = self.inventory[index]
+        expected = compatible_slot(self._item_definition(item))
+        slot = slot or expected
+        if expected is None or slot != expected:
+            self._report("That item does not fit this active slot.")
+            return False
+        old = self.equipment[slot]
+        if old is not None:
+            self.active_items.discard(old)
+        self.equipment[slot] = index
+        self._report(f"Equipped {self.item_name(item)} in {slot}.")
+        return True
+
+    def unequip(self, slot):
+        if self.ended or slot not in self.equipment or self.equipment[slot] is None:
+            return False
+        self.active_items.discard(self.equipment[slot])
+        self.equipment[slot] = None
+        self._report(f"Unequipped {slot}.")
+        return True
+
+    @staticmethod
+    def item_name(item):
+        return item.removesuffix("_object").replace("_", " ")
+
+    def _remove_inventory_item(self, index):
+        self.inventory[index] = ""
+        for slot, equipped in self.equipment.items():
+            if equipped == index:
+                self.equipment[slot] = None
+        self.active_items.discard(index)
+
+    def armor(self):
+        return sum(self._item_definition(self.inventory[index])["armor_bonus"]
+                   for slot in ("head", "offhand")
+                   if (index := self.equipment[slot]) is not None)
+
+    def use_item(self, index):
+        if self.ended or type(index) is not int or not 0 <= index < len(self.inventory) or not self.inventory[index]:
+            return False
+        item = self.inventory[index]
+        definition = self._item_definition(item)
+        kind = definition["item_type"]
+        if kind == "weapon":
+            if self.equipment["weapon"] != index:
+                self.equip(index)
+            return self.attack()
+        if kind == "armor":
+            if self.equipment[compatible_slot(definition)] != index:
+                return self.equip(index)
+            self._report(f"{self.item_name(item).title()}: +{definition['armor_bonus']} armor while equipped.")
+            return False
+        if kind == "readable":
+            self._dialog(definition["read_text"] or "There is nothing written here.")
+            return False
+        if kind == "toggle":
+            if self.equipment["light"] != index:
+                self.equip(index)
+            if index in self.active_items:
+                self.active_items.remove(index)
+            else:
+                self.active_items.add(index)
+            state = "on" if index in self.active_items else "off"
+            self._report(f"{self.item_name(item).title()} is {state}.")
+        elif kind == "consumable":
+            effects = definition["effects"]
+            health = min(self.stats["max_health"], max(0, self.health + effects.get("health", 0)))
+            energy = min(self.stats["max_energy"], max(0, self.energy + effects.get("energy", 0)))
+            if (health, energy) == (self.health, self.energy):
+                self._report("That item has no effect right now.")
+                return False
+            self.health, self.energy = health, energy
+            self._remove_inventory_item(index)
+            self._report(f"Used {self.item_name(item)}.")
+            if not self.health:
+                self.ended, self.end_result = True, "lose"
+                self._dialog("Game over. You have died.")
+        else:
+            self._report("That item has no use action.")
+            return False
+        self.turn_count += 1
+        self._enemy_turn()
+        return True
+
+    def use_slot(self, slot):
+        index = self.equipment.get(slot)
+        return self.use_item(index) if index is not None else False
+
+    def attack_weapon(self):
+        index = self.equipment["weapon"]
+        item = self.inventory[index] if index is not None else None
+        return (item, self._item_definition(item)["weapon_damage"]) if item else (None, 0)
+
+    def attack(self, direction=None):
+        if self.ended:
+            return False
+        direction = direction or self.facing
+        if direction not in DIRECTIONS:
+            return False
+        self.facing = direction
+        weapon, bonus = self.attack_weapon()
+        settings = self._item_definition(weapon) if weapon else {}
+        ranged = settings.get("ranged", False)
+        cost = settings.get("energy_cost", 0) if ranged else 0
+        ammo = settings.get("ammo_item", "") if ranged else ""
+        if self.energy < cost or (ammo and ammo not in self.inventory):
+            self._report("Not enough energy or ammunition to fire.")
+            return False
+        if ranged:
+            self.energy -= cost
+            if ammo:
+                self._remove_inventory_item(self.inventory.index(ammo))
+        dx, dy = DIRECTIONS[direction]
+        target = (self.player_x, self.player_y)
+        enemy = None
+        for distance in range(1, (settings.get("attack_range", 6) if ranged else 1) + 1):
+            target = (self.player_x + dx * distance, self.player_y + dy * distance)
+            if not (0 <= target[0] < self.current_area.width and 0 <= target[1] < self.current_area.height):
+                break
+            if ranged:
+                tile = self.current_area.tiles[target[1]][target[0]]
+                walkable = tile.walkable_override if tile.walkable_override is not None else default_tile_walkable(tile.type)
+                if not walkable:
+                    break
+            enemy = next((obj for obj in self.current_area.objects
+                          if (obj.x, obj.y) == target and self._enemy_definition(obj) is not None), None)
+            if enemy is not None or not self._position_is_open(self.current_area, *target):
+                break
+        if enemy is not None:
+            definition = self._enemy_definition(enemy)
+            damage = max(1, self.stats["strength"]) + bonus
+            method = f"with a {self.item_name(weapon)}" if weapon else "unarmed"
+            self._report(f"You attack {definition.get('name', enemy.type)} {method}.")
+            remaining = max(0, enemy.properties.get("enemy_health", definition.get("health", 10)) - damage)
+            enemy.properties["enemy_health"] = remaining
+            self._feedback("hit", *target, damage)
+            self._report(f"You hit {definition.get('name', enemy.type)} for {damage} damage ({remaining} health left).")
+            if remaining == 0:
+                self.current_area.objects.remove(enemy)
+                self._report(f"{definition.get('name', enemy.type)} defeated.")
+        else:
+            self._feedback("miss", *target)
+            self._report("Miss! No enemy within reach in that direction.")
+        if ranged:
+            self.feedback[-1].update(from_x=self.player_x, from_y=self.player_y)
+        if enemy is not None or ranged:
+            self.turn_count += 1
+            self._enemy_turn()
+            return True
+        return False
 
     def process_entry_triggers(self, visited=None):
         if self.ended:
@@ -735,10 +1042,14 @@ class RunnerEngine:
                 old_location = (
                     self.current_area_filename, self.player_x, self.player_y
                 )
+                owner = self.current_area
                 try:
                     self._execute_trigger(trigger)
                 except RunnerError as error:
                     self._report(f"Trigger {trigger.name!r}: {error}")
+                    return
+                if trigger.parameters.get("once", False):
+                    owner.triggers.remove(trigger)
                 if self.ended:
                     return
                 new_location = (
@@ -756,6 +1067,8 @@ class RunnerEngine:
             for trigger in area.triggers:
                 params = trigger.parameters
                 try:
+                    if type(params.get("once", False)) is not bool:
+                        raise RunnerError("once must be true or false.")
                     if trigger.trigger_type == "teleport":
                         destination = self.area_filename(params.get("area", ""))
                         x, y = params.get("x"), params.get("y")
@@ -766,14 +1079,19 @@ class RunnerEngine:
                                 f"target {destination} ({x},{y}) is blocked or out of bounds."
                             )
                     elif trigger.trigger_type == "area_object":
-                        destination = self.area_filename(params.get("area", ""))
+                        destination = self.area_filename(params.get("area") or filename)
+                        if params.get("action", "add") not in ("add", "remove"):
+                            raise RunnerError("area object action must be add or remove.")
                         object_type = params.get("object")
                         if not isinstance(object_type, str) or not object_type:
                             raise RunnerError("object name is missing.")
                         target = self.areas[destination]
-                        if not (trigger.x < target.width and trigger.y < target.height):
+                        x, y = params.get("x", trigger.x), params.get("y", trigger.y)
+                        if type(x) is not int or type(y) is not int:
+                            raise RunnerError("object coordinates must be integers.")
+                        if not (0 <= x < target.width and 0 <= y < target.height):
                             raise RunnerError(
-                                f"spawn position ({trigger.x},{trigger.y}) is outside "
+                                f"object position ({x},{y}) is outside "
                                 f"{destination}."
                             )
                     elif trigger.trigger_type == "tile_update":
@@ -880,6 +1198,8 @@ class RunnerEngine:
     def _execute_trigger(self, trigger):
         params = trigger.parameters
         trigger_type = trigger.trigger_type
+        if type(params.get("once", False)) is not bool:
+            raise RunnerError("once must be true or false.")
         if trigger_type == "show_message":
             message = params.get("message", "")
             if not isinstance(message, str):
@@ -945,33 +1265,43 @@ class RunnerEngine:
             except ValueError as error:
                 raise RunnerError("inventory is full; no item was added.") from error
             slots[empty_slot] = add_item
+        if remove_item:
+            self._remove_inventory_item(self.inventory.index(remove_item))
         self.inventory = slots
-        if add_item or remove_item:
-            self._report("Inventory updated.")
+        if remove_item:
+            self._report(f"Removed {self.item_name(remove_item)} from inventory.")
+        if add_item:
+            self._report(f"Added {self.item_name(add_item)} to inventory.")
 
     def _add_area_object(self, trigger, params):
+        # The legacy method name is retained for existing callers.
         try:
-            filename = self.area_filename(params.get("area", ""))
+            filename = self.area_filename(params.get("area") or self.current_area_filename)
         except RunnerError as error:
             raise RunnerError(f"invalid destination area: {error}") from error
         object_type = params.get("object")
         if not isinstance(object_type, str) or not object_type:
             raise RunnerError("area object trigger is missing an object name.")
+        action = params.get("action", "add")
+        if action not in ("add", "remove"):
+            raise RunnerError("area object action must be add or remove.")
         area = self.areas[filename]
-        if not (0 <= trigger.x < area.width and 0 <= trigger.y < area.height):
-            raise RunnerError(
-                f"spawn position ({trigger.x},{trigger.y}) is outside {filename}."
-            )
-        if any(
-            obj.type == object_type and obj.x == trigger.x and obj.y == trigger.y
-            for obj in area.objects
-        ):
+        x, y = params.get("x", trigger.x), params.get("y", trigger.y)
+        if (type(x) is not int or type(y) is not int
+                or not (0 <= x < area.width and 0 <= y < area.height)):
+            raise RunnerError(f"object position ({x},{y}) is outside {filename}.")
+        existing = next((obj for obj in area.objects
+                         if obj.type == object_type and obj.x == x and obj.y == y), None)
+        if action == "remove":
+            if existing is None:
+                raise RunnerError(f"no {object_type} at ({x},{y}) in {filename}.")
+            area.objects.remove(existing)
+            self._report(f"Removed {self.item_name(object_type)} from {filename}.")
+        elif existing is not None:
             self._report(f"{object_type} is already present in {filename}.")
-            return
-        area.objects.append(GameObject(
-            type=object_type, x=trigger.x, y=trigger.y
-        ))
-        self._report(f"Added {object_type} to {filename}.")
+        else:
+            area.objects.append(GameObject(type=object_type, x=x, y=y))
+            self._report(f"Added {self.item_name(object_type)} to {filename}.")
 
     def _teleport(self, params):
         try:
@@ -1003,8 +1333,18 @@ class RunnerEngine:
             for obj in list(self.current_area.objects):
                 if (obj.x, obj.y) != (x, y):
                     continue
-                definition = self.object_definitions.get(obj.type, {})
-                if not isinstance(definition, dict) or not definition.get("gettable"):
+                definition = self._item_definition(obj.type)
+                if definition["item_type"] == "openable":
+                    opened = not obj.properties.get("open", False)
+                    if not opened and (obj.x, obj.y) == (self.player_x, self.player_y):
+                        self._report("Step away before closing it.")
+                        return False
+                    obj.properties["open"] = opened
+                    self._report(f"{self.item_name(obj.type).title()} is {'open' if opened else 'closed'}.")
+                    self.turn_count += 1
+                    self._enemy_turn()
+                    return True
+                if not definition.get("gettable"):
                     continue
                 try:
                     empty_slot = self.inventory.index("")
@@ -1015,6 +1355,7 @@ class RunnerEngine:
                 self.current_area.objects.remove(obj)
                 self.turn_count += 1
                 self._report(f"Picked up {obj.type}.")
+                self._enemy_turn()
                 return True
         self._report("There is nothing to interact with nearby.")
         return False
