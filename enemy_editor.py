@@ -250,6 +250,13 @@ class EnemyEditor:
         self.enemy_ranged_attack_var.set(
             definition.get("ranged_attack", "none")
         )
+        if hasattr(self, "remember_editor_form"):
+            self.remember_editor_form("enemy", [
+                getattr(self, name) for name in (
+                    "enemy_name_var", "enemy_sprite_var", "enemy_health_var", "enemy_speed_var",
+                    "enemy_ranged_attack_var", "enemy_behavior_var", "enemy_damage_var",
+                ) if hasattr(self, name)
+            ])
 
     def select_enemy_definition(self, index):
         enemy_ids = list(self.get_enemy_definitions())
@@ -345,6 +352,13 @@ class EnemyEditor:
                 f"Could not update every saved area for this enemy: {error}",
             )
             return False
+        if hasattr(self, "remember_editor_form"):
+            self.remember_editor_form("enemy", [
+                getattr(self, name) for name in (
+                    "enemy_name_var", "enemy_sprite_var", "enemy_health_var", "enemy_speed_var",
+                    "enemy_ranged_attack_var", "enemy_behavior_var", "enemy_damage_var",
+                ) if hasattr(self, name)
+            ])
         if refresh:
             self.refresh_enemy_editor()
         if hasattr(self, "draw_area"):

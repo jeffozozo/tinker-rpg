@@ -42,6 +42,7 @@ class TinkerEditor(EnemyEditor, EditorMethods, FileManager, DialogTools):
         self.selected_trigger_index = 0
         self.trigger_colors = {
             "teleport": "#0066CC",      # Blue
+            "player_stats": "#B2498A",
             "inventory": "#009900",     # Green
             "tile_update": "#FFCC00",   # Yellow
             "area_object": "#FF6600",   # Orange
@@ -55,6 +56,8 @@ class TinkerEditor(EnemyEditor, EditorMethods, FileManager, DialogTools):
         self._saved_game_state = asdict(self.current_game)
         self._saved_area_state = asdict(self.current_area)
         self.root.protocol("WM_DELETE_WINDOW", self.close_editor)
+        if self.root.tk.call("tk", "windowingsystem") == "aqua":
+            self.root.createcommand("tk::mac::Quit", self.close_editor)
         self.bind_events()
         self.show_startup_message()
 
@@ -98,6 +101,7 @@ class TinkerEditor(EnemyEditor, EditorMethods, FileManager, DialogTools):
         game_menu.add_command(label="Save All", command=self.save_all)
         game_menu.add_separator()
         game_menu.add_command(label="Game Properties", command=self.show_game_properties)
+        game_menu.add_command(label="Reload Assets", command=self.reload_assets)
         
         # Area menu
         area_menu = tk.Menu(menubar, tearoff=0)
@@ -206,7 +210,7 @@ class TinkerEditor(EnemyEditor, EditorMethods, FileManager, DialogTools):
         self.area_name_var = tk.StringVar(value=self.current_area.name)
         name_entry = ttk.Entry(info_frame, textvariable=self.area_name_var, width=20)
         name_entry.pack(side=tk.LEFT, padx=(5, 0))
-        name_entry.bind('<KeyRelease>', self.on_area_name_change)
+        self.area_name_var.trace_add("write", self.on_area_name_change)
         
         coordinate_frame = ttk.Frame(info_frame)
         coordinate_frame.pack(side=tk.RIGHT)

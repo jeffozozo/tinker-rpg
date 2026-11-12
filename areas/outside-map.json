@@ -1560,7 +1560,9 @@
           "health": 8,
           "movement_speed": 1.5,
           "ranged_attack": "none",
-          "starter_key": "example:spider"
+          "starter_key": "example:spider",
+          "behavior": "stationary",
+          "contact_damage": 1
         },
         "walkable": false
       }
@@ -1578,7 +1580,9 @@
           "health": 8,
           "movement_speed": 1.5,
           "ranged_attack": "none",
-          "starter_key": "example:spider"
+          "starter_key": "example:spider",
+          "behavior": "stationary",
+          "contact_damage": 1
         },
         "walkable": false
       }
@@ -1605,6 +1609,39 @@
         "area": "great_hall",
         "x": 3,
         "y": 11
+      }
+    },
+    {
+      "x": 6,
+      "y": 13,
+      "trigger_type": "player_stats",
+      "name": "trigger_3",
+      "parameters": {
+        "stat": "health",
+        "amount": -2,
+        "once": false
+      }
+    },
+    {
+      "x": 4,
+      "y": 12,
+      "trigger_type": "player_stats",
+      "name": "trigger_4",
+      "parameters": {
+        "stat": "health",
+        "amount": -2,
+        "once": false
+      }
+    },
+    {
+      "x": 9,
+      "y": 8,
+      "trigger_type": "player_stats",
+      "name": "trigger_5",
+      "parameters": {
+        "stat": "health",
+        "amount": 5,
+        "once": false
       }
     }
   ]

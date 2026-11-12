@@ -121,7 +121,7 @@ class TileManager:
             os.makedirs(objects_dir)
             return False
         
-        png_files = glob.glob(os.path.join(objects_dir, "*.png"))
+        png_files = sorted(glob.glob(os.path.join(objects_dir, "*.png")))
         loaded_any = False
         for png_file in png_files:
             try:
@@ -130,7 +130,9 @@ class TileManager:
                 if pil_image.size != (32, 32):
                     pil_image = pil_image.resize((32, 32), Image.NEAREST)
                 photo_image = ImageTk.PhotoImage(pil_image)
-                display_name = obj_name.replace('_', ' ').title()
+                display_name = obj_name.removesuffix('_object').replace('_', ' ').title()
+                if obj_name == 'fountain_red_object':
+                    display_name = 'Fountain Red'
                 
                 self.objects[obj_name] = {
                     "image": photo_image,

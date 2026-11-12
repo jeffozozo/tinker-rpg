@@ -16,20 +16,36 @@ MAX_RECENT_GAMES = 10
 class FileManager:
     """Mixin class containing file management methods"""
 
+    @staticmethod
+    def _editor_form_values(variables):
+        return tuple(variable.get("1.0", "end-1c") if isinstance(variable, tk.Text)
+                     else variable.get() for variable in variables)
+
+    def remember_editor_form(self, name, variables):
+        if not hasattr(self, "_editor_form_baselines"):
+            self._editor_form_baselines = {}
+        variables = tuple(variables)
+        self._editor_form_baselines[name] = (variables, self._editor_form_values(variables))
+
+    def pending_editor_forms(self):
+        pending = set()
+        for name, (variables, baseline) in getattr(self, "_editor_form_baselines", {}).items():
+            try:
+                if self._editor_form_values(variables) != baseline:
+                    pending.add(name)
+            except tk.TclError:
+                # A form has been destroyed while changing the selected tool.
+                continue
+        return pending
+
     def has_unsaved_changes(self):
         return (
             asdict(self.current_game) != self._saved_game_state
             or asdict(self.current_area) != self._saved_area_state
+            or bool(self.pending_editor_forms())
         )
 
     def close_editor(self):
-        # Commit pending form fields before comparing with the saved state.
-        if hasattr(self, "save_selected_trigger") and not self.save_selected_trigger():
-            return
-        if hasattr(self, "save_enemy_definition") and not self.save_enemy_definition():
-            return
-        if hasattr(self, "player_stat_vars") and not self.save_player_setup():
-            return
         if self.has_unsaved_changes():
             answer = messagebox.askyesnocancel(
                 "Unsaved Changes",
@@ -39,6 +55,9 @@ class FileManager:
             if answer is None:
                 return
             if answer:
+                if ("object" in self.pending_editor_forms()
+                        and not self.save_object_definition_changes()):
+                    return
                 self.save_all()
                 if self.has_unsaved_changes():
                     return
@@ -225,8 +244,11 @@ class FileManager:
             if self._save_game_to_file(filename):
                 self.current_game_file = filename
 
-    def _save_game_to_file(self, filename):
+    def _save_game_to_file(self, filename, show_message=True):
         try:
+            if ("object" in self.pending_editor_forms()
+                    and not self.save_object_definition_changes()):
+                return False
             if (hasattr(self, "save_enemy_definition") and
                     not self.save_enemy_definition()):
                 return False
@@ -236,10 +258,12 @@ class FileManager:
             with open(filename, 'w') as f:
                 json.dump(asdict(self.current_game), f, indent=2)
             self._saved_game_state = asdict(self.current_game)
-            messagebox.showinfo("Save Game", f"Game saved to {filename}")
+            if show_message:
+                messagebox.showinfo("Save Game", f"Game saved to {filename}")
             return True
         except Exception as e:
-            messagebox.showerror("Error", f"Failed to save game: {e}")
+            if show_message:
+                messagebox.showerror("Error", f"Failed to save game: {e}")
             return False
     
     def open_game(self, filename=None):
@@ -310,7 +334,7 @@ class FileManager:
         if self.current_area:
             try:
                 if self.current_area_file:
-                    if self._save_area_to_file(self.current_area_file):
+                    if self._save_area_to_file(self.current_area_file, show_message=False):
                         saved_items.append(f"Area: {os.path.basename(self.current_area_file)}")
                     else:
                         errors.append(f"Failed to save area: {os.path.basename(self.current_area_file)}")
@@ -331,7 +355,7 @@ class FileManager:
                             errors.append(
                                 f"Area overwrite cancelled: {os.path.basename(area_filename)}"
                             )
-                        elif self._save_area_to_file(area_filename):
+                        elif self._save_area_to_file(area_filename, show_message=False):
                             self.current_area_file = area_filename
                             saved_items.append(f"Area: {os.path.basename(area_filename)}")
 
@@ -357,7 +381,7 @@ class FileManager:
         if self.current_game:
             try:
                 if self.current_game_file:
-                    if self._save_game_to_file(self.current_game_file):
+                    if self._save_game_to_file(self.current_game_file, show_message=False):
                         saved_items.append(f"Game: {os.path.basename(self.current_game_file)}")
                     else:
                         errors.append(f"Failed to save game: {os.path.basename(self.current_game_file)}")
@@ -372,7 +396,7 @@ class FileManager:
                     )
                     if game_filename:
                         game_filename = self._normalize_save_filename(game_filename)
-                        if self._save_game_to_file(game_filename):
+                        if self._save_game_to_file(game_filename, show_message=False):
                             self.current_game_file = game_filename
                             saved_items.append(f"Game: {os.path.basename(game_filename)}")
                         else:
@@ -448,7 +472,7 @@ class FileManager:
                 return True
         return False
 
-    def _save_area_to_file(self, filename, save_trigger=True):
+    def _save_area_to_file(self, filename, save_trigger=True, show_message=True):
         try:
             if (save_trigger and hasattr(self, "save_selected_trigger") and
                     not self.save_selected_trigger()):
@@ -458,10 +482,12 @@ class FileManager:
             with open(filename, 'w') as f:
                 json.dump(asdict(self.current_area), f, indent=2)
             self._saved_area_state = asdict(self.current_area)
-            messagebox.showinfo("Save Area", f"Area saved to {filename}")
+            if show_message:
+                messagebox.showinfo("Save Area", f"Area saved to {filename}")
             return True
         except Exception as e:
-            messagebox.showerror("Error", f"Failed to save area: {e}")
+            if show_message:
+                messagebox.showerror("Error", f"Failed to save area: {e}")
             return False
     
     def open_area(self):

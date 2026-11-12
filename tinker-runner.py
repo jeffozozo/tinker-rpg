@@ -304,7 +304,7 @@ class TinkerRunner:
                 )
             color = "#ffe16b" if marker["kind"] == "miss" else "#ff5353"
             self.canvas.create_oval(
-                x + 2, y + 2, x + 30, y + 30,
+                x + 7.6, y + 7.6, x + 24.4, y + 24.4,
                 outline=color, width=3, tags="attack_feedback",
             )
             if marker["kind"] != "miss":
@@ -374,9 +374,13 @@ class TinkerRunner:
             text=f"Health: {self.engine.health}/{self.engine.stats['max_health']}  Armor: {self.engine.armor()}"
         )
         if self.engine.stats["max_energy"] > 0:
+            if not self.energy_label.winfo_manager():
+                self.energy_label.pack(side=tk.LEFT, padx=(0, 16), after=self.health_label)
             self.energy_label.config(
                 text=f"Energy: {self.engine.energy}/{self.engine.stats['max_energy']}"
             )
+        else:
+            self.energy_label.pack_forget()
         self.gold_label.config(text=f"${self.engine.stats['gold']}")
         result = (
             f"  |  YOU {self.engine.end_result.upper()}"

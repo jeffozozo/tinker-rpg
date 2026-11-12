@@ -9,7 +9,7 @@ import json
 import os
 from dataclasses import asdict
 
-from data_classes import MAX_PLAYER_INVENTORY_SLOTS
+from data_classes import MAX_PLAYER_INVENTORY_SLOTS, PLAYER_STAT_CHANGES
 from project_paths import project_root
 
 class EditorMethods:
@@ -20,6 +20,7 @@ class EditorMethods:
         self.selected_trigger_index = 0
         self.trigger_colors = {
             "teleport": "#0066CC",      # Blue
+            "player_stats": "#B2498A",
             "inventory": "#009900",     # Green
             "tile_update": "#FFCC00",   # Yellow
             "area_object": "#FF6600",   # Orange
@@ -126,6 +127,9 @@ class EditorMethods:
         for key, variable in getattr(self, "player_stat_vars", {}).items():
             variable.set(str(player["stats"][key]))
         self.refresh_player_inventory()
+        if hasattr(self, "remember_editor_form"):
+            self.remember_editor_form("player", [*getattr(self, "player_stat_vars", {}).values(),
+                                                 *getattr(self, "player_inventory_vars", [])])
 
     def save_player_setup(self):
         player = self.get_player_settings()
@@ -190,6 +194,9 @@ class EditorMethods:
                 return False
             player["starting_inventory"] = inventory
         player["stats"] = stats
+        if hasattr(self, "remember_editor_form"):
+            self.remember_editor_form("player", [*getattr(self, "player_stat_vars", {}).values(),
+                                                 *getattr(self, "player_inventory_vars", [])])
         return True
 
     def set_player_start(self, x, y):
@@ -782,6 +789,16 @@ class EditorMethods:
         for stat, value_var in self.object_effect_vars.items():
             value_var.set(str(definition["effects"].get(stat, 0)))
         self.on_object_gettable_change()
+        self._remember_object_form()
+
+    def _remember_object_form(self):
+        if hasattr(self, "remember_editor_form"):
+            variables = [self.object_gettable_var, self.object_walkable_var, self.object_effect_mode_var,
+                         *self.object_effect_vars.values()]
+            if hasattr(self, "object_item_type_var"):
+                variables += [self.object_item_type_var, self.object_weapon_damage_var]
+            variables += list(getattr(self, "item_detail_vars", {}).values())
+            self.remember_editor_form("object", variables)
 
     def on_object_item_type_change(self, _event=None):
         kind = self.object_item_type_var.get()
@@ -814,7 +831,7 @@ class EditorMethods:
     def save_object_definition_changes(self):
         object_type = self.selected_tile
         if self.selected_mode != "object":
-            return
+            return False
 
         weapon_settings = {}
         if hasattr(self, "object_item_type_var"):
@@ -823,10 +840,10 @@ class EditorMethods:
                 weapon_damage = int(self.object_weapon_damage_var.get()) if item_type == "weapon" else 0
             except ValueError:
                 messagebox.showerror("Invalid Weapon", "Weapon damage bonus must be a whole number.")
-                return
+                return False
             if item_type not in ITEM_TYPES or weapon_damage < 0:
                 messagebox.showerror("Invalid Weapon", "Choose an item type and a non-negative damage bonus.")
-                return
+                return False
             weapon_settings = {"item_type": item_type, "weapon_damage": weapon_damage}
             if item_type not in ("object", "openable"):
                 self.object_gettable_var.set(True)
@@ -842,7 +859,7 @@ class EditorMethods:
                     validate_item(weapon_settings)
                 except (ValueError, TypeError) as error:
                     messagebox.showerror("Invalid Item", str(error))
-                    return
+                    return False
 
         if self.object_gettable_var.get():
             try:
@@ -852,7 +869,7 @@ class EditorMethods:
                 }
             except ValueError:
                 messagebox.showerror("Invalid Effect", "Stat effects must be whole numbers.")
-                return
+                return False
         else:
             effects = {stat: 0 for stat in self.object_effect_vars}
 
@@ -866,11 +883,14 @@ class EditorMethods:
         }
         self.draw_area()
         self.update_properties_display()
+        self._remember_object_form()
+        return True
 
     def get_trigger_type_description(self, trigger_type):
         descriptions = {
             "teleport": "Moves the player to another area.",
             "inventory": "Adds or removes an item from the player's inventory.",
+            "player_stats": "Changes a player stat by a signed amount.",
             "tile_update": "Changes a tile in the current area.",
             "area_object": "Adds or removes an object on an area map.",
             "game_end": "Ends the game with a win or loss.",
@@ -908,7 +928,7 @@ class EditorMethods:
 
         ttk.Button(button_frame, text="Save", command=save_message).pack(side=tk.RIGHT, padx=(5, 0))
     
-    def on_area_name_change(self, event):
+    def on_area_name_change(self, *_args):
         self.current_area.name = self.area_name_var.get()
 
     def on_game_name_change(self, *_args):
@@ -1169,15 +1189,16 @@ class EditorMethods:
                              "chest": "#8B4513", "barrel": "#654321"}
                     color = colors.get(obj_name, "#32CD32")
                     self.tile_canvas.create_rectangle(10, y, 40, y + 30, fill=color, outline="black", tags=f"obj_{obj_name}")
-                self.tile_canvas.create_text(50, y + 15, text=obj_name.title(), anchor=tk.W)
+                self.tile_canvas.create_text(50, y + 15, text=obj_info.get("display_name", obj_name.replace("_", " ").title()), anchor=tk.W)
                 if obj_name == self.selected_tile:
                     self.tile_canvas.create_rectangle(8, y-2, 200, y + 32, outline="red", width=2, tags="selection")
         
         elif self.selected_mode == "trigger":
-            trigger_types = ["teleport", "inventory", "tile_update", "area_object", "game_end", "show_message", "custom"]
+            trigger_types = ["teleport", "inventory", "player_stats", "tile_update", "area_object", "game_end", "show_message", "custom"]
             trigger_names = {
                 "teleport": "Teleport",
                 "inventory": "Inventory",
+                "player_stats": "Player Stats",
                 "tile_update": "Tile Update",
                 "area_object": "Area Object", 
                 "game_end": "Game End",
@@ -1442,6 +1463,7 @@ class EditorMethods:
         trigger_types = (
             "teleport",
             "inventory",
+            "player_stats",
             "tile_update",
             "area_object",
             "game_end",
@@ -1533,6 +1555,10 @@ class EditorMethods:
             x_var = add_entry("x", "Target X:", params.get("x", 0))
             y_var = add_entry("y", "Target Y:", params.get("y", 0))
             add_coordinate_picker(x_var, y_var, destination_area_var)
+        elif trigger_type == "player_stats":
+            add_combo("stat", "Stat:", PLAYER_STAT_CHANGES, params.get("stat", "health"))
+            add_entry("amount", "Change (+/-):", params.get("amount", 0))
+            ttk.Label(form, text="Use +5 to increase or -5 to decrease. Health and energy stay within their maximums. Zero health ends the game.", wraplength=245).pack(anchor=tk.W, pady=4)
         elif trigger_type == "inventory":
             items = [""] + sorted(set(self.tile_manager.get_object_names())
                                     | set(self.current_game.used_objects)
@@ -1624,11 +1650,14 @@ class EditorMethods:
                 height=7,
             )
 
-        if trigger_type in ("inventory", "area_object"):
+        if trigger_type in ("inventory", "area_object", "player_stats"):
             once_var = tk.BooleanVar(value=params.get("once", False))
             self._trigger_editor_vars["once"] = once_var
             ttk.Checkbutton(form, text="Run once per game", variable=once_var).pack(anchor=tk.W, pady=3)
             ttk.Label(form, text="Triggers run in list order. A failed trigger stops the remaining actions on this tile.", wraplength=245).pack(anchor=tk.W, pady=3)
+
+        if hasattr(self, "remember_editor_form"):
+            self.remember_editor_form("trigger", self._trigger_editor_vars.values())
 
     def save_selected_trigger(self, show_error=True, refresh=True):
         if getattr(self, "selected_mode", "trigger") != "trigger":
@@ -1648,14 +1677,14 @@ class EditorMethods:
                 parameters[name] = variable.get()
             else:
                 value = variable.get()
-                if name in ("x", "y"):
+                if name in ("x", "y", "amount"):
                     try:
                         value = int(value)
                     except ValueError:
                         if show_error:
                             messagebox.showerror(
-                                "Invalid Coordinates",
-                                f"{name.upper()} must be a whole number.",
+                                "Invalid Trigger Value",
+                                f"{name.replace('_', ' ').title()} must be a whole number.",
                             )
                         return False
                 parameters[name] = value
@@ -1666,6 +1695,10 @@ class EditorMethods:
         if trigger_type is None:
             if show_error:
                 messagebox.showerror("Invalid Trigger Type", "Choose a valid trigger type.")
+            return False
+        if trigger_type == "player_stats" and parameters.get("stat") not in PLAYER_STAT_CHANGES:
+            if show_error:
+                messagebox.showerror("Invalid Stat", "Choose a player stat.")
             return False
         if trigger_type == "tile_update":
             selected_tile = self._trigger_editor_tile_labels.get(
@@ -1688,6 +1721,8 @@ class EditorMethods:
         trigger.name = variables["name"].get()
         trigger.trigger_type = trigger_type
         trigger.parameters = parameters
+        if hasattr(self, "remember_editor_form"):
+            self.remember_editor_form("trigger", variables.values())
         if refresh:
             self.refresh_trigger_editor()
             self.update_properties_display()

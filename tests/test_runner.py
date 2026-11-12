@@ -374,6 +374,19 @@ class RunnerEngineTests(unittest.TestCase):
         self.assertEqual(engine.health, 6)
         self.assertNotEqual((enemy.x, enemy.y), (engine.player_x, engine.player_y))
 
+    def test_chase_closes_horizontal_gap_when_player_moves_up_and_down(self):
+        engine = self.combat_engine(speed=1, damage=0, position=(5, 1))
+        enemy = engine.current_area.objects[0]
+        self.assertTrue(engine.move("down"))
+        self.assertEqual((enemy.x, enemy.y), (4, 1))
+        self.assertTrue(engine.move("up"))
+        self.assertEqual((enemy.x, enemy.y), (3, 1))
+        for direction in ("down", "up", "down", "up"):
+            before = (enemy.x, enemy.y)
+            engine.move(direction)
+            self.assertLessEqual(abs(enemy.x-before[0]) + abs(enemy.y-before[1]), 1)
+        self.assertLessEqual(abs(enemy.x-engine.player_x) + abs(enemy.y-engine.player_y), 1)
+
     def test_chase_routes_around_walls_and_other_objects(self):
         engine = self.combat_engine()
         engine.current_area.tiles[1][3].walkable_override = False
@@ -604,9 +617,28 @@ class RunnerEngineTests(unittest.TestCase):
         engine = self.engine()
         self.assertFalse(engine.move("right"))
         self.assertTrue(engine.move("up"))
+        self.assertEqual(engine.turn_count, 2)
+        self.assertFalse(engine.move("up"))
+        self.assertEqual(engine.turn_count, 3)
+
+    def test_bumping_enemy_uses_turn_and_allows_contact_attack(self):
+        engine = self.combat_engine(position=(2, 1), damage=3)
+        self.assertFalse(engine.move("right"))
+        self.assertEqual((engine.player_x, engine.player_y), (1, 1))
         self.assertEqual(engine.turn_count, 1)
+        self.assertEqual(engine.health, 9)
+        self.assertFalse(any(event["kind"] == "step" for event in engine.feedback))
+
+    def test_bumping_wall_advances_chasing_enemy_without_reentering_triggers(self):
+        engine = self.combat_engine(position=(4, 1), damage=0)
+        engine.current_area.tiles[0][1].walkable_override = False
+        from data_classes import Trigger
+        engine.current_area.triggers.append(Trigger(1, 1, "inventory", "stay", {"add": "key_object"}))
+        inventory = engine.inventory[:]
         self.assertFalse(engine.move("up"))
         self.assertEqual(engine.turn_count, 1)
+        self.assertEqual(engine.current_area.objects[0].x, 3)
+        self.assertEqual(engine.inventory, inventory)
 
     def test_objects_and_enemies_block_movement(self):
         self.area["objects"] = [

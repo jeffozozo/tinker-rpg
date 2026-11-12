@@ -316,6 +316,71 @@ class ActiveItemTests(unittest.TestCase):
         self.assertEqual(engine.inventory.count("sword_object"), 2)
         self.assertEqual(len(engine.current_area.triggers), 1)
 
+    def test_stat_trigger_changes_health_once_on_entry(self):
+        self.area.triggers = [Trigger(2, 2, "player_stats", "heal", {"stat": "health", "amount": 5, "once": True})]
+        engine = self.engine()
+        engine.move("right")
+        self.assertEqual(engine.health, 17)
+        engine.move("left")
+        engine.move("right")
+        self.assertEqual(engine.health, 17)
+        self.assertEqual(engine.current_area.triggers, [])
+
+    def test_stat_trigger_clamps_current_values_and_stat_minimums(self):
+        engine = self.engine()
+        engine._apply_stat_trigger({"stat": "health", "amount": 100})
+        engine._apply_stat_trigger({"stat": "energy", "amount": 100})
+        self.assertEqual((engine.health, engine.energy), (20, 10))
+        engine._apply_stat_trigger({"stat": "gold", "amount": -100})
+        self.assertEqual(engine.stats["gold"], 0)
+        engine._apply_stat_trigger({"stat": "max_health", "amount": -100})
+        engine._apply_stat_trigger({"stat": "max_energy", "amount": -100})
+        self.assertEqual((engine.stats["max_health"], engine.health), (1, 1))
+        self.assertEqual((engine.stats["max_energy"], engine.energy), (0, 0))
+
+    def test_stat_damage_can_end_game_and_stop_remaining_tile_triggers(self):
+        self.area.triggers = [
+            Trigger(2, 2, "player_stats", "damage", {"stat": "health", "amount": -100}),
+            Trigger(2, 2, "player_stats", "reward", {"stat": "gold", "amount": 10}),
+        ]
+        engine = self.engine()
+        engine.move("right")
+        self.assertEqual(engine.health, 0)
+        self.assertTrue(engine.ended)
+        self.assertEqual(engine.end_result, "lose")
+        self.assertEqual(engine.stats["gold"], 0)
+
+    def test_stat_trigger_changes_combat_strength_and_persists_all_runtime_stats(self):
+        engine = self.engine()
+        for stat, amount in (("max_health", 10), ("max_energy", 5), ("strength", 4), ("intelligence", 3), ("gold", 10)):
+            engine._apply_stat_trigger({"stat": stat, "amount": amount})
+        engine._apply_stat_trigger({"stat": "health", "amount": 100})
+        engine._apply_stat_trigger({"stat": "energy", "amount": 100})
+        path = self.root / "stats.json"
+        engine.save_to_file(path, "Stats changed")
+        loaded = RunnerEngine.load_save(path, project_root=self.root)
+        for stat in ("max_health", "max_energy", "strength", "intelligence", "gold"):
+            self.assertEqual(loaded.stats[stat], engine.stats[stat])
+        self.assertEqual((loaded.health, loaded.energy), (30, 15))
+
+    def test_legacy_save_without_runtime_stats_still_loads(self):
+        engine = self.engine()
+        path = self.root / "legacy.json"
+        engine.save_to_file(path, "Legacy")
+        saved = json.loads(path.read_text())
+        saved["player"].pop("stats")
+        path.write_text(json.dumps(saved))
+        loaded = RunnerEngine.load_save(path, project_root=self.root)
+        self.assertEqual(loaded.health, 12)
+        self.assertEqual(loaded.stats["max_health"], 20)
+
+    def test_invalid_stat_changes_are_rejected_without_changing_state(self):
+        engine = self.engine()
+        for params in ({"stat": "health", "amount": 1.5}, {"stat": "unknown", "amount": 5}, {"stat": "health", "amount": True}):
+            with self.subTest(params=params), self.assertRaises(RunnerError):
+                engine._apply_stat_trigger(params)
+        self.assertEqual(engine.health, 12)
+
     def test_ended_game_blocks_item_actions(self):
         engine = self.engine()
         engine.ended = True

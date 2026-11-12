@@ -8,36 +8,35 @@
     "cave.json"
   ],
   "used_tiles": [
-    "blue_brick_wall",
-    "brown_brick_wall",
-    "castle",
-    "cobblestone_floor",
+    "up_stairs",
     "forest",
-    "grass",
-    "gray_brick_door",
-    "gray_brick_wall",
-    "lake_center",
+    "cobblestone_floor",
     "mountains",
-    "swamp",
+    "lake_center",
     "town",
-    "up_stairs"
+    "swamp",
+    "castle",
+    "blue_brick_wall",
+    "gray_brick_door",
+    "grass",
+    "brown_brick_wall",
+    "gray_brick_wall"
   ],
   "used_npcs": [
-    "black_blob_npc",
     "dragon_npc",
-    "gargoyle_npc",
-    "oldwoman_npc",
     "orc_npc",
-    "peasant_npc",
-    "skeleton_npc",
-    "spider_npc"
+    "spider_npc",
+    "oldwoman_npc",
+    "gargoyle_npc",
+    "black_blob_npc",
+    "skeleton_npc"
   ],
   "used_objects": [
     "candles_object",
     "fountain_object",
-    "gargoyle_object",
+    "throne_object",
     "lever_object",
-    "throne_object"
+    "gargoyle_object"
   ],
   "used_triggers": [
     "trigger"
@@ -51,7 +50,9 @@
         "health": 24,
         "movement_speed": 0.5,
         "ranged_attack": "none",
-        "starter_key": "example:gargoyle"
+        "starter_key": "example:gargoyle",
+        "behavior": "stationary",
+        "contact_damage": 1
       },
       "enemy_4407999aa6ba4128a20ff362220e3b18": {
         "id": "enemy_4407999aa6ba4128a20ff362220e3b18",
@@ -78,16 +79,20 @@
         "health": 8,
         "movement_speed": 1.5,
         "ranged_attack": "none",
-        "starter_key": "example:spider"
+        "starter_key": "example:spider",
+        "behavior": "stationary",
+        "contact_damage": 1
       },
       "enemy_513ea502f7b14b64a2631a9d0bbbec20": {
         "id": "enemy_513ea502f7b14b64a2631a9d0bbbec20",
         "name": "Skeleton",
         "sprite": "skeleton_npc",
         "health": 12,
-        "movement_speed": 1.0,
+        "movement_speed": 0.25,
         "ranged_attack": "none",
-        "starter_key": "example:skeleton"
+        "starter_key": "example:skeleton",
+        "behavior": "chase",
+        "contact_damage": 1
       },
       "enemy_23a5958435d74387b16db412ccbcbe4d": {
         "id": "enemy_23a5958435d74387b16db412ccbcbe4d",

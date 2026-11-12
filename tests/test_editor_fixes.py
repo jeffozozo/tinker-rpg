@@ -96,6 +96,65 @@ class GameLifecycleTests(unittest.TestCase):
         manager.close_editor()
         manager.root.destroy.assert_called_once()
 
+    @patch("file_manager.messagebox.askyesnocancel", return_value=None)
+    def test_pending_object_fields_prompt_before_any_form_is_applied(self, prompt):
+        manager = self.manager()
+        state = {"damage": "4"}
+        variable = Mock(get=Mock(side_effect=lambda: state["damage"]))
+        manager.remember_editor_form("object", [variable])
+        state["damage"] = "9"
+        manager.save_object_definition_changes = Mock()
+        manager.save_enemy_definition = Mock()
+        manager.save_all = Mock()
+        self.assertTrue(manager.has_unsaved_changes())
+        manager.close_editor()
+        prompt.assert_called_once()
+        manager.save_object_definition_changes.assert_not_called()
+        manager.save_enemy_definition.assert_not_called()
+        manager.save_all.assert_not_called()
+        manager.root.destroy.assert_not_called()
+
+    @patch("file_manager.messagebox.askyesnocancel", return_value=False)
+    def test_discard_pending_invalid_fields_closes_without_validating_or_saving(self, prompt):
+        manager = self.manager()
+        variable = Mock(get=Mock(return_value="4"))
+        manager.remember_editor_form("object", [variable])
+        variable.get.return_value = "not a number"
+        manager.save_object_definition_changes = Mock(return_value=False)
+        manager.close_editor()
+        prompt.assert_called_once()
+        manager.save_object_definition_changes.assert_not_called()
+        manager.root.destroy.assert_called_once()
+
+    @patch("file_manager.messagebox.askyesnocancel", return_value=True)
+    def test_save_pending_object_fields_applies_before_save_all(self, prompt):
+        manager = self.manager()
+        variable = Mock(get=Mock(return_value="4"))
+        manager.remember_editor_form("object", [variable])
+        variable.get.return_value = "8"
+        sequence = Mock()
+        def commit():
+            manager.remember_editor_form("object", [variable])
+            return True
+        manager.save_object_definition_changes = sequence.commit
+        manager.save_object_definition_changes.side_effect = commit
+        manager.save_all = sequence.save_all
+        manager.close_editor()
+        self.assertEqual(sequence.mock_calls, [unittest.mock.call.commit(), unittest.mock.call.save_all()])
+        manager.root.destroy.assert_called_once()
+
+    @patch("file_manager.messagebox.askyesnocancel", return_value=True)
+    def test_invalid_pending_object_fields_keep_editor_open_on_save(self, prompt):
+        manager = self.manager()
+        variable = Mock(get=Mock(return_value="4"))
+        manager.remember_editor_form("object", [variable])
+        variable.get.return_value = "bad"
+        manager.save_object_definition_changes = Mock(return_value=False)
+        manager.save_all = Mock()
+        manager.close_editor()
+        manager.save_all.assert_not_called()
+        manager.root.destroy.assert_not_called()
+
     @patch("file_manager.messagebox.showerror")
     def test_open_game_loads_start_area_instead_of_first_area(self, showerror):
         manager = self.manager()
@@ -856,6 +915,29 @@ class EditorFixTests(unittest.TestCase):
             )
             menu.add_command.call_args_list[0].kwargs["command"]()
             manager.open_game.assert_called_once_with(game_paths[0])
+
+    @patch("file_manager.messagebox.showerror")
+    @patch("file_manager.messagebox.showwarning")
+    @patch("file_manager.messagebox.showinfo")
+    def test_save_all_shows_one_confirmation_and_individual_saves_still_confirm(self, showinfo, showwarning, showerror):
+        manager = FileManagerHarness()
+        manager.update_game_assets_silent = Mock()
+        with tempfile.TemporaryDirectory() as directory:
+            manager.current_area_file = os.path.join(directory, "area.json")
+            manager.current_game_file = os.path.join(directory, "game.json")
+            manager.save_all()
+            showinfo.assert_called_once()
+            self.assertEqual(showinfo.call_args.args[0], "Save All")
+            self.assertTrue(os.path.isfile(manager.current_area_file))
+            self.assertTrue(os.path.isfile(manager.current_game_file))
+            showwarning.assert_not_called()
+            showerror.assert_not_called()
+            showinfo.reset_mock()
+            manager._save_area_to_file(manager.current_area_file)
+            self.assertEqual(showinfo.call_args.args[0], "Save Area")
+            manager._save_game_to_file(manager.current_game_file)
+            self.assertEqual(showinfo.call_args.args[0], "Save Game")
+            self.assertEqual(showinfo.call_count, 2)
 
     @patch("file_manager.messagebox.showerror")
     @patch("file_manager.messagebox.showinfo")

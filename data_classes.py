@@ -8,6 +8,7 @@ from typing import Dict, List, Optional, Any
 
 MAX_AREA_DIMENSION = 100
 MAX_PLAYER_INVENTORY_SLOTS = 8
+PLAYER_STAT_CHANGES = ("health", "energy", "gold", "strength", "intelligence", "max_health", "max_energy")
 
 @dataclass
 class Tile:
@@ -71,6 +72,10 @@ class Trigger:
             if remove_item:
                 parts.append(f"Remove: {remove_item}")
             return ", ".join(parts) if parts else "Inventory change"
+        elif self.trigger_type == "player_stats":
+            stat = self.parameters.get("stat", "health").replace("_", " ").title()
+            amount = self.parameters.get("amount", 0)
+            return f"{stat}: {amount:+d}" if type(amount) is int else f"{stat}: {amount}"
         elif self.trigger_type == "tile_update":
             tile = self.parameters.get("tile", "")
             x = self.parameters.get("x", 0)

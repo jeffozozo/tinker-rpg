@@ -14,6 +14,7 @@ from PIL import Image
 from data_classes import (
     MAX_AREA_DIMENSION,
     MAX_PLAYER_INVENTORY_SLOTS,
+    PLAYER_STAT_CHANGES,
     Area,
     GameObject,
     Game,
@@ -29,6 +30,7 @@ from tile_manager import default_tile_walkable
 TRIGGER_TYPES = {
     "teleport",
     "inventory",
+    "player_stats",
     "tile_update",
     "area_object",
     "game_end",
@@ -229,6 +231,7 @@ class RunnerEngine:
                 "health": self.health,
                 "energy": self.energy,
                 "gold": self.stats["gold"],
+                "stats": {key: self.stats[key] for key in ("max_health", "max_energy", "strength", "intelligence")},
                 "inventory": self.inventory,
                 "equipment": self.equipment,
                 "active_items": sorted(self.active_items),
@@ -339,6 +342,15 @@ class RunnerEngine:
             raise RunnerError(
                 f"{save_path}: saved player position is out of bounds."
             )
+
+        runtime_stats = player_state.get("stats", {})
+        allowed = {"max_health", "max_energy", "strength", "intelligence"}
+        if not isinstance(runtime_stats, dict) or set(runtime_stats) - allowed:
+            raise RunnerError(f"{save_path}: invalid saved player stats.")
+        for key, value in runtime_stats.items():
+            if type(value) is not int or value < (1 if key == "max_health" else 0):
+                raise RunnerError(f"{save_path}: invalid saved player stat {key}.")
+        engine.stats.update(runtime_stats)
 
         for field, minimum, maximum in (
             ("health", 0, engine.stats["max_health"]),
@@ -777,9 +789,11 @@ class RunnerEngine:
         if not (0 <= target_x < self.current_area.width and
                 0 <= target_y < self.current_area.height):
             self._report("You cannot move beyond the edge of the area.")
+            self.wait()
             return False
         if not self._position_is_open(self.current_area, target_x, target_y):
             self._report("That way is blocked.")
+            self.wait()
             return False
         self.player_x, self.player_y = target_x, target_y
         self._feedback("step", target_x, target_y)
@@ -802,14 +816,20 @@ class RunnerEngine:
         return definition
 
     def _chase_step(self, enemy):
-        # Breadth-first search finds a shortest route around walls and objects.
+        # Breadth-first search keeps routes shortest. Prefer closing the larger
+        # axis gap when routes tie, instead of always copying vertical movement.
         start = (enemy.x, enemy.y)
         target = (self.player_x, self.player_y)
         queue = deque([(start, None)])
         visited = {start}
         while queue:
             (x, y), first_step = queue.popleft()
-            for dx, dy in DIRECTIONS.values():
+            directions = sorted(
+                DIRECTIONS.values(),
+                key=lambda delta: (target[0] - x - delta[0]) ** 2
+                                  + (target[1] - y - delta[1]) ** 2,
+            )
+            for dx, dy in directions:
                 point = (x + dx, y + dy)
                 if point in visited:
                     continue
@@ -1114,6 +1134,11 @@ class RunnerEngine:
                                 f"Trigger {trigger.name!r} in {filename}: tile "
                                 f"image {params['tile']!r} is missing."
                             )
+                    elif trigger.trigger_type == "player_stats":
+                        if params.get("stat", "health") not in PLAYER_STAT_CHANGES:
+                            raise RunnerError("choose a valid player stat.")
+                        if type(params.get("amount", 0)) is not int:
+                            raise RunnerError("stat change must be a whole number.")
                     elif trigger.trigger_type == "inventory":
                         if any(
                             not isinstance(params.get(key, ""), str)
@@ -1206,6 +1231,8 @@ class RunnerEngine:
                 raise RunnerError("message must be text.")
             if message:
                 self._dialog(message)
+        elif trigger_type == "player_stats":
+            self._apply_stat_trigger(params)
         elif trigger_type == "inventory":
             self._apply_inventory_trigger(params)
         elif trigger_type == "tile_update":
@@ -1245,6 +1272,24 @@ class RunnerEngine:
                 f"Trigger {trigger.name!r} uses a custom script, which the runner "
                 "does not execute."
             )
+
+    def _apply_stat_trigger(self, params):
+        stat, amount = params.get("stat", "health"), params.get("amount", 0)
+        if stat not in PLAYER_STAT_CHANGES or type(amount) is not int:
+            raise RunnerError("Choose a valid player stat and a whole-number change.")
+        old = getattr(self, stat) if stat in ("health", "energy") else self.stats[stat]
+        if stat in ("health", "energy"):
+            value = min(self.stats[f"max_{stat}"], max(0, old + amount))
+            setattr(self, stat, value)
+        else:
+            value = max(1 if stat == "max_health" else 0, old + amount)
+            self.stats[stat] = value
+            self.health = min(self.health, self.stats["max_health"])
+            self.energy = min(self.energy, self.stats["max_energy"])
+        self._report(f"{stat.replace('_', ' ').title()}: {old} → {value} ({value-old:+d}).")
+        if self.health == 0:
+            self.ended, self.end_result = True, "lose"
+            self._dialog("Game over. You have died.")
 
     def _apply_inventory_trigger(self, params):
         add_item = params.get("add", "")
