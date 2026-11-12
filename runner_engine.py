@@ -2,6 +2,7 @@
 
 import json
 import os
+import sys
 import tempfile
 from dataclasses import asdict
 from pathlib import Path
@@ -16,6 +17,8 @@ from data_classes import (
     Tile,
     Trigger,
 )
+from project_paths import asset_root as get_asset_root
+from project_paths import project_root as get_project_root
 from tile_manager import default_tile_walkable
 
 
@@ -42,7 +45,7 @@ class RunnerError(ValueError):
 
 def resolve_game_path(game_argument, cwd=None, project_root=None):
     cwd = Path(cwd or os.getcwd()).resolve()
-    project_root = Path(project_root or Path(__file__).parent).resolve()
+    project_root = Path(project_root or get_project_root()).resolve()
     supplied = Path(game_argument).expanduser()
 
     def candidates_in(directory, name):
@@ -103,7 +106,12 @@ class RunnerEngine:
     """Validated game data plus the mutable state for one play session."""
 
     def __init__(self, game_argument, project_root=None, dialog_handler=None):
-        self.project_root = Path(project_root or Path(__file__).parent).resolve()
+        self.project_root = Path(project_root or get_project_root()).resolve()
+        self.asset_root = (
+            Path(project_root).resolve()
+            if project_root is not None and not getattr(sys, "frozen", False)
+            else get_asset_root()
+        )
         self.game_path = resolve_game_path(
             game_argument, project_root=self.project_root
         )
@@ -237,7 +245,12 @@ class RunnerEngine:
             raise RunnerError(f"{save_path}: area snapshots must be an object.")
 
         engine = cls.__new__(cls)
-        engine.project_root = Path(project_root or Path(__file__).parent).resolve()
+        engine.project_root = Path(project_root or get_project_root()).resolve()
+        engine.asset_root = (
+            Path(project_root).resolve()
+            if project_root is not None and not getattr(sys, "frozen", False)
+            else get_asset_root()
+        )
         source_game_path = data.get("source_game_path", "")
         engine.game_path = (
             Path(source_game_path)
@@ -336,7 +349,7 @@ class RunnerEngine:
         return engine
 
     def _asset_names(self, category):
-        directory = self.project_root / category
+        directory = self.asset_root / category
         return {
             path.stem for path in directory.glob("*.png")
         } if directory.is_dir() else set()
@@ -813,7 +826,7 @@ class RunnerEngine:
             if key in checked:
                 return
             checked.add(key)
-            path = self.project_root / category / f"{name}.png"
+            path = self.asset_root / category / f"{name}.png"
             try:
                 with Image.open(path) as image:
                     image.verify()

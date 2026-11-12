@@ -9,6 +9,7 @@ import os
 from dataclasses import asdict
 
 from data_classes import MAX_PLAYER_INVENTORY_SLOTS
+from project_paths import project_root
 
 class EditorMethods:
     """Mixin class containing all editor interaction methods"""
@@ -1624,7 +1625,7 @@ class EditorMethods:
             if not area_filename:
                 return "Select a destination area that belongs to this game."
             area_path = os.path.join(
-                os.path.dirname(os.path.abspath(__file__)), "areas", area_filename
+                project_root(), "areas", area_filename
             )
             if (self.current_area_file and
                     os.path.realpath(self.current_area_file) == os.path.realpath(area_path)):

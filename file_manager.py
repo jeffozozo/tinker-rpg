@@ -8,6 +8,8 @@ import json
 import os
 from dataclasses import asdict
 
+from project_paths import project_root
+
 MAX_RECENT_GAMES = 10
 
 
@@ -15,7 +17,7 @@ class FileManager:
     """Mixin class containing file management methods"""
 
     def _project_path(self, *parts):
-        return os.path.join(os.path.dirname(os.path.abspath(__file__)), *parts)
+        return os.path.join(project_root(), *parts)
 
     def _recent_games_path(self):
         return os.path.join(

@@ -1,0 +1,97 @@
+{
+  "name": "silly",
+  "areas": [
+    "main-map-a.json"
+  ],
+  "used_tiles": [],
+  "used_npcs": [],
+  "used_objects": [],
+  "used_triggers": [],
+  "properties": {
+    "enemies": {
+      "enemy_45b5f91e487042beb88009eb509526f1": {
+        "id": "enemy_45b5f91e487042beb88009eb509526f1",
+        "name": "Gargoyle",
+        "sprite": "gargoyle_npc",
+        "health": 24,
+        "movement_speed": 0.5,
+        "ranged_attack": "none",
+        "starter_key": "example:gargoyle"
+      },
+      "enemy_8125c5c7b072445483356cde1e590c08": {
+        "id": "enemy_8125c5c7b072445483356cde1e590c08",
+        "name": "Orc",
+        "sprite": "orc_npc",
+        "health": 16,
+        "movement_speed": 1.0,
+        "ranged_attack": "none",
+        "starter_key": "example:orc"
+      },
+      "enemy_0300f8055e284ffc8d541142dad0fbf7": {
+        "id": "enemy_0300f8055e284ffc8d541142dad0fbf7",
+        "name": "Dragon",
+        "sprite": "dragon_npc",
+        "health": 50,
+        "movement_speed": 0.5,
+        "ranged_attack": "flame",
+        "starter_key": "example:dragon"
+      },
+      "enemy_0e20a9f54bdb410e83a6f5bff8a97bef": {
+        "id": "enemy_0e20a9f54bdb410e83a6f5bff8a97bef",
+        "name": "Spider",
+        "sprite": "spider_npc",
+        "health": 8,
+        "movement_speed": 1.5,
+        "ranged_attack": "none",
+        "starter_key": "example:spider"
+      },
+      "enemy_3e3ed76543cf470cb8a6beb35ec92e62": {
+        "id": "enemy_3e3ed76543cf470cb8a6beb35ec92e62",
+        "name": "Skeleton",
+        "sprite": "skeleton_npc",
+        "health": 12,
+        "movement_speed": 1.0,
+        "ranged_attack": "none",
+        "starter_key": "example:skeleton"
+      },
+      "enemy_969faff7a8fa46498eed5c5518223dc2": {
+        "id": "enemy_969faff7a8fa46498eed5c5518223dc2",
+        "name": "Black Blob",
+        "sprite": "black_blob_npc",
+        "health": 10,
+        "movement_speed": 0.75,
+        "ranged_attack": "none",
+        "starter_key": "example:black_blob"
+      }
+    },
+    "player": {
+      "sprite": "dog_npc",
+      "starting_inventory": [
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        ""
+      ],
+      "stats": {
+        "starting_health": 20,
+        "max_health": 20,
+        "starting_energy": 0,
+        "max_energy": 0,
+        "strength": 1,
+        "intelligence": 1,
+        "gold": 0
+      }
+    },
+    "start_area": "main-map-a.json",
+    "start_x": 10,
+    "start_y": 10
+  },
+  "object_definitions": {},
+  "intro_message": "",
+  "instructions_message": "",
+  "game_end_message": ""
+}

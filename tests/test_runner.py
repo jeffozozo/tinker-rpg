@@ -2,6 +2,7 @@ import contextlib
 import importlib.util
 import io
 import json
+import shutil
 import tempfile
 import unittest
 from pathlib import Path
@@ -11,6 +12,7 @@ from unittest.mock import Mock, patch
 from PIL import Image
 from data_classes import GameObject, Tile
 from runner_engine import RunnerEngine, RunnerError, resolve_game_path
+import project_paths
 
 RUNNER_PATH = Path(__file__).resolve().parents[1] / "tinker-runner.py"
 RUNNER_SPEC = importlib.util.spec_from_file_location("tinker_runner", RUNNER_PATH)
@@ -87,6 +89,51 @@ class RunnerEngineTests(unittest.TestCase):
 
     def engine(self):
         return RunnerEngine(self.game_path, project_root=self.root)
+
+    def test_project_root_resolves_frozen_package_data_directory(self):
+        executable = self.root / "Tinker Editor" / "Tinker Editor.exe"
+        with (
+            patch.object(project_paths.sys, "frozen", True, create=True),
+            patch.object(project_paths.sys, "executable", str(executable)),
+        ):
+            for directory in ("tiles", "npcs", "objects"):
+                (self.root / directory).mkdir(exist_ok=True)
+            self.assertEqual(project_paths.project_root(), self.root.resolve())
+
+    def test_frozen_macos_app_uses_bundled_assets_and_documents_for_data(self):
+        app_bundle = self.root / "Install" / "Tinker Editor.app"
+        executable = app_bundle / "Contents" / "MacOS" / "Tinker Editor"
+        bundled_assets = app_bundle / "Contents" / "Resources" / "TinkerData"
+        for directory in ("tiles", "npcs", "objects"):
+            (bundled_assets / directory).mkdir(parents=True, exist_ok=True)
+            shutil.rmtree(self.root / directory)
+        with (
+            patch.object(project_paths.sys, "frozen", True, create=True),
+            patch.object(project_paths.sys, "executable", str(executable)),
+            patch.object(project_paths.Path, "home", return_value=self.root.resolve()),
+        ):
+            self.assertEqual(
+                project_paths.project_root(),
+                self.root.resolve() / "Documents" / "Tinker RPG",
+            )
+            self.assertEqual(project_paths.asset_root(), bundled_assets.resolve())
+
+    def test_frozen_windows_installer_uses_external_assets_and_user_data(self):
+        executable = self.root / "Install" / "Tinker Editor" / "Tinker Editor.exe"
+        bundled_assets = self.root / "Install" / "assets"
+        for directory in ("tiles", "npcs", "objects"):
+            (bundled_assets / directory).mkdir(parents=True, exist_ok=True)
+            shutil.rmtree(self.root / directory)
+        with (
+            patch.object(project_paths.sys, "frozen", True, create=True),
+            patch.object(project_paths.sys, "executable", str(executable)),
+            patch.object(project_paths.Path, "home", return_value=self.root.resolve()),
+        ):
+            self.assertEqual(
+                project_paths.project_root(),
+                self.root.resolve() / "Documents" / "Tinker RPG",
+            )
+            self.assertEqual(project_paths.asset_root(), bundled_assets.resolve())
 
     def test_runner_window_sizes_to_start_area_with_screen_limit(self):
         root = Mock()
@@ -480,6 +527,25 @@ class RunnerEngineTests(unittest.TestCase):
         self.assertEqual(result, 0)
         self.assertIn("No errors found.", output.getvalue())
         tk_root.assert_not_called()
+
+    def test_runner_without_game_prompts_for_file_and_allows_cancel(self):
+        root = Mock()
+        with (
+            patch.object(tinker_runner.tk, "Tk", return_value=root),
+            patch.object(
+                tinker_runner.filedialog, "askopenfilename", return_value=""
+            ) as choose_game,
+            patch.object(tinker_runner, "RunnerEngine") as engine_factory,
+        ):
+            result = tinker_runner.main([])
+
+        self.assertEqual(result, 0)
+        choose_game.assert_called_once()
+        self.assertEqual(
+            choose_game.call_args.kwargs["initialdir"], project_paths.project_root() / "games"
+        )
+        root.destroy.assert_called_once_with()
+        engine_factory.assert_not_called()
 
     def test_check_reports_validation_issues_with_failure_status(self):
         engine = Mock(

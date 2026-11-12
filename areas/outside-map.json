@@ -1534,7 +1534,56 @@
       }
     ]
   ],
-  "objects": [],
+  "objects": [
+    {
+      "type": "fountain_object",
+      "x": 9,
+      "y": 8,
+      "properties": {}
+    },
+    {
+      "type": "skeleton_npc",
+      "x": 13,
+      "y": 10,
+      "properties": {}
+    },
+    {
+      "type": "spider_npc",
+      "x": 2,
+      "y": 9,
+      "properties": {
+        "enemy_id": "enemy_de80cafe68f0458cac7fc5294ff71775",
+        "enemy_data": {
+          "id": "enemy_de80cafe68f0458cac7fc5294ff71775",
+          "name": "Spider",
+          "sprite": "spider_npc",
+          "health": 8,
+          "movement_speed": 1.5,
+          "ranged_attack": "none",
+          "starter_key": "example:spider"
+        },
+        "walkable": false
+      }
+    },
+    {
+      "type": "spider_npc",
+      "x": 5,
+      "y": 7,
+      "properties": {
+        "enemy_id": "enemy_de80cafe68f0458cac7fc5294ff71775",
+        "enemy_data": {
+          "id": "enemy_de80cafe68f0458cac7fc5294ff71775",
+          "name": "Spider",
+          "sprite": "spider_npc",
+          "health": 8,
+          "movement_speed": 1.5,
+          "ranged_attack": "none",
+          "starter_key": "example:spider"
+        },
+        "walkable": false
+      }
+    }
+  ],
   "triggers": [
     {
       "x": 19,
@@ -1555,7 +1604,7 @@
       "parameters": {
         "area": "great_hall",
         "x": 3,
-        "y": 9
+        "y": 11
       }
     }
   ]

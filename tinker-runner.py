@@ -11,6 +11,7 @@ from tkinter import filedialog, messagebox, ttk
 from PIL import Image, ImageTk
 
 from runner_engine import RunnerEngine, RunnerError
+from project_paths import asset_root, project_root
 
 
 TILE_SIZE = 32
@@ -59,7 +60,7 @@ class TinkerRunner:
         self.root.geometry(f"{width}x{height}")
 
     def _set_app_icon(self):
-        icon_path = self.project_root / "objects" / "gargoyle_object.png"
+        icon_path = asset_root() / "objects" / "gargoyle_object.png"
         try:
             with Image.open(icon_path) as source:
                 icon = source.convert("RGBA").resize(
@@ -164,7 +165,7 @@ class TinkerRunner:
 
     def _asset_path(self, category, name):
         extension = ".png"
-        return self.project_root / category / f"{name}{extension}"
+        return asset_root() / category / f"{name}{extension}"
 
     def _get_image(self, category, name):
         key = (category, name)
@@ -537,13 +538,33 @@ def main(argv=None):
     parser = argparse.ArgumentParser(
         description="Play a game created with Tinker RPG Editor."
     )
-    parser.add_argument("game", help="game JSON path, name, or filename stem")
+    parser.add_argument(
+        "game",
+        nargs="?",
+        help="game JSON path, name, or filename stem; choose a game if omitted",
+    )
     parser.add_argument(
         "--check",
         action="store_true",
         help="validate the game and report errors without starting it",
     )
     args = parser.parse_args(argv)
+    if args.game is None:
+        chooser = tk.Tk()
+        chooser.withdraw()
+        args.game = filedialog.askopenfilename(
+            title="Choose a Game",
+            initialdir=project_root() / "games",
+            filetypes=[
+                ("Game files", "*.json"),
+                ("All files", "*"),
+            ],
+            parent=chooser,
+        )
+        chooser.destroy()
+        if not args.game:
+            return 0
+
     try:
         engine = RunnerEngine(args.game)
     except RunnerError as error:

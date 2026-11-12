@@ -15,6 +15,7 @@ from enemy_editor import EnemyEditor
 from editor_methods import EditorMethods
 from file_manager import FileManager
 from dialog_tools import DialogTools
+from project_paths import asset_root, project_root
 
 class TinkerEditor(EnemyEditor, EditorMethods, FileManager, DialogTools):
     def __init__(self, root):
@@ -57,7 +58,7 @@ class TinkerEditor(EnemyEditor, EditorMethods, FileManager, DialogTools):
         from PIL import Image, ImageTk
 
         icon_path = os.path.join(
-            os.path.dirname(os.path.abspath(__file__)),
+            asset_root(),
             "objects",
             "gargoyle_object.png",
         )
@@ -68,9 +69,9 @@ class TinkerEditor(EnemyEditor, EditorMethods, FileManager, DialogTools):
         
     def create_directories(self):
         """Create necessary directories if they don't exist"""
-        directories = ["tiles", "npcs", "objects", "triggers", "areas"]
+        directories = ["areas", "games", "saves"]
         for directory in directories:
-            path = os.path.join(os.path.dirname(os.path.abspath(__file__)), directory)
+            path = os.path.join(project_root(), directory)
             if not os.path.exists(path):
                 os.makedirs(path)
                 
