@@ -1313,6 +1313,9 @@ class EditorFixTests(unittest.TestCase):
             })
             for x in (2, 4)
         ]
+        editor.enemy_loot_var = Mock(get=Mock(return_value="Helmet"))
+        editor._enemy_loot_labels = {"None": "", "Helmet": "helmet_object"}
+        editor.tile_manager.get_object_names.return_value = ["helmet_object"]
         editor.enemy_name_var = Mock(get=Mock(return_value="Storm Caster"))
         editor.enemy_sprite_var = Mock(get=Mock(return_value="wizard"))
         editor.enemy_health_var = Mock(get=Mock(return_value="18"))
@@ -1325,6 +1328,7 @@ class EditorFixTests(unittest.TestCase):
         self.assertEqual(definition["behavior"], "chase")
         self.assertEqual(definition["contact_damage"], 4)
 
+        self.assertEqual(definition["loot_object"], "helmet_object")
         self.assertEqual(definition["name"], "Storm Caster")
         self.assertEqual(definition["sprite"], "wizard")
         self.assertEqual(definition["health"], 18)

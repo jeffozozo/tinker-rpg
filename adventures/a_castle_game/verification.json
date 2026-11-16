@@ -1,0 +1,10 @@
+{
+  "result": "win",
+  "turns": 193,
+  "health": 21,
+  "funds": 20,
+  "validation_issues": [],
+  "diagnostics": [
+    "Trigger 'return_crimson_crown': cannot remove 'red_gem_object'; it is not in the inventory."
+  ]
+}

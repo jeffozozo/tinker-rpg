@@ -48,6 +48,66 @@ class ActiveItemTests(unittest.TestCase):
         (self.root / "games/test.json").write_text(json.dumps(asdict(self.game)))
         return RunnerEngine("test", project_root=self.root)
 
+    def loot_engine(self, loot="gem_object"):
+        self.add_enemy(x=2, y=2, damage=0)
+        self.game.properties["enemies"]["blob"].update(health=1, loot_object=loot)
+        engine = self.engine()
+        engine.equip(0)
+        return engine
+
+    def test_enemy_type_loot_drops_for_each_instance_at_death_position(self):
+        engine = self.loot_engine()
+        original = engine.current_area.objects[0]
+        engine.current_area.objects.append(GameObject(original.type, 3, 2, dict(original.properties)))
+        engine.attack("right")
+        self.assertEqual(sum(o.type == "gem_object" for o in engine.current_area.objects), 1)
+        self.assertEqual((next(o for o in engine.current_area.objects if o.type == "gem_object").x), 2)
+        engine.inventory[6] = ""
+        engine.move("right")
+        self.assertEqual(engine.inventory[6], "gem_object")
+        engine.attack("right")
+        self.assertEqual([(o.x, o.y) for o in engine.current_area.objects if o.type == "gem_object"], [(3, 2)])
+        engine.wait()
+        self.assertEqual(sum(o.type == "gem_object" for o in engine.current_area.objects), 1)
+
+    def test_enemy_loot_full_inventory_remains_and_survives_save_load(self):
+        engine = self.loot_engine()
+        engine.attack("right")
+        engine.move("right")
+        self.assertTrue(any(o.type == "gem_object" for o in engine.current_area.objects))
+        path = self.root / "loot.save.json"
+        engine.save_to_file(path, "Loot")
+        engine = RunnerEngine.load_save(path, project_root=self.root)
+        engine.inventory[6] = ""
+        engine.move("left")
+        engine.move("right")
+        self.assertEqual(engine.inventory[6], "gem_object")
+        self.assertFalse(any(o.type == "gem_object" for o in engine.current_area.objects))
+        self.assertFalse(engine.current_area.triggers)
+
+    def test_noncollectible_enemy_loot_uses_normal_object_behavior(self):
+        engine = self.loot_engine("chest_object")
+        engine.attack("right")
+        loot = next(o for o in engine.current_area.objects if o.type == "chest_object")
+        self.assertEqual((loot.x, loot.y), (2, 2))
+        self.assertFalse(loot.properties.get("dropped_item", False))
+        self.assertFalse(engine.current_area.triggers)
+
+    def test_enemy_without_loot_preserves_old_behavior(self):
+        engine = self.loot_engine("")
+        engine.attack("right")
+        self.assertFalse(engine.current_area.objects)
+        self.assertFalse(engine.current_area.triggers)
+
+    def test_ranged_kill_leaves_loot_at_moved_enemy_position(self):
+        engine = self.loot_engine()
+        enemy = engine.current_area.objects[0]
+        enemy.x = 4
+        engine.equip(1)
+        engine.attack("right")
+        self.assertEqual([(o.x, o.y) for o in engine.current_area.objects], [(4, 2)])
+        self.assertEqual(engine.current_area.objects[0].type, "gem_object")
+
     def add_enemy(self, x=5, y=2, damage=3):
         self.game.properties["enemies"] = {"blob": {
             "name": "Black Blob", "sprite": "black_blob_npc", "health": 20,

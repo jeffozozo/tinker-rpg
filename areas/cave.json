@@ -1,5 +1,5 @@
 {
-  "name": "cave",
+  "name": "The Old Woman\u2019s Cave",
   "width": 5,
   "height": 7,
   "tiles": [
@@ -209,24 +209,71 @@
   ],
   "triggers": [
     {
-      "x": 3,
-      "y": 6,
-      "trigger_type": "show_message",
-      "name": "trigger_1",
-      "parameters": {
-        "message": "The old woman says \"How did you find me? Nevermind. Now that you're here, you can do something for me. Bring me the scepter of light from the dungeons beneath the castle. I will tell you the answer to the riddle.\""
-      }
-    },
-    {
       "x": 0,
       "y": 0,
       "trigger_type": "teleport",
-      "name": "trigger_2",
+      "name": "leave_cave",
       "parameters": {
         "area": "outside-map",
         "x": 19,
-        "y": 13
-      }
+        "y": 13,
+        "charges": 0
+      },
+      "enemy_attached": "",
+      "enemy_defeated": false,
+      "enemy_pending": false
+    },
+    {
+      "x": 2,
+      "y": 6,
+      "trigger_type": "show_message",
+      "name": "old_woman_request",
+      "parameters": {
+        "message": "The old woman says: \u201cHow did you find me? Never mind. Bring me the scepter of light\u2014a magic wand carried by a skeleton of the castle\u2014and I will give you the answer to the gargoyle\u2019s riddle. Step beside me when you have it.\u201d",
+        "charges": 1
+      },
+      "enemy_attached": "",
+      "enemy_defeated": false,
+      "enemy_pending": false
+    },
+    {
+      "x": 3,
+      "y": 6,
+      "trigger_type": "inventory",
+      "name": "give_scepter",
+      "parameters": {
+        "remove": "magic_wand_object",
+        "charges": 1
+      },
+      "enemy_attached": "",
+      "enemy_defeated": false,
+      "enemy_pending": false
+    },
+    {
+      "x": 3,
+      "y": 6,
+      "trigger_type": "inventory",
+      "name": "receive_answer_token",
+      "parameters": {
+        "add": "green_gem_object",
+        "charges": 1
+      },
+      "enemy_attached": "",
+      "enemy_defeated": false,
+      "enemy_pending": false
+    },
+    {
+      "x": 3,
+      "y": 6,
+      "trigger_type": "show_message",
+      "name": "old_woman_answer",
+      "parameters": {
+        "message": "\u201cYour name is Keeper. Your quest is the crimson crown. Your color is green.\u201d She presses a green token into your palm. \u201cShow this to the gargoyle. There is another wand beneath the castle if you need one.\u201d",
+        "charges": 1
+      },
+      "enemy_attached": "",
+      "enemy_defeated": false,
+      "enemy_pending": false
     }
   ]
 }

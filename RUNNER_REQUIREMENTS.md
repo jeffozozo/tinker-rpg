@@ -292,6 +292,13 @@ avoids a race where one trigger charges but another fails to grant the item.
 
 ## 9. Enemies and combat
 
+- Each enemy type may select one **Loot object**, or **None**, in the enemy
+  editor. Every defeated instance leaves that object at its actual death tile.
+- Collectible loot uses walk-on pickup triggers and remains on the map when
+  inventory is full. Other loot uses the object's normal properties. Loot and
+  pending pickup triggers persist in saved runs. Existing enemy-attached
+  triggers continue to work independently of this type-level loot setting.
+
 The editor's initial enemy definitions/instances provide a display name, live
 sprite, health, movement speed, and ranged-attack type. Defeated enemies
 disappear. The first runner displays enemies as stationary blocking objects and

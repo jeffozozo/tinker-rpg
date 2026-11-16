@@ -1,0 +1,102 @@
+A CASTLE GAME
+
+The castle’s throne stands empty. Find the keeper’s supplies beside you, seek the old woman in the southeast cave, and discover what the gargoyle protects. Read the journal before venturing far.
+Press H for controls and instructions.
+You receive the sword.
+You ready the sword.
+You receive the helmet.
+You put on the helmet.
+You receive the book.
+You receive the torch.
+You ready the torch.
+The torch glows.
+Spider hits you for 1 damage.
+THE CASTLE KEEPER’S JOURNAL
+The old woman in the southeast cave knows the gargoyle’s answers. She seeks the scepter of light: a wand carried by the castle skeletons. The gargoyle accepts her green token as proof of your quest. Beyond its door the dragon guards the crimson crown. Return that crown to the great hall throne.
+Equip weapons and armor in inventory. F attacks in your facing. The wand spends energy. Blue gems restore health and energy; drop spare items on clear ground if your pack is full.
+That way is blocked.
+Spider hits you for 1 damage.
+You attack Spider with a sword for 8 damage.
+Spider falls.
+You receive $15.
+Skeleton hits you for 2 damage.
+That way is blocked.
+Skeleton hits you for 2 damage.
+You attack Skeleton with a sword for 8 damage.
+Skeleton hits you for 2 damage.
+You attack Skeleton with a sword for 8 damage.
+Skeleton falls.
+You receive the magic wand.
+Spider hits you for 1 damage.
+That way is blocked.
+Spider hits you for 1 damage.
+You attack Spider with a sword for 8 damage.
+Spider falls.
+You receive the blue gem.
+You recover 10 health.
+Clear water restores your health. The swamp pools to the southwest are poisonous.
+You enter The Old Woman’s Cave.
+The old woman says: “How did you find me? Never mind. Bring me the scepter of light—a magic wand carried by a skeleton of the castle—and I will give you the answer to the gargoyle’s riddle. Step beside me when you have it.”
+“Your name is Keeper. Your quest is the crimson crown. Your color is green.” She presses a green token into your palm. “Show this to the gargoyle. There is another wand beneath the castle if you need one.”
+You no longer carry the magic wand.
+You receive the green gem.
+You enter Castle Grounds.
+You enter The Great Hall.
+The candles beside the west wall mark an optional $5 offering. Step toward them to support the castle’s restoration.
+Your gift will keep the hall’s candles burning.
+You pay $5.
+You do not have what you need here.
+The spring runs red. The lever on the east wall can clear it. The runes near the western candles hold two energy recharges.
+You enter The Spring Chamber.
+The red water clears. Fresh blue water bubbles in the same stone basin.
+You receive the blue gem.
+You enter The Great Hall.
+The keeper’s armory has fallen to the dead. Skeletons carry wands; the orc carries a shield. Defeat them, then walk onto their fallen equipment.
+You enter Beneath the Castle.
+Orc hits you for 3 damage.
+That way is blocked.
+Orc hits you for 3 damage.
+You attack Orc with a sword for 8 damage.
+Skeleton hits you for 2 damage.
+Orc hits you for 3 damage.
+That way is blocked.
+Skeleton hits you for 2 damage.
+Orc hits you for 3 damage.
+You attack Skeleton with a sword for 8 damage.
+Skeleton hits you for 2 damage.
+Orc hits you for 3 damage.
+You attack Skeleton with a sword for 8 damage.
+Skeleton falls.
+Orc hits you for 3 damage.
+That way is blocked.
+Orc hits you for 3 damage.
+The armory falls quiet. You recover the keeper’s lost purse.
+You attack Orc with a sword for 8 damage.
+Orc falls.
+You receive $10.
+You use the blue gem.
+You use the blue gem.
+You receive the magic wand.
+You receive the shield.
+You ready the shield.
+You ready the magic wand.
+You enter The Great Hall.
+You do not have what you need here.
+“Answer me these questions three: what is your name, what is your quest, and what is your favorite color?” The stone guardian waits for the old woman’s green token.
+“Keeper. Crown. Green. You may pass.” A stair opens to the left of the gargoyle.
+You enter The Gargoyle’s Riddle.
+You no longer carry the green gem.
+A dragon guards the crimson crown. Use your wand or sword, and keep a space in your pack. Return its red gem to the great hall throne.
+You enter The Dragon’s Vault.
+You attack Dragon with a magic wand for 9 damage.
+You attack Dragon with a magic wand for 9 damage.
+You attack Dragon with a magic wand for 9 damage.
+You attack Dragon with a magic wand for 9 damage.
+Dragon falls.
+You receive the red gem.
+You enter The Gargoyle’s Riddle.
+You enter The Great Hall.
+You lay the crimson crown upon the throne. Light returns to the castle windows, and the gargoyle lowers its stone wings in salute. Your quest is complete.
+
+THE END
+You no longer carry the red gem.

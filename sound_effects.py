@@ -12,48 +12,84 @@ from project_paths import asset_root
 SOUND_NAMES = ("step", "hit", "miss", "hurt", "step_hurt")
 
 
-class _MacSounds:
-    """Register WAVs once with macOS; playback never launches a process."""
+class _MacPlayer:
+    """A prepared native player, independent of the system-alert sound service."""
 
-    def __init__(self, paths):
-        self.ids = {}
-        self.audio = ctypes.CDLL("/System/Library/Frameworks/AudioToolbox.framework/AudioToolbox")
+    def __init__(self, path):
+        ctypes.CDLL("/System/Library/Frameworks/AVFoundation.framework/AVFoundation")
+        self.objc = ctypes.CDLL("/usr/lib/libobjc.A.dylib")
+        self.objc.objc_getClass.argtypes = [ctypes.c_char_p]
+        self.objc.objc_getClass.restype = ctypes.c_void_p
+        self.objc.sel_registerName.argtypes = [ctypes.c_char_p]
+        self.objc.sel_registerName.restype = ctypes.c_void_p
         core = ctypes.CDLL("/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation")
         core.CFURLCreateFromFileSystemRepresentation.argtypes = [ctypes.c_void_p, ctypes.c_char_p, ctypes.c_long, ctypes.c_bool]
         core.CFURLCreateFromFileSystemRepresentation.restype = ctypes.c_void_p
         core.CFRelease.argtypes = [ctypes.c_void_p]
         core.CFRelease.restype = None
-        self.audio.AudioServicesCreateSystemSoundID.argtypes = [ctypes.c_void_p, ctypes.POINTER(ctypes.c_uint32)]
-        self.audio.AudioServicesCreateSystemSoundID.restype = ctypes.c_int32
-        self.audio.AudioServicesPlaySystemSound.argtypes = [ctypes.c_uint32]
-        self.audio.AudioServicesPlaySystemSound.restype = None
-        self.audio.AudioServicesDisposeSystemSoundID.argtypes = [ctypes.c_uint32]
-        self.audio.AudioServicesDisposeSystemSoundID.restype = ctypes.c_int32
+        self.player = None
+        encoded = os.fsencode(path)
+        url = core.CFURLCreateFromFileSystemRepresentation(None, encoded, len(encoded), False)
+        if not url:
+            raise OSError(f"Cannot load sound {path}")
+        try:
+            allocated = self._send(self.objc.objc_getClass(b"AVAudioPlayer"), "alloc")
+            self.player = self._send(allocated, "initWithContentsOfURL:error:",
+                                     (ctypes.c_void_p, ctypes.c_void_p), (url, None))
+        finally:
+            core.CFRelease(url)
+        if not self.player:
+            raise OSError(f"Cannot preload sound {path}")
+        if not self._send(self.player, "prepareToPlay", result=ctypes.c_bool):
+            self.close()
+            raise OSError(f"Cannot prepare sound {path}")
+
+    def _send(self, target, selector, types=(), args=(), result=ctypes.c_void_p):
+        method = ctypes.CFUNCTYPE(result, ctypes.c_void_p, ctypes.c_void_p, *types)(
+            ("objc_msgSend", self.objc))
+        return method(target, self.objc.sel_registerName(selector.encode()), *args)
+
+    def play(self):
+        self._send(self.player, "stop", result=None)
+        self._send(self.player, "setCurrentTime:", (ctypes.c_double,), (0.0,), result=None)
+        if not self._send(self.player, "play", result=ctypes.c_bool):
+            raise OSError("Cannot play sound")
+
+    def close(self):
+        if self.player:
+            self._send(self.player, "stop", result=None)
+            self._send(self.player, "release", result=None)
+            self.player = None
+
+
+class _MacSounds:
+    """Rotate prepared voices so repeated steps start immediately, without queuing."""
+
+    def __init__(self, paths):
+        self.players = {}
+        self.next_voice = {}
         try:
             for name, path in paths.items():
-                encoded = os.fsencode(path)
-                url = core.CFURLCreateFromFileSystemRepresentation(None, encoded, len(encoded), False)
-                if not url:
-                    raise OSError(f"Cannot load sound {path}")
-                sound_id = ctypes.c_uint32()
-                try:
-                    status = self.audio.AudioServicesCreateSystemSoundID(url, ctypes.byref(sound_id))
-                finally:
-                    core.CFRelease(url)
-                if status != 0:
-                    raise OSError(f"Cannot preload sound {path}: {status}")
-                self.ids[name] = sound_id.value
+                self.players[name] = []
+                self.next_voice[name] = 0
+                for _ in range(4):
+                    self.players[name].append(_MacPlayer(path))
         except Exception:
             self.close()
             raise
 
     def play(self, name):
-        self.audio.AudioServicesPlaySystemSound(self.ids[name])
+        voices = self.players[name]
+        index = self.next_voice[name]
+        voices[index].play()
+        self.next_voice[name] = (index + 1) % len(voices)
 
     def close(self):
-        for sound_id in self.ids.values():
-            self.audio.AudioServicesDisposeSystemSoundID(sound_id)
-        self.ids.clear()
+        for voices in self.players.values():
+            for player in voices:
+                player.close()
+        self.players.clear()
+        self.next_voice.clear()
 
 
 class _WindowsSounds:

@@ -1,10 +1,34 @@
 import unittest
 from unittest.mock import Mock, patch
 
-from sound_effects import SoundEffects
+from sound_effects import SoundEffects, _MacSounds
 
 
 class SoundPlaybackTests(unittest.TestCase):
+    @patch("sound_effects._MacPlayer")
+    def test_mac_repeated_steps_start_a_prepared_voice_every_time(self, player):
+        voices = [Mock() for _ in range(4)]
+        player.side_effect = voices
+        sounds = _MacSounds({"step": "step.wav"})
+        for _ in range(21):
+            sounds.play("step")
+        self.assertEqual([voice.play.call_count for voice in voices], [6, 5, 5, 5])
+        self.assertEqual(player.call_count, 4)
+        sounds.close()
+        sounds.close()
+        for voice in voices:
+            voice.close.assert_called_once()
+
+    def test_walking_sample_matches_reference_and_combined_cue(self):
+        from pathlib import Path
+        import wave
+        directory = Path(__file__).resolve().parents[1] / "sounds"
+        self.assertEqual((directory / "step.wav").read_bytes(),
+                         (directory / "sources/ultima_iv_walk_normal_c64.wav").read_bytes())
+        with wave.open(str(directory / "step.wav")) as step, wave.open(str(directory / "step_hurt.wav")) as combined:
+            self.assertEqual(step.getframerate(), combined.getframerate())
+            self.assertEqual(step.readframes(step.getnframes()), combined.readframes(step.getnframes()))
+
     @patch("sound_effects.atexit.register")
     @patch("sound_effects._MacSounds")
     @patch("sound_effects.sys.platform", "darwin")

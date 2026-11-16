@@ -1,5 +1,5 @@
 {
-  "name": "fountian_room",
+  "name": "The Spring Chamber",
   "width": 7,
   "height": 4,
   "tiles": [
@@ -154,32 +154,157 @@
   ],
   "objects": [
     {
-      "type": "fountain_object",
+      "type": "lever_object",
+      "x": 5,
+      "y": 2,
+      "properties": {}
+    },
+    {
+      "type": "fountain_red_object",
       "x": 1,
       "y": 1,
       "properties": {}
     },
     {
-      "type": "lever_object",
-      "x": 5,
-      "y": 2,
+      "type": "blue_gem_object",
+      "x": 4,
+      "y": 1,
       "properties": {}
     }
   ],
   "triggers": [
     {
+      "x": 3,
+      "y": 3,
+      "trigger_type": "teleport",
+      "name": "leave_spring",
+      "parameters": {
+        "area": "great_hall",
+        "x": 4,
+        "y": 1,
+        "charges": 0
+      },
+      "enemy_attached": "",
+      "enemy_defeated": false,
+      "enemy_pending": false
+    },
+    {
+      "x": 3,
+      "y": 2,
+      "trigger_type": "show_message",
+      "name": "spring_warning",
+      "parameters": {
+        "message": "The spring runs red. The lever on the east wall can clear it. The runes near the western candles hold two energy recharges.",
+        "charges": 1
+      },
+      "enemy_attached": "",
+      "enemy_defeated": false,
+      "enemy_pending": false
+    },
+    {
       "x": 5,
       "y": 2,
       "trigger_type": "area_object",
-      "name": "trigger_1",
+      "name": "clear_red_water",
       "parameters": {
-        "area": "",
-        "action": "add",
+        "action": "remove",
         "object": "fountain_red_object",
-        "x": 6,
-        "y": 4,
-        "once": false
-      }
+        "area": "",
+        "x": 1,
+        "y": 1,
+        "charges": 1
+      },
+      "enemy_attached": "",
+      "enemy_defeated": false,
+      "enemy_pending": false
+    },
+    {
+      "x": 5,
+      "y": 2,
+      "trigger_type": "area_object",
+      "name": "restore_blue_water",
+      "parameters": {
+        "action": "add",
+        "object": "fountain_object",
+        "area": "",
+        "x": 1,
+        "y": 1,
+        "charges": 1
+      },
+      "enemy_attached": "",
+      "enemy_defeated": false,
+      "enemy_pending": false
+    },
+    {
+      "x": 5,
+      "y": 2,
+      "trigger_type": "show_message",
+      "name": "lever_result",
+      "parameters": {
+        "message": "The red water clears. Fresh blue water bubbles in the same stone basin.",
+        "charges": 1
+      },
+      "enemy_attached": "",
+      "enemy_defeated": false,
+      "enemy_pending": false
+    },
+    {
+      "x": 1,
+      "y": 1,
+      "trigger_type": "player_stats",
+      "name": "restored_spring",
+      "parameters": {
+        "stat": "health",
+        "amount": 32,
+        "charges": 0
+      },
+      "enemy_attached": "",
+      "enemy_defeated": false,
+      "enemy_pending": false
+    },
+    {
+      "x": 1,
+      "y": 2,
+      "trigger_type": "player_stats",
+      "name": "two_runic_charges",
+      "parameters": {
+        "stat": "energy",
+        "amount": 10,
+        "charges": 2
+      },
+      "enemy_attached": "",
+      "enemy_defeated": false,
+      "enemy_pending": false
+    },
+    {
+      "x": 4,
+      "y": 1,
+      "trigger_type": "inventory",
+      "name": "spring_gift_take",
+      "parameters": {
+        "add": "blue_gem_object",
+        "charges": 1
+      },
+      "enemy_attached": "",
+      "enemy_defeated": false,
+      "enemy_pending": false
+    },
+    {
+      "x": 4,
+      "y": 1,
+      "trigger_type": "area_object",
+      "name": "spring_gift_remove",
+      "parameters": {
+        "action": "remove",
+        "object": "blue_gem_object",
+        "area": "",
+        "x": 4,
+        "y": 1,
+        "charges": 1
+      },
+      "enemy_attached": "",
+      "enemy_defeated": false,
+      "enemy_pending": false
     }
   ]
 }

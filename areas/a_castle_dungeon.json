@@ -1,0 +1,627 @@
+{
+  "name": "Beneath the Castle",
+  "width": 9,
+  "height": 11,
+  "tiles": [
+    [
+      {
+        "type": "gray_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "gray_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "gray_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "gray_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "gray_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "gray_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "gray_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "gray_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "gray_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "gray_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "gray_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "gray_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "gray_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "gray_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "gray_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "gray_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "gray_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "gray_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "gray_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "gray_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "gray_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "gray_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "gray_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "gray_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "gray_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "gray_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "up_stairs",
+        "walkable_override": true,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "gray_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "gray_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "gray_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "gray_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "gray_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "gray_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "gray_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "gray_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "gray_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "gray_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ]
+  ],
+  "objects": [
+    {
+      "type": "skeleton_npc",
+      "x": 6,
+      "y": 3,
+      "properties": {
+        "enemy_id": "enemy_513ea502f7b14b64a2631a9d0bbbec20",
+        "enemy_data": {
+          "id": "enemy_513ea502f7b14b64a2631a9d0bbbec20",
+          "name": "Skeleton",
+          "sprite": "skeleton_npc",
+          "health": 12,
+          "movement_speed": 0.5,
+          "ranged_attack": "none",
+          "starter_key": "example:skeleton",
+          "behavior": "chase",
+          "contact_damage": 3,
+          "loot_object": "magic_wand_object"
+        },
+        "walkable": false,
+        "enemy_instance_id": "enemy_instance_35942a852a2248bc9d87e2429a54ab77"
+      }
+    },
+    {
+      "type": "orc_npc",
+      "x": 2,
+      "y": 3,
+      "properties": {
+        "enemy_id": "enemy_4407999aa6ba4128a20ff362220e3b18",
+        "enemy_data": {
+          "id": "enemy_4407999aa6ba4128a20ff362220e3b18",
+          "name": "Orc",
+          "sprite": "orc_npc",
+          "health": 16,
+          "movement_speed": 0.5,
+          "ranged_attack": "none",
+          "starter_key": "example:orc",
+          "behavior": "chase",
+          "contact_damage": 4,
+          "loot_object": "shield_object"
+        },
+        "walkable": false,
+        "enemy_instance_id": "a_castle_armory_orc"
+      }
+    }
+  ],
+  "triggers": [
+    {
+      "x": 3,
+      "y": 9,
+      "trigger_type": "teleport",
+      "name": "dungeon_exit",
+      "parameters": {
+        "area": "great_hall",
+        "x": 4,
+        "y": 11,
+        "charges": 0
+      },
+      "enemy_attached": "",
+      "enemy_defeated": false,
+      "enemy_pending": false
+    },
+    {
+      "x": 3,
+      "y": 8,
+      "trigger_type": "show_message",
+      "name": "dungeon_warning",
+      "parameters": {
+        "message": "The keeper\u2019s armory has fallen to the dead. Skeletons carry wands; the orc carries a shield. Defeat them, then walk onto their fallen equipment.",
+        "charges": 1
+      },
+      "enemy_attached": "",
+      "enemy_defeated": false,
+      "enemy_pending": false
+    },
+    {
+      "x": 2,
+      "y": 3,
+      "trigger_type": "funds",
+      "name": "armory_orc_bounty",
+      "parameters": {
+        "action": "add",
+        "amount": 10,
+        "charges": 1
+      },
+      "enemy_attached": "a_castle_armory_orc",
+      "enemy_defeated": false,
+      "enemy_pending": false
+    },
+    {
+      "x": 2,
+      "y": 3,
+      "trigger_type": "show_message",
+      "name": "armory_quiet",
+      "parameters": {
+        "message": "The armory falls quiet. You recover the keeper\u2019s lost purse.",
+        "charges": 1
+      },
+      "enemy_attached": "a_castle_armory_orc",
+      "enemy_defeated": false,
+      "enemy_pending": false
+    }
+  ]
+}

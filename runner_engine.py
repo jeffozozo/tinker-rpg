@@ -881,6 +881,7 @@ class RunnerEngine:
             if health <= 0:
                 owner = self.current_area
                 owner.objects.remove(enemy)
+                self._drop_enemy_loot(enemy, definition)
                 self._activate_enemy_triggers(enemy)
                 if self.ended or self.current_area is not owner:
                     return
@@ -958,6 +959,28 @@ class RunnerEngine:
                 self.equipment[slot] = None
         self.active_items.discard(index)
 
+    def _drop_enemy_loot(self, enemy, definition):
+        loot = definition.get("loot_object", "")
+        if not isinstance(loot, str) or not loot or loot not in self.object_names:
+            return
+        if self._item_definition(loot)["gettable"]:
+            self._place_collectible(loot, enemy.x, enemy.y)
+        else:
+            self.current_area.objects.append(GameObject(loot, enemy.x, enemy.y))
+
+    def _place_collectible(self, item, x, y):
+        area = self.current_area
+        identifier = f"dropped_{uuid4().hex}"
+        # Dropped items must stay walkable even when their authored definition blocks.
+        area.objects.append(GameObject(item, x, y, {"dropped_item": True, "walkable": True}))
+        area.triggers.extend([
+            Trigger(x, y, "inventory", f"{identifier}_pickup", {"add": item, "charges": 1}),
+            Trigger(x, y, "area_object", f"{identifier}_remove", {
+                "area": self.current_area_filename, "action": "remove", "object": item,
+                "x": x, "y": y, "charges": 1,
+            }),
+        ])
+
     def drop_item(self, index):
         if self.ended or type(index) is not int or not 0 <= index < len(self.inventory) or not self.inventory[index]:
             return False
@@ -969,16 +992,7 @@ class RunnerEngine:
             self._report("There is no room to leave anything here. Move to open ground first.")
             return False
         item = self.inventory[index]
-        identifier = f"dropped_{uuid4().hex}"
-        # Dropped items must stay walkable even when their authored definition blocks.
-        area.objects.append(GameObject(item, x, y, {"dropped_item": True, "walkable": True}))
-        area.triggers.extend([
-            Trigger(x, y, "inventory", f"{identifier}_pickup", {"add": item, "charges": 1}),
-            Trigger(x, y, "area_object", f"{identifier}_remove", {
-                "area": self.current_area_filename, "action": "remove", "object": item,
-                "x": x, "y": y, "charges": 1,
-            }),
-        ])
+        self._place_collectible(item, x, y)
         self._remove_inventory_item(index)
         self._report(f"You set down the {self.item_name(item)}.")
         # Entry triggers run on a later move, never during the drop itself.
@@ -1098,6 +1112,7 @@ class RunnerEngine:
             if remaining == 0:
                 self.current_area.objects.remove(enemy)
                 self._report(f"{definition.get('name') or self.item_name(enemy.type).title()} falls.")
+                self._drop_enemy_loot(enemy, definition)
                 self._activate_enemy_triggers(enemy)
         else:
             self._feedback("miss", *target)
@@ -1304,6 +1319,9 @@ class RunnerEngine:
                         f"{self.game_path}: enemy {enemy_id!r} must be an object."
                     )
                     continue
+                loot = definition.get("loot_object", "")
+                if loot:
+                    check("objects", loot, f"Enemy {definition.get('name', enemy_id)!r} loot")
                 check(
                     "npcs",
                     definition.get("sprite"),

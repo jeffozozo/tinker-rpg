@@ -1,5 +1,5 @@
 {
-  "name": "gargoyle room",
+  "name": "The Gargoyle\u2019s Riddle",
   "width": 7,
   "height": 4,
   "tiles": [
@@ -175,23 +175,88 @@
   "triggers": [
     {
       "x": 3,
-      "y": 2,
-      "trigger_type": "show_message",
-      "name": "gargoyle_speaks",
-      "parameters": {
-        "message": "Answer me these questions three?\nwhat is your name?\nwhat is your quest?\nwhat is your favorite color?"
-      }
-    },
-    {
-      "x": 3,
       "y": 3,
       "trigger_type": "teleport",
-      "name": "go_to_great_hall",
+      "name": "leave_gargoyle",
       "parameters": {
         "area": "great_hall",
         "x": 2,
-        "y": 1
-      }
+        "y": 1,
+        "charges": 0
+      },
+      "enemy_attached": "",
+      "enemy_defeated": false,
+      "enemy_pending": false
+    },
+    {
+      "x": 3,
+      "y": 2,
+      "trigger_type": "show_message",
+      "name": "gargoyle_questions",
+      "parameters": {
+        "message": "\u201cAnswer me these questions three: what is your name, what is your quest, and what is your favorite color?\u201d The stone guardian waits for the old woman\u2019s green token.",
+        "charges": 1
+      },
+      "enemy_attached": "",
+      "enemy_defeated": false,
+      "enemy_pending": false
+    },
+    {
+      "x": 3,
+      "y": 2,
+      "trigger_type": "inventory",
+      "name": "show_green_answer",
+      "parameters": {
+        "remove": "green_gem_object",
+        "charges": 1
+      },
+      "enemy_attached": "",
+      "enemy_defeated": false,
+      "enemy_pending": false
+    },
+    {
+      "x": 3,
+      "y": 2,
+      "trigger_type": "tile_update",
+      "name": "gargoyle_gate_opens",
+      "parameters": {
+        "x": 2,
+        "y": 0,
+        "tile": "gray_brick_open_door",
+        "walkable": true,
+        "charges": 1
+      },
+      "enemy_attached": "",
+      "enemy_defeated": false,
+      "enemy_pending": false
+    },
+    {
+      "x": 3,
+      "y": 2,
+      "trigger_type": "show_message",
+      "name": "gargoyle_accepts",
+      "parameters": {
+        "message": "\u201cKeeper. Crown. Green. You may pass.\u201d A stair opens to the left of the gargoyle.",
+        "charges": 1
+      },
+      "enemy_attached": "",
+      "enemy_defeated": false,
+      "enemy_pending": false
+    },
+    {
+      "x": 2,
+      "y": 0,
+      "trigger_type": "teleport",
+      "name": "dragon_door",
+      "parameters": {
+        "area": "a_castle_vault",
+        "x": 4,
+        "y": 7,
+        "charges": 0
+      },
+      "enemy_attached": "",
+      "enemy_defeated": false,
+      "enemy_pending": false
     }
   ]
 }

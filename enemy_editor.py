@@ -52,6 +52,7 @@ class EnemyEditor:
         self.enemy_ranged_attack_var = tk.StringVar()
         self.enemy_behavior_var = tk.StringVar()
         self.enemy_damage_var = tk.StringVar()
+        self.enemy_loot_var = tk.StringVar()
         self.enemy_sprite_selector = None
 
         self._enemy_field("Name:", self.enemy_name_var)
@@ -62,9 +63,12 @@ class EnemyEditor:
         self._enemy_field("Movement speed (tiles/turn):", self.enemy_speed_var)
         self._enemy_choice("Behavior:", self.enemy_behavior_var, ("stationary", "chase"))
         self._enemy_field("Contact damage:", self.enemy_damage_var)
+        self.enemy_loot_selector = self._enemy_choice(
+            "Loot object:", self.enemy_loot_var, self._enemy_loot_choices()
+        )
         ttk.Label(
             self.enemy_properties_frame,
-            text="Defeated enemies disappear.",
+            text="Defeated enemies leave this object where they fall. Applies to every instance of this enemy type.",
             wraplength=260,
         ).pack(anchor=tk.W, padx=5, pady=2)
         ttk.Button(
@@ -92,6 +96,13 @@ class EnemyEditor:
 
     def _available_enemy_sprites(self):
         return tuple(self.tile_manager.get_npc_names())
+
+    def _enemy_loot_choices(self):
+        self._enemy_loot_labels = {"None": ""}
+        for name in sorted(self.tile_manager.get_object_names()):
+            label = name.removesuffix("_object").replace("_", " ").title()
+            self._enemy_loot_labels[label] = name
+        return tuple(self._enemy_loot_labels)
 
     def get_enemy_definitions(self):
         definitions = self.current_game.properties.setdefault("enemies", {})
@@ -131,6 +142,7 @@ class EnemyEditor:
             "movement_speed": 1.0,
             "behavior": "chase",
             "contact_damage": 1,
+            "loot_object": "",
             "ranged_attack": "none",
         }
         self.selected_enemy_id = enemy_id
@@ -214,6 +226,8 @@ class EnemyEditor:
         sprites = self._available_enemy_sprites()
         if getattr(self, "enemy_sprite_selector", None) is not None:
             self.enemy_sprite_selector.configure(values=sprites)
+        if getattr(self, "enemy_loot_selector", None) is not None:
+            self.enemy_loot_selector.configure(values=self._enemy_loot_choices())
         if self.selected_enemy_id:
             self._load_enemy_fields(definitions[self.selected_enemy_id])
         elif hasattr(self, "enemy_name_var"):
@@ -228,12 +242,21 @@ class EnemyEditor:
             if hasattr(self, "enemy_behavior_var"):
                 self.enemy_behavior_var.set("")
                 self.enemy_damage_var.set("")
+            if hasattr(self, "enemy_loot_var"):
+                self.enemy_loot_var.set("None")
         if hasattr(self, "tile_canvas"):
             self.update_tile_display()
 
     def _load_enemy_fields(self, definition):
         if not hasattr(self, "enemy_name_var"):
             return
+        if hasattr(self, "enemy_loot_var"):
+            loot = definition.get("loot_object", "")
+            labels = self._enemy_loot_labels
+            if loot and loot not in labels.values():
+                labels[f"Missing: {loot}"] = loot
+                self.enemy_loot_selector.configure(values=tuple(labels))
+            self.enemy_loot_var.set(next(label for label, value in labels.items() if value == loot))
         self.enemy_name_var.set(definition.get("name", ""))
         self.enemy_sprite_var.set(definition.get("sprite", ""))
         self.enemy_health_var.set(str(definition.get("health", 10)))
@@ -250,7 +273,7 @@ class EnemyEditor:
             self.remember_editor_form("enemy", [
                 getattr(self, name) for name in (
                     "enemy_name_var", "enemy_sprite_var", "enemy_health_var", "enemy_speed_var",
-                    "enemy_ranged_attack_var", "enemy_behavior_var", "enemy_damage_var",
+                    "enemy_ranged_attack_var", "enemy_behavior_var", "enemy_damage_var", "enemy_loot_var",
                 ) if hasattr(self, name)
             ])
 
@@ -325,6 +348,13 @@ class EnemyEditor:
             messagebox.showerror("Invalid Enemy Stats", "Choose a behavior and non-negative contact damage.")
             return False
 
+        loot = definition.get("loot_object", "")
+        if hasattr(self, "enemy_loot_var"):
+            loot = self._enemy_loot_labels.get(self.enemy_loot_var.get())
+            if loot is None or (loot and loot not in self.tile_manager.get_object_names()):
+                messagebox.showerror("Invalid Enemy", "Choose an available loot object or None.")
+                return False
+
         previous_definition = deepcopy(definition)
         definition.update({
             "id": enemy_id,
@@ -334,6 +364,7 @@ class EnemyEditor:
             "movement_speed": movement_speed,
             "behavior": behavior,
             "contact_damage": contact_damage,
+            "loot_object": loot,
             "ranged_attack": ranged_attack,
         })
         self.sync_enemy_instances()
@@ -352,7 +383,7 @@ class EnemyEditor:
             self.remember_editor_form("enemy", [
                 getattr(self, name) for name in (
                     "enemy_name_var", "enemy_sprite_var", "enemy_health_var", "enemy_speed_var",
-                    "enemy_ranged_attack_var", "enemy_behavior_var", "enemy_damage_var",
+                    "enemy_ranged_attack_var", "enemy_behavior_var", "enemy_damage_var", "enemy_loot_var",
                 ) if hasattr(self, name)
             ])
         if refresh:

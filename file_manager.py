@@ -636,6 +636,9 @@ class FileManager:
         enemy_definitions = self.current_game.properties.get("enemies", {})
         if isinstance(enemy_definitions, dict):
             for definition in enemy_definitions.values():
+                loot = definition.get("loot_object")
+                if loot:
+                    used_objects.add(loot)
                 sprite = definition.get("sprite")
                 if sprite:
                     used_npcs.add(sprite)

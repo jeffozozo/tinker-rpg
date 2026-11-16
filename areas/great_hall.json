@@ -1,5 +1,5 @@
 {
-  "name": "great_hall",
+  "name": "The Great Hall",
   "width": 7,
   "height": 14,
   "tiles": [
@@ -474,8 +474,8 @@
         "properties": {}
       },
       {
-        "type": "cobblestone_floor",
-        "walkable_override": null,
+        "type": "down_stairs",
+        "walkable_override": true,
         "properties": {}
       },
       {
@@ -501,8 +501,8 @@
         "properties": {}
       },
       {
-        "type": "gray_brick_wall",
-        "walkable_override": null,
+        "type": "gray_brick_open_door",
+        "walkable_override": true,
         "properties": {}
       },
       {
@@ -595,32 +595,141 @@
       "x": 2,
       "y": 0,
       "trigger_type": "teleport",
-      "name": "go_to_gargoyle_room",
+      "name": "gargoyle_door",
       "parameters": {
         "area": "gargoyle_room",
         "x": 3,
-        "y": 2
-      }
+        "y": 2,
+        "charges": 0
+      },
+      "enemy_attached": "",
+      "enemy_defeated": false,
+      "enemy_pending": false
     },
     {
       "x": 4,
       "y": 0,
       "trigger_type": "teleport",
-      "name": "go_to_fountain_room",
+      "name": "fountain_door",
       "parameters": {
         "area": "fountain_room",
         "x": 3,
-        "y": 2
-      }
+        "y": 2,
+        "charges": 0
+      },
+      "enemy_attached": "",
+      "enemy_defeated": false,
+      "enemy_pending": false
+    },
+    {
+      "x": 3,
+      "y": 13,
+      "trigger_type": "teleport",
+      "name": "leave_castle",
+      "parameters": {
+        "area": "outside-map",
+        "x": 9,
+        "y": 7,
+        "charges": 0
+      },
+      "enemy_attached": "",
+      "enemy_defeated": false,
+      "enemy_pending": false
+    },
+    {
+      "x": 5,
+      "y": 12,
+      "trigger_type": "teleport",
+      "name": "dungeon_stairs",
+      "parameters": {
+        "area": "a_castle_dungeon",
+        "x": 3,
+        "y": 8,
+        "charges": 0
+      },
+      "enemy_attached": "",
+      "enemy_defeated": false,
+      "enemy_pending": false
+    },
+    {
+      "x": 3,
+      "y": 3,
+      "trigger_type": "show_message",
+      "name": "throne_history",
+      "parameters": {
+        "message": "An empty throne waits for its crimson crown. The keeper\u2019s journal records how to find it. The east stairs lead beneath the castle.",
+        "charges": 1
+      },
+      "enemy_attached": "",
+      "enemy_defeated": false,
+      "enemy_pending": false
     },
     {
       "x": 3,
       "y": 2,
-      "trigger_type": "show_message",
-      "name": "stand_by_throne",
+      "trigger_type": "inventory",
+      "name": "return_crimson_crown",
       "parameters": {
-        "message": "You feel a sense of great history as you look over the Throne"
-      }
+        "remove": "red_gem_object",
+        "charges": 1
+      },
+      "enemy_attached": "",
+      "enemy_defeated": false,
+      "enemy_pending": false
+    },
+    {
+      "x": 3,
+      "y": 2,
+      "trigger_type": "game_end",
+      "name": "castle_restored",
+      "parameters": {
+        "win_lose": "win",
+        "message": "You lay the crimson crown upon the throne. Light returns to the castle windows, and the gargoyle lowers its stone wings in salute. Your quest is complete.\n\nTHE END",
+        "charges": 1
+      },
+      "enemy_attached": "",
+      "enemy_defeated": false,
+      "enemy_pending": false
+    },
+    {
+      "x": 2,
+      "y": 10,
+      "trigger_type": "show_message",
+      "name": "donation_notice",
+      "parameters": {
+        "message": "The candles beside the west wall mark an optional $5 offering. Step toward them to support the castle\u2019s restoration.",
+        "charges": 1
+      },
+      "enemy_attached": "",
+      "enemy_defeated": false,
+      "enemy_pending": false
+    },
+    {
+      "x": 1,
+      "y": 10,
+      "trigger_type": "funds",
+      "name": "restoration_offering",
+      "parameters": {
+        "action": "remove",
+        "amount": 5,
+        "charges": 1
+      },
+      "enemy_attached": "",
+      "enemy_defeated": false,
+      "enemy_pending": false
+    },
+    {
+      "x": 1,
+      "y": 10,
+      "trigger_type": "show_message",
+      "name": "offering_thanks",
+      "parameters": {
+        "message": "Your gift will keep the hall\u2019s candles burning.",
+        "charges": 1
+      },
+      "enemy_attached": "",
+      "enemy_defeated": false,
+      "enemy_pending": false
     }
   ]
 }
