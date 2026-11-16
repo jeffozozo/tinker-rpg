@@ -1,0 +1,61 @@
+BELL OF DAWN — NEW PLAYTEST ISSUES
+November 13, 2026
+
+These are observations for review, not changes to the engine. The previous
+adventure and its issue report were replaced as requested. Coordinates below
+are zero-based authoring coordinates. Normal gameplay does not print them.
+
+1. Story messages can appear BEFORE the action that caused them.
+Observed during the full native runner playthrough. Enemy reward dialogue says
+"The guardian crumbles" before the final attack, "Moss Guardian falls", and the
+inventory reward. The donation thanks precedes "You pay $5". The ending precedes
+"You no longer carry the red gem".
+Reproduce: defeat the Moss Guardian, pay the optional castle donation, or return
+the crimson heart. See playthrough.txt for the exact ordering.
+Cause: story dialogs invoke the UI callback immediately, while action reports
+wait in engine.events until the runner's post-action flush.
+Impact: combat, rewards and the ending read out of order.
+Possible direction for discussion: queue all adventure text in action order.
+
+2. Finite stat triggers spend charges when nothing is restored.
+Reproduce in a fresh game: reach Briarford's runestone at (10,4) with full energy.
+The two-charge energy trigger goes from 2 charges to 1 although energy stays
+10/10 and no restoration message appears. Leaving and returning at full energy
+can exhaust the shrine without benefiting from it.
+Confirmed in verification.json using an isolated fresh snapshot.
+The normal playthrough deliberately spent energy before using each charge,
+then confirmed the exhausted trigger stays exhausted rather than becoming
+unlimited. This is a semantics question: should a clamped, zero-effect stat
+change count as a successful use?
+
+3. Deferred enemy rewards need a clearer recovery cue.
+With a full inventory, defeat a moving enemy with an attached Inventory reward.
+The safe behavior works: the reward stays pending, survives save/load, and can
+be collected after dropping an item. However, the message says only:
+"Your inventory is full. Drop something on open ground, then return to collect
+this item."
+In the isolated test, the guardian died at (6,7), but its fixed reward trigger
+remained at (6,4). Returning to where it died does not recover the reward; the
+player must walk onto the original trigger location. There is no visible marker
+for that pending reward. The following reward dialogue remains pending too.
+This follows the agreed fixed-position trigger design; the issue is discoverability,
+not lost inventory. Consider an in-world cue or clearer recovery wording without
+changing where triggers are anchored.
+
+4. Open-door tiles default to blocked.
+Confirmed while authoring and testing the optional donation paving:
+"gray_brick_open_door" with walkable_override=None cannot be entered.
+The castle's outside doorway would also be blocked without an override.
+Cause: default_tile_walkable recognizes "_door_", but these asset names end
+with "_door". They are classified as unknown rather than doors.
+Adventure workaround: explicitly mark door tiles walkable using the editor's
+Walkable control. Trigger-opened gates also set walkable=True. The game now
+works with those overrides; the shared default logic was left for review.
+
+AUTHORING REFINEMENTS ALREADY MADE
+- Put enemy warnings on arrival tiles so ranged kills cannot precede the warning.
+- Put the final throne off the through-route so normal exploration does not
+  repeatedly attempt to spend the final quest item.
+- Use an optional donation instead of a shop/toll transaction. A failed Funds
+  trigger stops subsequent actions but does not physically prevent walking on.
+- Shrine text describes two uses without promising unsupported visual flame changes.

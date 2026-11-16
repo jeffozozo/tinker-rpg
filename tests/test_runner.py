@@ -10,7 +10,7 @@ from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
 from PIL import Image
-from data_classes import GameObject, Tile
+from data_classes import GameObject, Tile, Trigger
 from runner_engine import RunnerEngine, RunnerError, resolve_game_path
 import project_paths
 
@@ -186,7 +186,7 @@ class RunnerEngineTests(unittest.TestCase):
         runner = tinker_runner.TinkerRunner.__new__(
             tinker_runner.TinkerRunner
         )
-        runner.engine = SimpleNamespace(events=["Welcome."])
+        runner.engine = SimpleNamespace(events=["Welcome."], _diagnostic=Mock())
         runner._append_log = Mock()
 
         with patch.object(tinker_runner.tk, "Toplevel") as toplevel:
@@ -196,9 +196,40 @@ class RunnerEngineTests(unittest.TestCase):
         self.assertEqual(runner.engine.events, [])
         runner._append_log.assert_has_calls([
             unittest.mock.call("Welcome."),
-            unittest.mock.call("Save Failed: Could not save."),
+            unittest.mock.call("Your progress could not be saved. Try another name or location."),
         ])
         toplevel.assert_not_called()
+
+    def test_death_offers_restart_once_and_leaves_declined_game_over(self):
+        runner = tinker_runner.TinkerRunner.__new__(tinker_runner.TinkerRunner)
+        runner.root = Mock()
+        runner.engine = SimpleNamespace(health=0, ended=True, end_result="lose")
+        runner.close_inventory = Mock()
+        runner.restart_game = Mock()
+        with patch.object(tinker_runner.messagebox, "askyesno", return_value=False) as prompt:
+            runner._offer_restart_after_death()
+            runner._offer_restart_after_death()
+        prompt.assert_called_once()
+        runner.restart_game.assert_not_called()
+        self.assertTrue(runner.engine.ended)
+        runner.close_inventory.assert_called_once()
+
+    def test_accepting_death_restart_skips_second_confirmation(self):
+        runner = tinker_runner.TinkerRunner.__new__(tinker_runner.TinkerRunner)
+        runner.root = Mock()
+        runner.engine = SimpleNamespace(health=0, ended=True, end_result="lose")
+        runner.close_inventory = Mock()
+        runner.restart_game = Mock()
+        with patch.object(tinker_runner.messagebox, "askyesno", return_value=True):
+            runner._offer_restart_after_death()
+        runner.restart_game.assert_called_once_with(confirm=False)
+
+    def test_living_player_is_not_offered_death_restart(self):
+        runner = tinker_runner.TinkerRunner.__new__(tinker_runner.TinkerRunner)
+        runner.engine = SimpleNamespace(health=1)
+        with patch.object(tinker_runner.messagebox, "askyesno") as prompt:
+            runner._offer_restart_after_death()
+        prompt.assert_not_called()
 
     def test_restart_reloads_authored_game_and_clears_save_association(self):
         runner = tinker_runner.TinkerRunner.__new__(
@@ -445,7 +476,7 @@ class RunnerEngineTests(unittest.TestCase):
         engine.equip(0)
         engine.attack("right")
         self.assertEqual(engine.current_area.objects[0].properties["enemy_health"], 15)
-        self.assertIn("You attack Blob with a sword.", engine.events)
+        self.assertIn("You attack Blob with a sword for 5 damage.", engine.events)
         self.assertEqual(engine.feedback[0]["damage"], 5)
 
     def test_only_selected_weapon_is_used_and_bonuses_do_not_stack(self):
@@ -458,7 +489,7 @@ class RunnerEngineTests(unittest.TestCase):
         engine.equip(2)
         engine.attack("right")
         self.assertEqual(engine.feedback[0]["damage"], 8)
-        self.assertIn("You attack Blob with a club.", engine.events)
+        self.assertIn("You attack Blob with a club for 8 damage.", engine.events)
 
     def test_removing_sword_returns_to_unarmed_damage(self):
         engine = self.combat_engine(position=(2, 1), health=20)
@@ -469,12 +500,16 @@ class RunnerEngineTests(unittest.TestCase):
         engine.feedback.clear()
         engine.attack("right")
         self.assertEqual(engine.feedback[0]["damage"], 1)
-        self.assertIn("You attack Blob unarmed.", engine.events)
+        self.assertIn("You attack Blob unarmed for 1 damage.", engine.events)
 
     def test_sword_pickup_and_saved_weapon_settings_affect_attacks(self):
         engine = self.combat_engine(position=(2, 1), health=20)
         engine.current_area.objects.append(GameObject("sword_object", 1, 1))
-        self.assertTrue(engine.interact())
+        engine.current_area.triggers.extend([
+            Trigger(1, 1, "inventory", "take_sword", {"add": "sword_object", "once": True}),
+            Trigger(1, 1, "area_object", "remove_sword", {"action": "remove", "object": "sword_object", "once": True}),
+        ])
+        engine.process_entry_triggers()
         self.assertIn("sword_object", engine.inventory)
         engine.equip(engine.inventory.index("sword_object"))
         # Game-authored weapon values override the built-in sword default.
@@ -542,6 +577,7 @@ class RunnerEngineTests(unittest.TestCase):
         runner._flush_events = sequence.log
         runner.refresh_inventory = sequence.inventory
         runner.refresh_active_bar = sequence.bar
+        runner._offer_restart_after_death = sequence.death_check
         runner._after_action()
         self.assertEqual(sequence.mock_calls[:2], [unittest.mock.call.feedback(), unittest.mock.call.redraw()])
 
@@ -585,6 +621,87 @@ class RunnerEngineTests(unittest.TestCase):
         for setting in ({"speed": float("nan")}, {"damage": -1}, {"health": 0}):
             with self.subTest(setting=setting), self.assertRaises(RunnerError):
                 self.combat_engine(**setting)
+
+    def test_space_has_no_gameplay_action(self):
+        runner = tinker_runner.TinkerRunner.__new__(tinker_runner.TinkerRunner)
+        runner.engine = self.engine()
+        runner.engine.current_area.objects.append(GameObject("sword_object", 1, 1))
+        runner._after_action = Mock()
+        before = (runner.engine.turn_count, list(runner.engine.inventory))
+        runner.on_key_press(SimpleNamespace(keysym="space", widget=Mock()))
+        self.assertEqual((runner.engine.turn_count, runner.engine.inventory), before)
+        self.assertEqual(len(runner.engine.current_area.objects), 1)
+        runner._after_action.assert_not_called()
+
+    def test_modal_inventory_blocks_gameplay_shortcuts_from_any_widget(self):
+        runner = tinker_runner.TinkerRunner.__new__(tinker_runner.TinkerRunner)
+        runner.engine = self.engine()
+        runner.inventory_window = Mock()
+        runner.inventory_window.winfo_exists.return_value = True
+        runner._after_action = Mock()
+        runner.activate_slot = Mock()
+        runner.quit_game = Mock()
+        runner.show_instructions = Mock()
+        before = (runner.engine.player_x, runner.engine.player_y, runner.engine.health, runner.engine.turn_count)
+        for key in ("up", "down", "left", "right", "w", "a", "s", "d", "f", "period", "1", "2", "3", "4", "5", "q", "h", "space", "Return", "Tab"):
+            runner.on_key_press(SimpleNamespace(keysym=key, widget=Mock()))
+        self.assertEqual((runner.engine.player_x, runner.engine.player_y, runner.engine.health, runner.engine.turn_count), before)
+        runner._after_action.assert_not_called()
+        runner.activate_slot.assert_not_called()
+        runner.quit_game.assert_not_called()
+        runner.show_instructions.assert_not_called()
+
+    def test_inventory_escape_releases_grab_and_restores_map_controls(self):
+        runner = tinker_runner.TinkerRunner.__new__(tinker_runner.TinkerRunner)
+        runner.engine = self.engine()
+        window = Mock()
+        runner.inventory_window = window
+        window.winfo_exists.return_value = True
+        runner.canvas = Mock()
+        runner.dirty = False
+        runner._after_action = Mock()
+        runner.on_key_press(SimpleNamespace(keysym="Escape", widget=Mock()))
+        window.grab_release.assert_called_once()
+        window.destroy.assert_called_once()
+        runner.canvas.focus_set.assert_called_once()
+        self.assertIsNone(runner.inventory_window)
+        runner.on_key_press(SimpleNamespace(keysym="Right", widget=runner.canvas))
+        self.assertEqual(runner.engine.turn_count, 1)
+        self.assertEqual((runner.engine.player_x, runner.engine.player_y), (2, 1))
+
+    def test_inventory_i_shortcut_closes_modal_dialog(self):
+        runner = tinker_runner.TinkerRunner.__new__(tinker_runner.TinkerRunner)
+        runner.inventory_window = Mock()
+        runner.inventory_window.winfo_exists.return_value = True
+        runner.close_inventory = Mock()
+        self.assertEqual(runner.on_key_press(SimpleNamespace(keysym="i", widget=Mock())), "break")
+        runner.close_inventory.assert_called_once()
+
+    def test_startup_does_not_reveal_enemies_in_other_areas(self):
+        runner = tinker_runner.TinkerRunner.__new__(tinker_runner.TinkerRunner)
+        runner.engine = self.combat_engine()
+        runner.engine.validation_issues = []
+        runner._append_log = Mock()
+        runner._after_action = Mock()
+        runner.start_game()
+        self.assertEqual(runner._append_log.call_args_list, [unittest.mock.call("Press H for controls and instructions.")])
+
+    def test_world_changes_are_silent_and_combat_does_not_reveal_remaining_health(self):
+        engine = self.combat_engine(position=(2, 1))
+        engine._execute_trigger(Trigger(0, 0, "tile_update", "secret_door", {"x": 0, "y": 0, "tile": "grass"}))
+        engine._execute_trigger(Trigger(5, 3, "area_object", "secret_reward", {"object": "chest_object"}))
+        self.assertEqual(engine.events, [])
+        engine.attack("right")
+        self.assertTrue(any("for 1 damage" in event for event in engine.events))
+        self.assertFalse(any("health left" in event or "secret_" in event or ".json" in event for event in engine.events))
+
+    def test_validation_details_are_kept_out_of_story_log(self):
+        engine = self.engine()
+        engine.events.clear()
+        engine._validation_issue("Secret vault spawn at (5,3) has missing /private/path/red_gem.png")
+        self.assertEqual(engine.events, [])
+        self.assertIn("Secret vault", engine.diagnostics[-1])
+        self.assertIn("Secret vault", engine.validation_issues[-1])
 
     def test_missing_start_settings_are_actionable(self):
         self.game["properties"].pop("start_area")
@@ -750,7 +867,7 @@ class RunnerEngineTests(unittest.TestCase):
         engine = self.engine()
         engine.process_entry_triggers()
 
-        self.assertTrue(any("repeating teleport-trigger loop" in event for event in engine.events))
+        self.assertTrue(any("repeating teleport-trigger loop" in event for event in engine.diagnostics))
 
     def test_game_end_and_custom_triggers_have_clear_runtime_behavior(self):
         self._replace_triggers([{
@@ -772,7 +889,7 @@ class RunnerEngineTests(unittest.TestCase):
         engine = self.engine()
         engine.move("right")
         self.assertFalse(engine.ended)
-        self.assertTrue(any("does not execute" in event for event in engine.events))
+        self.assertTrue(any("does not execute" in event for event in engine.diagnostics))
 
     def test_legacy_show_dialog_alias_is_supported(self):
         self._replace_triggers([{

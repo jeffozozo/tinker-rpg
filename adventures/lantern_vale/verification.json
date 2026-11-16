@@ -1,0 +1,30 @@
+{
+  "checks": {
+    "insufficient_funds_preserves_charge_and_money": true,
+    "missing_seal_keeps_gate_closed": true,
+    "full_inventory_enemy_reward_is_pending": true,
+    "pending_reward_survives_save_and_can_be_recovered": true,
+    "inventory_blocks_background_movement": true,
+    "space_does_not_advance_turn": true,
+    "death_decline_prompts_once_and_blocks_play": true,
+    "death_restart_starts_fresh_without_second_prompt": true
+  },
+  "observations": {
+    "full_energy_spends_finite_charge": {
+      "energy": 10,
+      "remaining_charges": 1,
+      "energy_restored": false
+    },
+    "moved_enemy_reward": {
+      "defeated_at": [
+        6,
+        7
+      ],
+      "retry_at": [
+        6,
+        4
+      ]
+    },
+    "reward_retry_message": "You attack Moss Guardian with a sword for 6 damage. | Moss Guardian falls. | Your inventory is full. Drop something on open ground, then return to collect this item."
+  }
+}

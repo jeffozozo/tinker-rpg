@@ -42,6 +42,7 @@ class TinkerEditor(EnemyEditor, EditorMethods, FileManager, DialogTools):
         self.selected_trigger_index = 0
         self.trigger_colors = {
             "teleport": "#0066CC",      # Blue
+            "funds": "#B8860B",
             "player_stats": "#B2498A",
             "inventory": "#009900",     # Green
             "tile_update": "#FFCC00",   # Yellow

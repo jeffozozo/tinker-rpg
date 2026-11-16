@@ -1,0 +1,30 @@
+SPOILERS — THE BELL OF DAWN
+
+1. Dawnmere: walk north to Mara. Collect the sword, book and torch along the
+   crossroad. Equip the sword and torch in inventory; read the book and turn
+   the torch on. The fountain southeast restores health. Leave south.
+2. Vale: head east to Briarford, fighting the slime and spider with F. Blocked
+   moves take turns too. Return to Dawnmere to heal if needed.
+3. Briarford: collect and equip helmet, shield and wand. Collect the blue gem.
+   Speak to Fen in the northeast. The candles' runestone has TWO energy
+   recharges; avoid using it at full energy. A purse in the northwest awards $12.
+4. Grove: return west and take the northwest stairs. Defeat the Moss Guardian
+   for the green seal. The stone figure southwest increases strength once.
+   Red water southeast hurts. Use the blue gem when hurt or low on energy to
+   free a slot before accepting the seal. Leave south.
+5. Castle: take the northeast road from the Vale. The keeper's $5 restoration
+   donation is optional. Step just south of the inner wall with the green seal
+   to open the gate. The lever in the west reveals a restoration gem. The sentry
+   guards the hall. The throne is northwest; the belfry stairs are northeast.
+   Save here if you like. Return to a village for healing or remaining recharges
+   if needed. Clear inventory space for the final reward.
+6. Belfry: defeat The Hush. Ranged wand attacks work down the passage; use your
+   sword if energy runs out. The crimson heart is awarded on defeat. If your
+   inventory is full, free a slot and return to its original trigger location
+   in the narrow passage (5,5), not necessarily where the enemy died.
+7. Return down the stairs to the castle. Walk in front of the northwest throne
+   with the crimson heart. The spring clears, the bell rings, and you win.
+
+Drop demonstration: use inventory's Drop on the book while on clear ground,
+walk away, then walk back to recover it. Equipment and light state survive saves.
+On death the Game Over prompt can restart the adventure with a fresh world.

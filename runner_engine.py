@@ -6,6 +6,7 @@ from collections import deque
 import os
 import sys
 import tempfile
+from uuid import uuid4
 from dataclasses import asdict
 from pathlib import Path
 
@@ -15,6 +16,9 @@ from data_classes import (
     MAX_AREA_DIMENSION,
     MAX_PLAYER_INVENTORY_SLOTS,
     PLAYER_STAT_CHANGES,
+    trigger_charges,
+    funds_delta,
+    ensure_enemy_instance_ids,
     Area,
     GameObject,
     Game,
@@ -31,6 +35,7 @@ TRIGGER_TYPES = {
     "teleport",
     "inventory",
     "player_stats",
+    "funds",
     "tile_update",
     "area_object",
     "game_end",
@@ -47,6 +52,14 @@ DIRECTIONS = {
 
 class RunnerError(ValueError):
     """Raised when a game cannot be loaded safely."""
+
+
+class PlayerActionError(RunnerError):
+    """An expected gameplay failure with a safe, useful player explanation."""
+
+    def __init__(self, detail, player_message):
+        super().__init__(detail)
+        self.player_message = player_message
 
 
 def resolve_game_path(game_argument, cwd=None, project_root=None):
@@ -136,6 +149,7 @@ class RunnerEngine:
         self.events = []
         self.feedback = []
         self.validation_issues = []
+        self.diagnostics = []
         self.facing = "down"
         self.turn_count = 0
         self.ended = False
@@ -578,6 +592,10 @@ class RunnerEngine:
                     f"{path}: trigger {trigger.name!r} has unsupported type "
                     f"{trigger.trigger_type!r}."
                 )
+            if (not isinstance(trigger.enemy_attached, str)
+                    or type(trigger.enemy_defeated) is not bool or type(trigger.enemy_pending) is not bool
+                    or (trigger.enemy_pending and not trigger.enemy_defeated)):
+                raise RunnerError(f"{path}: trigger {trigger.name!r} has invalid enemy attachment state.")
             if not isinstance(trigger.name, str):
                 raise RunnerError(f"{path}: trigger {index + 1} name must be text.")
             if not isinstance(trigger.parameters, dict):
@@ -585,7 +603,7 @@ class RunnerEngine:
                     f"{path}: trigger {trigger.name!r} parameters must be an object."
                 )
             triggers.append(trigger)
-        return Area(
+        area = Area(
             name=data.get("name", path.stem),
             width=width,
             height=height,
@@ -593,6 +611,11 @@ class RunnerEngine:
             objects=objects,
             triggers=triggers,
         )
+        try:
+            ensure_enemy_instance_ids(area)
+        except ValueError as error:
+            raise RunnerError(f"{path}: {error}") from error
+        return area
 
     def _index_area_names(self):
         indexed = {}
@@ -740,6 +763,8 @@ class RunnerEngine:
                 continue
             if "enemy_id" in obj.properties or "enemy_data" in obj.properties:
                 return False
+            if obj.properties.get("dropped_item") is True:
+                continue
             if obj.type in self.npc_names:
                 if obj.properties.get("walkable", False) is False:
                     return False
@@ -770,7 +795,11 @@ class RunnerEngine:
     def _validation_issue(self, message):
         if message not in self.validation_issues:
             self.validation_issues.append(message)
-        self._report(message)
+        self._diagnostic(message)
+
+    def _diagnostic(self, message):
+        if message not in self.diagnostics:
+            self.diagnostics.append(message)
 
     def _dialog(self, message):
         self._report(message)
@@ -781,14 +810,14 @@ class RunnerEngine:
         if self.ended:
             return False
         if direction not in DIRECTIONS:
-            self._report(f"Unknown direction: {direction}.")
+            self._diagnostic(f"Unknown direction: {direction}.")
             return False
         self.facing = direction
         dx, dy = DIRECTIONS[direction]
         target_x, target_y = self.player_x + dx, self.player_y + dy
         if not (0 <= target_x < self.current_area.width and
                 0 <= target_y < self.current_area.height):
-            self._report("You cannot move beyond the edge of the area.")
+            self._report("You cannot go any farther that way.")
             self.wait()
             return False
         if not self._position_is_open(self.current_area, target_x, target_y):
@@ -850,7 +879,11 @@ class RunnerEngine:
                 continue
             health = enemy.properties.setdefault("enemy_health", definition.get("health", 10))
             if health <= 0:
-                self.current_area.objects.remove(enemy)
+                owner = self.current_area
+                owner.objects.remove(enemy)
+                self._activate_enemy_triggers(enemy)
+                if self.ended or self.current_area is not owner:
+                    return
                 continue
             if definition.get("behavior", "stationary") != "chase":
                 continue
@@ -872,11 +905,11 @@ class RunnerEngine:
                 damage = max(0, definition.get("contact_damage", 1) - self.armor())
                 self.health = max(0, self.health - damage)
                 self._feedback("hurt", self.player_x, self.player_y, damage)
-                self._report(f"{definition.get('name', enemy.type)} hits you for {damage} damage.")
+                self._report(f"{definition.get('name') or self.item_name(enemy.type).title()} hits you for {damage} damage." if damage else "Your armor turns aside the attack.")
                 if self.health == 0:
                     self.ended = True
                     self.end_result = "lose"
-                    self._dialog("Game over. You have died.")
+                    self._dialog("You have fallen. Your journey ends here.")
                     return
 
     def wait(self):
@@ -896,26 +929,27 @@ class RunnerEngine:
         expected = compatible_slot(self._item_definition(item))
         slot = slot or expected
         if expected is None or slot != expected:
-            self._report("That item does not fit this active slot.")
+            self._report("You cannot equip that item there.")
             return False
         old = self.equipment[slot]
         if old is not None:
             self.active_items.discard(old)
         self.equipment[slot] = index
-        self._report(f"Equipped {self.item_name(item)} in {slot}.")
+        self._report(f"You put on the {self.item_name(item)}." if slot == "head" else f"You ready the {self.item_name(item)}.")
         return True
 
     def unequip(self, slot):
         if self.ended or slot not in self.equipment or self.equipment[slot] is None:
             return False
+        item = self.inventory[self.equipment[slot]]
         self.active_items.discard(self.equipment[slot])
         self.equipment[slot] = None
-        self._report(f"Unequipped {slot}.")
+        self._report(f"You put away the {self.item_name(item)}.")
         return True
 
     @staticmethod
     def item_name(item):
-        return item.removesuffix("_object").replace("_", " ")
+        return item.removesuffix("_object").removesuffix("_npc").replace("_", " ")
 
     def _remove_inventory_item(self, index):
         self.inventory[index] = ""
@@ -923,6 +957,34 @@ class RunnerEngine:
             if equipped == index:
                 self.equipment[slot] = None
         self.active_items.discard(index)
+
+    def drop_item(self, index):
+        if self.ended or type(index) is not int or not 0 <= index < len(self.inventory) or not self.inventory[index]:
+            return False
+        area = self.current_area
+        x, y = self.player_x, self.player_y
+        if (any((obj.x, obj.y) == (x, y) for obj in area.objects)
+                or any((trigger.x, trigger.y) == (x, y) for trigger in area.triggers)
+                or not self._position_is_open(area, x, y)):
+            self._report("There is no room to leave anything here. Move to open ground first.")
+            return False
+        item = self.inventory[index]
+        identifier = f"dropped_{uuid4().hex}"
+        # Dropped items must stay walkable even when their authored definition blocks.
+        area.objects.append(GameObject(item, x, y, {"dropped_item": True, "walkable": True}))
+        area.triggers.extend([
+            Trigger(x, y, "inventory", f"{identifier}_pickup", {"add": item, "charges": 1}),
+            Trigger(x, y, "area_object", f"{identifier}_remove", {
+                "area": self.current_area_filename, "action": "remove", "object": item,
+                "x": x, "y": y, "charges": 1,
+            }),
+        ])
+        self._remove_inventory_item(index)
+        self._report(f"You set down the {self.item_name(item)}.")
+        # Entry triggers run on a later move, never during the drop itself.
+        self.turn_count += 1
+        self._enemy_turn()
+        return True
 
     def armor(self):
         return sum(self._item_definition(self.inventory[index])["armor_bonus"]
@@ -942,7 +1004,7 @@ class RunnerEngine:
         if kind == "armor":
             if self.equipment[compatible_slot(definition)] != index:
                 return self.equip(index)
-            self._report(f"{self.item_name(item).title()}: +{definition['armor_bonus']} armor while equipped.")
+            self._report(f"{self.item_name(item).title()}: protects against {definition['armor_bonus']} damage while equipped.")
             return False
         if kind == "readable":
             self._dialog(definition["read_text"] or "There is nothing written here.")
@@ -955,22 +1017,22 @@ class RunnerEngine:
             else:
                 self.active_items.add(index)
             state = "on" if index in self.active_items else "off"
-            self._report(f"{self.item_name(item).title()} is {state}.")
+            self._report(f"The {self.item_name(item)} glows." if state == "on" else f"The {self.item_name(item)} goes dark.")
         elif kind == "consumable":
             effects = definition["effects"]
             health = min(self.stats["max_health"], max(0, self.health + effects.get("health", 0)))
             energy = min(self.stats["max_energy"], max(0, self.energy + effects.get("energy", 0)))
             if (health, energy) == (self.health, self.energy):
-                self._report("That item has no effect right now.")
+                self._report("You do not need to use that right now.")
                 return False
             self.health, self.energy = health, energy
             self._remove_inventory_item(index)
-            self._report(f"Used {self.item_name(item)}.")
+            self._report(f"You use the {self.item_name(item)}.")
             if not self.health:
                 self.ended, self.end_result = True, "lose"
-                self._dialog("Game over. You have died.")
+                self._dialog("You have fallen. Your journey ends here.")
         else:
-            self._report("That item has no use action.")
+            self._report("You cannot use that here.")
             return False
         self.turn_count += 1
         self._enemy_turn()
@@ -997,8 +1059,11 @@ class RunnerEngine:
         ranged = settings.get("ranged", False)
         cost = settings.get("energy_cost", 0) if ranged else 0
         ammo = settings.get("ammo_item", "") if ranged else ""
-        if self.energy < cost or (ammo and ammo not in self.inventory):
-            self._report("Not enough energy or ammunition to fire.")
+        if self.energy < cost:
+            self._report(f"You need {cost} energy to fire this weapon.")
+            return False
+        if ammo and ammo not in self.inventory:
+            self._report("You have no ammunition for this weapon.")
             return False
         if ranged:
             self.energy -= cost
@@ -1024,24 +1089,59 @@ class RunnerEngine:
             definition = self._enemy_definition(enemy)
             damage = max(1, self.stats["strength"]) + bonus
             method = f"with a {self.item_name(weapon)}" if weapon else "unarmed"
-            self._report(f"You attack {definition.get('name', enemy.type)} {method}.")
+            self._report(f"You attack {definition.get('name') or self.item_name(enemy.type).title()} {method} for {damage} damage.")
             remaining = max(0, enemy.properties.get("enemy_health", definition.get("health", 10)) - damage)
             enemy.properties["enemy_health"] = remaining
             self._feedback("hit", *target, damage)
-            self._report(f"You hit {definition.get('name', enemy.type)} for {damage} damage ({remaining} health left).")
+            if ranged:
+                self.feedback[-1].update(from_x=self.player_x, from_y=self.player_y)
             if remaining == 0:
                 self.current_area.objects.remove(enemy)
-                self._report(f"{definition.get('name', enemy.type)} defeated.")
+                self._report(f"{definition.get('name') or self.item_name(enemy.type).title()} falls.")
+                self._activate_enemy_triggers(enemy)
         else:
             self._feedback("miss", *target)
-            self._report("Miss! No enemy within reach in that direction.")
-        if ranged:
-            self.feedback[-1].update(from_x=self.player_x, from_y=self.player_y)
+            if ranged:
+                self.feedback[-1].update(from_x=self.player_x, from_y=self.player_y)
+            self._report("Your attack misses.")
         if enemy is not None or ranged:
             self.turn_count += 1
             self._enemy_turn()
             return True
         return False
+
+    def _run_trigger(self, trigger, owner):
+        try:
+            charges = trigger_charges(trigger.parameters)
+            self._execute_trigger(trigger)
+        except (RunnerError, ValueError) as error:
+            self._diagnostic(f"Trigger {trigger.name!r}: {error}")
+            self._report(error.player_message if isinstance(error, PlayerActionError) else "Nothing happens.")
+            return False
+        trigger.enemy_pending = False
+        if charges == 1:
+            # Retire finite triggers before reaching 0: configured 0 means unlimited.
+            owner.triggers.remove(trigger)
+        elif charges > 1:
+            trigger.parameters["charges"] = charges - 1
+        return True
+
+    def _activate_enemy_triggers(self, enemy):
+        owner = self.current_area
+        identity = enemy.properties.get("enemy_instance_id")
+        if not identity:
+            return
+        attached = [trigger for trigger in owner.triggers
+                    if trigger.enemy_attached == identity and not trigger.enemy_defeated]
+        for trigger in attached:
+            trigger.enemy_defeated = trigger.enemy_pending = True
+        for trigger in attached:
+            before = (self.current_area_filename, self.player_x, self.player_y)
+            if not self._run_trigger(trigger, owner) or self.ended:
+                return
+            if before != (self.current_area_filename, self.player_x, self.player_y):
+                self.process_entry_triggers()
+                return
 
     def process_entry_triggers(self, visited=None):
         if self.ended:
@@ -1052,24 +1152,22 @@ class RunnerEngine:
                 self.current_area_filename, self.player_x, self.player_y
             )
             if location in visited:
-                self._report("Stopped a repeating teleport-trigger loop.")
+                self._diagnostic("Stopped a repeating teleport-trigger loop.")
+                self._report("The passage will not let you through.")
                 return
             visited.add(location)
             relocated = False
             for trigger in list(self.current_area.triggers):
                 if (trigger.x, trigger.y) != (self.player_x, self.player_y):
                     continue
+                if trigger.enemy_attached and not trigger.enemy_pending:
+                    continue
                 old_location = (
                     self.current_area_filename, self.player_x, self.player_y
                 )
                 owner = self.current_area
-                try:
-                    self._execute_trigger(trigger)
-                except RunnerError as error:
-                    self._report(f"Trigger {trigger.name!r}: {error}")
+                if not self._run_trigger(trigger, owner):
                     return
-                if trigger.parameters.get("once", False):
-                    owner.triggers.remove(trigger)
                 if self.ended:
                     return
                 new_location = (
@@ -1080,15 +1178,21 @@ class RunnerEngine:
                     break
             if not relocated:
                 return
-        self._report("Stopped a teleport-trigger chain after 64 relocations.")
+        self._diagnostic("Stopped a teleport-trigger chain after 64 relocations.")
+        self._report("The passage will not let you through.")
 
     def _validate_trigger_references(self):
         for filename, area in self.areas.items():
             for trigger in area.triggers:
                 params = trigger.parameters
                 try:
-                    if type(params.get("once", False)) is not bool:
-                        raise RunnerError("once must be true or false.")
+                    if (trigger.enemy_attached and not trigger.enemy_defeated
+                            and not any(obj.properties.get("enemy_instance_id") == trigger.enemy_attached for obj in area.objects)):
+                        raise RunnerError("attached enemy is missing from this area.")
+                    try:
+                        trigger_charges(params)
+                    except ValueError as error:
+                        raise RunnerError(str(error)) from error
                     if trigger.trigger_type == "teleport":
                         destination = self.area_filename(params.get("area", ""))
                         x, y = params.get("x"), params.get("y")
@@ -1134,6 +1238,11 @@ class RunnerEngine:
                                 f"Trigger {trigger.name!r} in {filename}: tile "
                                 f"image {params['tile']!r} is missing."
                             )
+                    elif trigger.trigger_type == "funds":
+                        try:
+                            funds_delta(params)
+                        except ValueError as error:
+                            raise RunnerError(str(error)) from error
                     elif trigger.trigger_type == "player_stats":
                         if params.get("stat", "health") not in PLAYER_STAT_CHANGES:
                             raise RunnerError("choose a valid player stat.")
@@ -1223,14 +1332,18 @@ class RunnerEngine:
     def _execute_trigger(self, trigger):
         params = trigger.parameters
         trigger_type = trigger.trigger_type
-        if type(params.get("once", False)) is not bool:
-            raise RunnerError("once must be true or false.")
+        try:
+            trigger_charges(params)
+        except ValueError as error:
+            raise RunnerError(str(error)) from error
         if trigger_type == "show_message":
             message = params.get("message", "")
             if not isinstance(message, str):
                 raise RunnerError("message must be text.")
             if message:
                 self._dialog(message)
+        elif trigger_type == "funds":
+            self._apply_funds_trigger(params)
         elif trigger_type == "player_stats":
             self._apply_stat_trigger(params)
         elif trigger_type == "inventory":
@@ -1251,7 +1364,6 @@ class RunnerEngine:
             self.current_area.tiles[y][x] = Tile(
                 type=tile_type, walkable_override=walkable
             )
-            self._report(f"Changed tile ({x},{y}) to {tile_type}.")
         elif trigger_type == "area_object":
             self._add_area_object(trigger, params)
         elif trigger_type == "teleport":
@@ -1266,17 +1378,28 @@ class RunnerEngine:
             self.ended = True
             self.end_result = result
             self._dialog(message or ("You win!" if result == "win" else "You lose."))
-            self._report(f"Game ended: {result}.")
         elif trigger_type == "custom":
-            self._report(
-                f"Trigger {trigger.name!r} uses a custom script, which the runner "
-                "does not execute."
-            )
+            self._diagnostic(f"Trigger {trigger.name!r} uses a custom script, which the runner does not execute.")
+
+    def _apply_funds_trigger(self, params):
+        try:
+            delta = funds_delta(params)
+        except ValueError as error:
+            raise RunnerError(str(error)) from error
+        balance = self.stats["gold"]
+        if balance + delta < 0:
+            raise PlayerActionError(f"Insufficient funds: need ${-delta}, have ${balance}.", f"You need ${-delta}, but have only ${balance}.")
+        self.stats["gold"] = balance + delta
+        self._report(f"You receive ${delta}." if delta > 0 else f"You pay ${-delta}.")
 
     def _apply_stat_trigger(self, params):
         stat, amount = params.get("stat", "health"), params.get("amount", 0)
         if stat not in PLAYER_STAT_CHANGES or type(amount) is not int:
             raise RunnerError("Choose a valid player stat and a whole-number change.")
+        if stat == "gold" and amount:
+            # Legacy money stat triggers use the same affordability rules.
+            self._apply_funds_trigger({"action": "add" if amount > 0 else "remove", "amount": abs(amount)})
+            return
         old = getattr(self, stat) if stat in ("health", "energy") else self.stats[stat]
         if stat in ("health", "energy"):
             value = min(self.stats[f"max_{stat}"], max(0, old + amount))
@@ -1286,10 +1409,21 @@ class RunnerEngine:
             self.stats[stat] = value
             self.health = min(self.health, self.stats["max_health"])
             self.energy = min(self.energy, self.stats["max_energy"])
-        self._report(f"{stat.replace('_', ' ').title()}: {old} → {value} ({value-old:+d}).")
+        change = value - old
+        if change:
+            if stat == "health":
+                self._report(f"You recover {change} health." if change > 0 else f"You lose {-change} health.")
+            elif stat == "energy":
+                self._report(f"You regain {change} energy." if change > 0 else f"You lose {-change} energy.")
+            elif stat in ("max_health", "max_energy"):
+                label = stat.replace("max_", "maximum ")
+                self._report(f"Your {label} {'increases' if change > 0 else 'decreases'} by {abs(change)}.")
+            else:
+                mood = ("stronger" if change > 0 else "weaker") if stat == "strength" else ("more clear-headed" if change > 0 else "less clear-headed")
+                self._report(f"You feel {mood}. {stat.title()} {change:+d}.")
         if self.health == 0:
             self.ended, self.end_result = True, "lose"
-            self._dialog("Game over. You have died.")
+            self._dialog("You have fallen. Your journey ends here.")
 
     def _apply_inventory_trigger(self, params):
         add_item = params.get("add", "")
@@ -1301,22 +1435,23 @@ class RunnerEngine:
             try:
                 slots[slots.index(remove_item)] = ""
             except ValueError as error:
-                raise RunnerError(
-                    f"cannot remove {remove_item!r}; it is not in the inventory."
+                raise PlayerActionError(
+                    f"cannot remove {remove_item!r}; it is not in the inventory.",
+                    "You do not have what you need here.",
                 ) from error
         if add_item:
             try:
                 empty_slot = slots.index("")
             except ValueError as error:
-                raise RunnerError("inventory is full; no item was added.") from error
+                raise PlayerActionError("inventory is full; no item was added.", "Your inventory is full. Drop something on open ground, then return to collect this item.") from error
             slots[empty_slot] = add_item
         if remove_item:
             self._remove_inventory_item(self.inventory.index(remove_item))
         self.inventory = slots
         if remove_item:
-            self._report(f"Removed {self.item_name(remove_item)} from inventory.")
+            self._report(f"You no longer carry the {self.item_name(remove_item)}.")
         if add_item:
-            self._report(f"Added {self.item_name(add_item)} to inventory.")
+            self._report(f"You receive the {self.item_name(add_item)}.")
 
     def _add_area_object(self, trigger, params):
         # The legacy method name is retained for existing callers.
@@ -1341,12 +1476,10 @@ class RunnerEngine:
             if existing is None:
                 raise RunnerError(f"no {object_type} at ({x},{y}) in {filename}.")
             area.objects.remove(existing)
-            self._report(f"Removed {self.item_name(object_type)} from {filename}.")
         elif existing is not None:
-            self._report(f"{object_type} is already present in {filename}.")
+            pass
         else:
             area.objects.append(GameObject(type=object_type, x=x, y=y))
-            self._report(f"Added {self.item_name(object_type)} to {filename}.")
 
     def _teleport(self, params):
         try:
@@ -1364,43 +1497,4 @@ class RunnerEngine:
         self.current_area_filename = filename
         self.current_area = area
         self.player_x, self.player_y = x, y
-        self._report(f"Entered {area.name}.")
-
-    def interact(self):
-        if self.ended:
-            return False
-        candidates = [(self.player_x, self.player_y)]
-        candidates.extend(
-            (self.player_x + dx, self.player_y + dy)
-            for dx, dy in (DIRECTIONS[key] for key in ("up", "left", "down", "right"))
-        )
-        for x, y in candidates:
-            for obj in list(self.current_area.objects):
-                if (obj.x, obj.y) != (x, y):
-                    continue
-                definition = self._item_definition(obj.type)
-                if definition["item_type"] == "openable":
-                    opened = not obj.properties.get("open", False)
-                    if not opened and (obj.x, obj.y) == (self.player_x, self.player_y):
-                        self._report("Step away before closing it.")
-                        return False
-                    obj.properties["open"] = opened
-                    self._report(f"{self.item_name(obj.type).title()} is {'open' if opened else 'closed'}.")
-                    self.turn_count += 1
-                    self._enemy_turn()
-                    return True
-                if not definition.get("gettable"):
-                    continue
-                try:
-                    empty_slot = self.inventory.index("")
-                except ValueError:
-                    self._report("Inventory is full.")
-                    return False
-                self.inventory[empty_slot] = obj.type
-                self.current_area.objects.remove(obj)
-                self.turn_count += 1
-                self._report(f"Picked up {obj.type}.")
-                self._enemy_turn()
-                return True
-        self._report("There is nothing to interact with nearby.")
-        return False
+        self._report(f"You enter {area.name}.")

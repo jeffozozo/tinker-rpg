@@ -2,6 +2,7 @@
 Updated data_classes.py with enhanced trigger system
 """
 
+from uuid import uuid4
 from item_rules import item_defaults
 from dataclasses import dataclass, asdict
 from typing import Dict, List, Optional, Any
@@ -9,6 +10,25 @@ from typing import Dict, List, Optional, Any
 MAX_AREA_DIMENSION = 100
 MAX_PLAYER_INVENTORY_SLOTS = 8
 PLAYER_STAT_CHANGES = ("health", "energy", "gold", "strength", "intelligence", "max_health", "max_energy")
+
+def funds_delta(parameters):
+    action, amount = parameters.get("action", "add"), parameters.get("amount", 0)
+    if action not in ("add", "remove"):
+        raise ValueError("Funds action must be add or remove.")
+    if type(amount) is not int or amount <= 0:
+        raise ValueError("Funds amount must be a positive whole number.")
+    return amount if action == "add" else -amount
+
+
+def trigger_charges(parameters):
+    """0 is unlimited; legacy once=True is equivalent to one charge."""
+    if type(parameters.get("once", False)) is not bool:
+        raise ValueError("once must be true or false.")
+    charges = parameters.get("charges", 1 if parameters.get("once", False) else 0)
+    if type(charges) is not int or charges < 0:
+        raise ValueError("Charges must be a whole number of zero or greater (0 = unlimited).")
+    return charges
+
 
 @dataclass
 class Tile:
@@ -38,14 +58,29 @@ class GameObject:
         if self.properties is None:
             self.properties = {}
 
+def ensure_enemy_instance_ids(area):
+    """Give placed enemies persistent identities independent of type and position."""
+    seen = set()
+    for obj in area.objects:
+        if "enemy_id" not in obj.properties and "enemy_data" not in obj.properties:
+            continue
+        identity = obj.properties.setdefault("enemy_instance_id", f"enemy_instance_{uuid4().hex}")
+        if not isinstance(identity, str) or not identity or identity in seen:
+            raise ValueError("Placed enemies need unique, non-empty instance IDs.")
+        seen.add(identity)
+
+
 @dataclass
 class Trigger:
     """Represents a trigger tile that executes actions"""
     x: int = 0
     y: int = 0
-    trigger_type: str = "teleport"  # teleport, inventory, tile_update, area_object, game_end, show_message, custom
+    trigger_type: str = "teleport"  # Action type; activation may be walking or enemy defeat.
     name: str = ""  # User-entered name
     parameters: Dict[str, Any] = None  # Type-specific parameters
+    enemy_attached: str = ""
+    enemy_defeated: bool = False  # Runtime activation state, persisted in saves.
+    enemy_pending: bool = False
     
     def __post_init__(self):
         if self.parameters is None:
@@ -72,6 +107,9 @@ class Trigger:
             if remove_item:
                 parts.append(f"Remove: {remove_item}")
             return ", ".join(parts) if parts else "Inventory change"
+        elif self.trigger_type == "funds":
+            action = "Remove" if self.parameters.get("action") == "remove" else "Add"
+            return f"{action} ${self.parameters.get('amount', 0)}"
         elif self.trigger_type == "player_stats":
             stat = self.parameters.get("stat", "health").replace("_", " ").title()
             amount = self.parameters.get("amount", 0)

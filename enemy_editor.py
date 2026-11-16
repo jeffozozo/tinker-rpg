@@ -48,6 +48,7 @@ class EnemyEditor:
         self.enemy_sprite_var = tk.StringVar()
         self.enemy_health_var = tk.StringVar()
         self.enemy_speed_var = tk.StringVar()
+        # Retain old values for compatible saves; no unsupported control is shown.
         self.enemy_ranged_attack_var = tk.StringVar()
         self.enemy_behavior_var = tk.StringVar()
         self.enemy_damage_var = tk.StringVar()
@@ -61,11 +62,6 @@ class EnemyEditor:
         self._enemy_field("Movement speed (tiles/turn):", self.enemy_speed_var)
         self._enemy_choice("Behavior:", self.enemy_behavior_var, ("stationary", "chase"))
         self._enemy_field("Contact damage:", self.enemy_damage_var)
-        self._enemy_choice(
-            "Ranged attack:",
-            self.enemy_ranged_attack_var,
-            RANGED_ATTACKS,
-        )
         ttk.Label(
             self.enemy_properties_frame,
             text="Defeated enemies disappear.",
@@ -451,6 +447,7 @@ class EnemyEditor:
             y=self.cursor_y,
             properties={
                 "enemy_id": self.selected_enemy_id,
+                "enemy_instance_id": f"enemy_instance_{uuid4().hex}",
                 "enemy_data": enemy_data,
                 "walkable": False,
             },

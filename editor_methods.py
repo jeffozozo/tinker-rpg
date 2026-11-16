@@ -9,7 +9,7 @@ import json
 import os
 from dataclasses import asdict
 
-from data_classes import MAX_PLAYER_INVENTORY_SLOTS, PLAYER_STAT_CHANGES
+from data_classes import MAX_PLAYER_INVENTORY_SLOTS, PLAYER_STAT_CHANGES, trigger_charges, funds_delta, ensure_enemy_instance_ids
 from project_paths import project_root
 
 class EditorMethods:
@@ -20,6 +20,7 @@ class EditorMethods:
         self.selected_trigger_index = 0
         self.trigger_colors = {
             "teleport": "#0066CC",      # Blue
+            "funds": "#B8860B",
             "player_stats": "#B2498A",
             "inventory": "#009900",     # Green
             "tile_update": "#FFCC00",   # Yellow
@@ -515,6 +516,12 @@ class EditorMethods:
                 else:
                     try:
                         destination_area = self._read_area_file(destination_path)
+                    except FileNotFoundError:
+                        messagebox.showerror(
+                            "Save Destination Area First",
+                            "Save the destination area first, then choose its coordinates.",
+                        )
+                        return False
                     except (OSError, ValueError, TypeError, KeyError) as error:
                         messagebox.showerror(
                             "Pick Coordinates",
@@ -891,11 +898,12 @@ class EditorMethods:
             "teleport": "Moves the player to another area.",
             "inventory": "Adds or removes an item from the player's inventory.",
             "player_stats": "Changes a player stat by a signed amount.",
+            "funds": "Adds or removes funds. Removal requires sufficient funds.",
             "tile_update": "Changes a tile in the current area.",
             "area_object": "Adds or removes an object on an area map.",
             "game_end": "Ends the game with a win or loss.",
             "show_message": "Displays a message to the player.",
-            "custom": "Runs a custom script.",
+            "custom": "Legacy custom scripts are not supported by the runner.",
         }
         return descriptions.get(trigger_type, "Unknown trigger type.")
 
@@ -1194,11 +1202,12 @@ class EditorMethods:
                     self.tile_canvas.create_rectangle(8, y-2, 200, y + 32, outline="red", width=2, tags="selection")
         
         elif self.selected_mode == "trigger":
-            trigger_types = ["teleport", "inventory", "player_stats", "tile_update", "area_object", "game_end", "show_message", "custom"]
+            trigger_types = ["teleport", "inventory", "player_stats", "funds", "tile_update", "area_object", "game_end", "show_message"]
             trigger_names = {
                 "teleport": "Teleport",
                 "inventory": "Inventory",
                 "player_stats": "Player Stats",
+                "funds": "Funds",
                 "tile_update": "Tile Update",
                 "area_object": "Area Object", 
                 "game_end": "Game End",
@@ -1401,6 +1410,8 @@ class EditorMethods:
         self.trigger_listbox.delete(0, tk.END)
         for index, trigger in enumerate(triggers_here):
             label = f"{index + 1}. {trigger.name} - {trigger.trigger_type.replace('_', ' ').title()}"
+            if trigger.enemy_attached:
+                label += " [Enemy attached]"
             self.trigger_listbox.insert(tk.END, label)
             self.trigger_listbox.itemconfig(
                 index,
@@ -1444,17 +1455,23 @@ class EditorMethods:
         return True
 
     def _change_trigger_editor_type(self, trigger, trigger_type, name):
+        trigger_type = self._trigger_editor_type_labels.get(trigger_type, trigger_type)
         if trigger_type == getattr(self, "_trigger_editor_draft_type", trigger.trigger_type):
             return
+        charge_variable = self._trigger_editor_vars.get("charges")
+        charges = charge_variable.get() if charge_variable is not None else trigger_charges(trigger.parameters)
+        attachment_var = self._trigger_editor_vars.get("enemy_attached")
+        attachment = (self._trigger_editor_enemy_labels.get(attachment_var.get(), "")
+                      if attachment_var is not None else trigger.enemy_attached)
         for child in self.trigger_form_frame.winfo_children():
             child.destroy()
         self._trigger_editor_vars = {}
         self._trigger_editor_tile_labels = {}
         self._build_trigger_editor(
-            trigger, trigger_type=trigger_type, parameters={}, name=name
+            trigger, trigger_type=trigger_type, parameters={"charges": charges}, name=name, enemy_attached=attachment
         )
 
-    def _build_trigger_editor(self, trigger, trigger_type=None, parameters=None, name=None):
+    def _build_trigger_editor(self, trigger, trigger_type=None, parameters=None, name=None, enemy_attached=None):
         form = self.trigger_form_frame
         self._trigger_editor_trigger = trigger
         trigger_type = trigger_type or trigger.trigger_type
@@ -1464,18 +1481,18 @@ class EditorMethods:
             "teleport",
             "inventory",
             "player_stats",
+            "funds",
             "tile_update",
             "area_object",
             "game_end",
             "show_message",
-            "custom",
         )
         self._trigger_editor_type_labels = {
             trigger_type.replace("_", " ").title(): trigger_type
             for trigger_type in trigger_types
         }
         trigger_type_var = tk.StringVar(
-            value=trigger_type.replace("_", " ").title()
+            value="Custom (unsupported)" if trigger_type == "custom" else trigger_type.replace("_", " ").title()
         )
         self._trigger_editor_vars["trigger_type"] = trigger_type_var
         type_row = ttk.Frame(form)
@@ -1513,10 +1530,10 @@ class EditorMethods:
             self._trigger_editor_vars[key] = variable
             return variable
 
-        def add_combo(key, label, values, value="", state="readonly"):
+        def add_combo(key, label, values, value="", state="readonly", label_width=10):
             row = ttk.Frame(form)
             row.pack(fill=tk.X, pady=2)
-            ttk.Label(row, text=label, width=10).pack(side=tk.LEFT)
+            ttk.Label(row, text=label, width=label_width).pack(side=tk.LEFT)
             variable = tk.StringVar(value=value)
             ttk.Combobox(
                 row, textvariable=variable, values=values, state=state, width=16
@@ -1555,8 +1572,16 @@ class EditorMethods:
             x_var = add_entry("x", "Target X:", params.get("x", 0))
             y_var = add_entry("y", "Target Y:", params.get("y", 0))
             add_coordinate_picker(x_var, y_var, destination_area_var)
+            ttk.Label(form, text="Save destination areas before linking teleports.", wraplength=245).pack(anchor=tk.W, pady=3)
+        elif trigger_type == "funds":
+            add_combo("action", "Action:", ("add", "remove"), params.get("action", "add"))
+            add_entry("amount", "Amount ($):", params.get("amount", 1))
+            ttk.Label(form, text="Use a positive whole amount. Remove fails if funds are insufficient: no money or charge is spent, and later triggers on this tile stop.", wraplength=245).pack(anchor=tk.W, pady=4)
         elif trigger_type == "player_stats":
-            add_combo("stat", "Stat:", PLAYER_STAT_CHANGES, params.get("stat", "health"))
+            stats = [stat for stat in PLAYER_STAT_CHANGES if stat != "gold"]
+            if params.get("stat") == "gold":
+                stats.append("gold")  # Existing games remain editable; new money triggers use Funds.
+            add_combo("stat", "Stat:", stats, params.get("stat", "health"))
             add_entry("amount", "Change (+/-):", params.get("amount", 0))
             ttk.Label(form, text="Use +5 to increase or -5 to decrease. Health and energy stay within their maximums. Zero health ends the game.", wraplength=245).pack(anchor=tk.W, pady=4)
         elif trigger_type == "inventory":
@@ -1631,30 +1656,29 @@ class EditorMethods:
         elif trigger_type == "show_message":
             add_text("message", "Message:", params.get("message", ""), height=5)
         elif trigger_type == "custom":
-            default_code = '''# Available game variables:
-# game.player_x, game.player_y - Player position
-# game.player_inventory - List of items player has
-# game.current_area - Current area name
-# game.set_area(area_name, x, y) - Teleport to area
-# game.add_item(item_name) - Add item to inventory
-# game.remove_item(item_name) - Remove item from inventory
-# game.show_message(message) - Show a message to the player
-# game.end_game(win=True, message="") - End the game
+            ttk.Label(form, text="This legacy custom trigger is not supported by the runner. Choose a supported trigger type above or delete it.", wraplength=245).pack(anchor=tk.W, pady=4)
 
-# Your code here:
-'''
-            add_text(
-                "code",
-                "Python Code:",
-                params.get("code", default_code),
-                height=7,
-            )
+        ensure_enemy_instance_ids(self.current_area)
+        enemy_labels = {"(none — walk onto tile)": ""}
+        definitions = self.current_game.properties.get("enemies", {})
+        for obj in self.current_area.objects:
+            identity = obj.properties.get("enemy_instance_id")
+            if not identity:
+                continue
+            definition = definitions.get(obj.properties.get("enemy_id"), obj.properties.get("enemy_data", {}))
+            label = f"{definition.get('name', obj.type)} at ({obj.x}, {obj.y})"
+            enemy_labels[label] = identity
+        attached = trigger.enemy_attached if enemy_attached is None else enemy_attached
+        if attached and attached not in enemy_labels.values():
+            enemy_labels["Missing enemy — select another"] = attached
+        selected_enemy = next(label for label, identity in enemy_labels.items() if identity == attached)
+        self._trigger_editor_enemy_labels = enemy_labels
+        add_combo("enemy_attached", "Enemy attached:", list(enemy_labels), selected_enemy, label_width=15)
+        ttk.Label(form, text="Attached triggers fire when that enemy is defeated. Their map position stays fixed.", wraplength=245).pack(anchor=tk.W, pady=3)
 
-        if trigger_type in ("inventory", "area_object", "player_stats"):
-            once_var = tk.BooleanVar(value=params.get("once", False))
-            self._trigger_editor_vars["once"] = once_var
-            ttk.Checkbutton(form, text="Run once per game", variable=once_var).pack(anchor=tk.W, pady=3)
-            ttk.Label(form, text="Triggers run in list order. A failed trigger stops the remaining actions on this tile.", wraplength=245).pack(anchor=tk.W, pady=3)
+        add_entry("charges", "Charges:", params.get("charges", 1 if params.get("once", False) else 0))
+        ttk.Label(form, text="0 = unlimited; 1 = the first successful entry only. Failed actions do not spend charges. Remaining charges are saved with your run.", wraplength=245).pack(anchor=tk.W, pady=3)
+        ttk.Label(form, text="Triggers run in list order. A failed trigger stops the remaining actions on this tile.", wraplength=245).pack(anchor=tk.W, pady=3)
 
         if hasattr(self, "remember_editor_form"):
             self.remember_editor_form("trigger", self._trigger_editor_vars.values())
@@ -1669,7 +1693,7 @@ class EditorMethods:
 
         parameters = {}
         for name, variable in variables.items():
-            if name in ("name", "trigger_type"):
+            if name in ("name", "trigger_type", "enemy_attached"):
                 continue
             if isinstance(variable, tk.Text):
                 parameters[name] = variable.get("1.0", tk.END).rstrip("\n")
@@ -1677,7 +1701,7 @@ class EditorMethods:
                 parameters[name] = variable.get()
             else:
                 value = variable.get()
-                if name in ("x", "y", "amount"):
+                if name in ("x", "y", "amount", "charges"):
                     try:
                         value = int(value)
                     except ValueError:
@@ -1692,10 +1716,21 @@ class EditorMethods:
         trigger_type = self._trigger_editor_type_labels.get(
             variables["trigger_type"].get()
         )
+        if (trigger_type is None and trigger.trigger_type == "custom"
+                and variables["trigger_type"].get() == "Custom (unsupported)"):
+            trigger_type = "custom"
+            parameters = {**trigger.parameters, **parameters}
         if trigger_type is None:
             if show_error:
                 messagebox.showerror("Invalid Trigger Type", "Choose a valid trigger type.")
             return False
+        if trigger_type == "funds":
+            try:
+                funds_delta(parameters)
+            except ValueError as error:
+                if show_error:
+                    messagebox.showerror("Invalid Funds", str(error))
+                return False
         if trigger_type == "player_stats" and parameters.get("stat") not in PLAYER_STAT_CHANGES:
             if show_error:
                 messagebox.showerror("Invalid Stat", "Choose a player stat.")
@@ -1712,12 +1747,27 @@ class EditorMethods:
                 return False
             parameters["tile"] = selected_tile
 
+        try:
+            trigger_charges(parameters)
+        except ValueError as error:
+            if show_error:
+                messagebox.showerror("Invalid Charges", str(error))
+            return False
         coordinate_error = self._trigger_coordinate_error(trigger_type, parameters)
         if coordinate_error:
             if show_error:
                 messagebox.showerror("Invalid Coordinates", coordinate_error)
             return False
 
+        if "enemy_attached" in variables:
+            attached = self._trigger_editor_enemy_labels.get(variables["enemy_attached"].get())
+            if attached is None:
+                if show_error:
+                    messagebox.showerror("Invalid Enemy", "Choose an attached enemy or no enemy.")
+                return False
+            if attached != trigger.enemy_attached:
+                trigger.enemy_attached = attached
+                trigger.enemy_defeated = trigger.enemy_pending = False
         trigger.name = variables["name"].get()
         trigger.trigger_type = trigger_type
         trigger.parameters = parameters
@@ -1779,6 +1829,10 @@ class EditorMethods:
                         destination_area = json.load(f)
                     destination_width = int(destination_area["width"])
                     destination_height = int(destination_area["height"])
+                except FileNotFoundError:
+                    if trigger_type == "teleport":
+                        return "Save the destination area before linking a teleport to it."
+                    return "Save the destination area before targeting it with this trigger."
                 except (OSError, KeyError, TypeError, ValueError) as e:
                     return f"Could not read destination area dimensions: {e}"
         elif trigger_type == "tile_update":

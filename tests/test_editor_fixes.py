@@ -258,6 +258,104 @@ class AreaLoadingHarness(FileManagerHarness):
         self.update_properties_display = Mock()
 
 
+class AreaSwitchTests(unittest.TestCase):
+    def setUp(self):
+        from dataclasses import asdict
+        self.directory = tempfile.TemporaryDirectory()
+        self.addCleanup(self.directory.cleanup)
+        self.source = os.path.join(self.directory.name, "first.json")
+        self.target = os.path.join(self.directory.name, "second.json")
+        self.manager = AreaLoadingHarness()
+        self.manager.current_area = Area(name="First")
+        self.manager.current_area_file = self.source
+        self.manager._saved_area_state = asdict(self.manager.current_area)
+        self.manager.cursor_x, self.manager.cursor_y = 3, 4
+        with open(self.source, "w") as handle:
+            json.dump(asdict(self.manager.current_area), handle)
+        with open(self.target, "w") as handle:
+            json.dump(asdict(Area(name="Second")), handle)
+        self.original_area = self.manager.current_area
+        self.manager.current_area.tiles[0][0].type = "grass"
+
+    def assert_stayed(self):
+        self.assertIs(self.manager.current_area, self.original_area)
+        self.assertEqual(self.manager.current_area_file, self.source)
+        self.assertEqual((self.manager.cursor_x, self.manager.cursor_y), (3, 4))
+
+    @patch("file_manager.messagebox.askyesnocancel", return_value=None)
+    def test_cancel_preserves_area_file_cursor_and_edits(self, prompt):
+        self.assertFalse(self.manager._load_area_from_file(self.target, show_message=False))
+        self.assert_stayed()
+        self.assertEqual(self.manager.current_area.tiles[0][0].type, "grass")
+        prompt.assert_called_once()
+
+    @patch("file_manager.messagebox.askyesnocancel", return_value=False)
+    def test_discard_switches_without_changing_source_file(self, prompt):
+        self.assertTrue(self.manager._load_area_from_file(self.target, show_message=False))
+        self.assertEqual(self.manager.current_area.name, "Second")
+        with open(self.source) as handle:
+            self.assertEqual(json.load(handle)["tiles"][0][0]["type"], "empty")
+
+    @patch("file_manager.messagebox.showinfo")
+    @patch("file_manager.messagebox.askyesnocancel", return_value=True)
+    def test_save_writes_source_before_switching(self, prompt, info):
+        self.assertTrue(self.manager._load_area_from_file(self.target, show_message=False))
+        self.assertEqual(self.manager.current_area.name, "Second")
+        with open(self.source) as handle:
+            self.assertEqual(json.load(handle)["tiles"][0][0]["type"], "grass")
+
+    @patch("file_manager.messagebox.askyesnocancel", return_value=True)
+    def test_failed_save_keeps_current_area(self, prompt):
+        self.manager.save_area = Mock(return_value=False)
+        self.assertFalse(self.manager._load_area_from_file(self.target, show_message=False))
+        self.assert_stayed()
+
+    @patch("file_manager.filedialog.asksaveasfilename", return_value="")
+    @patch("file_manager.messagebox.askyesnocancel", return_value=True)
+    def test_cancelled_save_as_keeps_unsaved_area(self, prompt, save_as):
+        self.manager.current_area_file = None
+        self.assertFalse(self.manager._load_area_from_file(self.target, show_message=False))
+        self.assertIs(self.manager.current_area, self.original_area)
+        self.assertIsNone(self.manager.current_area_file)
+        save_as.assert_called_once()
+
+    @patch("file_manager.messagebox.askyesnocancel")
+    def test_clean_area_switches_without_prompt(self, prompt):
+        self.manager.current_area.tiles[0][0].type = "empty"
+        self.assertTrue(self.manager._load_area_from_file(self.target, show_message=False))
+        prompt.assert_not_called()
+
+    @patch("file_manager.messagebox.askyesnocancel", return_value=False)
+    def test_discard_pending_invalid_trigger_does_not_apply_it(self, prompt):
+        self.manager.current_area.tiles[0][0].type = "empty"
+        variable = Mock(get=Mock(return_value="1"))
+        self.manager.remember_editor_form("trigger", [variable])
+        variable.get.return_value = "invalid coordinate"
+        self.manager.save_selected_trigger = Mock(return_value=False)
+        self.manager._trigger_editor_trigger = Trigger()
+        self.manager._trigger_editor_vars = {"x": variable}
+        self.assertTrue(self.manager._load_area_from_file(self.target, show_message=False))
+        prompt.assert_called_once()
+        self.manager.save_selected_trigger.assert_not_called()
+        self.assertNotIn("trigger", self.manager.pending_editor_forms())
+
+    @patch("file_manager.messagebox.askyesnocancel", return_value=None)
+    def test_cancelled_list_switch_restores_list_selection(self, prompt):
+        self.manager.current_game.areas = ["first.json", "second.json"]
+        self.manager._project_path = lambda *parts: os.path.join(self.directory.name, parts[-1])
+        self.manager.game_areas_listbox = Mock()
+        self.manager.game_areas_listbox.curselection.return_value = (1,)
+        self.manager.load_selected_game_area()
+        self.assert_stayed()
+        self.manager.game_areas_listbox.selection_set.assert_called_with(0)
+
+    @patch("file_manager.messagebox.askyesnocancel")
+    def test_selecting_current_area_does_not_reload_or_prompt(self, prompt):
+        self.assertTrue(self.manager._load_area_from_file(self.source, show_message=False))
+        self.assert_stayed()
+        prompt.assert_not_called()
+
+
 class PropertiesDisplayHarness(EditorMethods):
     def __init__(self, triggers, selected_mode=None, selected_tile="teleport"):
         self.current_area = Area(triggers=triggers)
@@ -641,6 +739,28 @@ class EditorFixTests(unittest.TestCase):
         self.assertEqual(trigger.trigger_type, "show_message")
         self.assertEqual(trigger.name, "Updated")
         self.assertEqual(trigger.parameters, {"message": "Door opened"})
+
+    def test_enemy_attachment_is_saved_separately_from_action_parameters(self):
+        trigger = Trigger(4, 5, "show_message", "reward", {"message": "old"})
+        editor = object.__new__(EditorMethods)
+        editor.selected_mode = "trigger"
+        editor._trigger_editor_trigger = trigger
+        editor._trigger_editor_type_labels = {"Show Message": "show_message"}
+        editor._trigger_editor_enemy_labels = {"Warden at (1, 2)": "warden_instance", "(none)": ""}
+        editor._trigger_editor_vars = {
+            "name": Mock(get=Mock(return_value="reward")),
+            "trigger_type": Mock(get=Mock(return_value="Show Message")),
+            "message": Mock(get=Mock(return_value="Victory")),
+            "enemy_attached": Mock(get=Mock(return_value="Warden at (1, 2)")),
+        }
+        editor._trigger_coordinate_error = Mock(return_value=None)
+        self.assertTrue(editor.save_selected_trigger(refresh=False))
+        self.assertEqual(trigger.enemy_attached, "warden_instance")
+        self.assertEqual(trigger.parameters, {"message": "Victory"})
+        self.assertEqual((trigger.x, trigger.y), (4, 5))
+        editor._trigger_editor_vars["enemy_attached"].get.return_value = "(none)"
+        self.assertTrue(editor.save_selected_trigger(refresh=False))
+        self.assertEqual(trigger.enemy_attached, "")
 
     def test_delete_removes_only_the_selected_trigger(self):
         first_trigger = Trigger(x=1, y=1, trigger_type="show_message")

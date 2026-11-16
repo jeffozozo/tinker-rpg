@@ -102,6 +102,7 @@ class TinkerRunner:
         help_menu.add_command(
             label="Instructions", command=self.show_instructions, accelerator="H"
         )
+        help_menu.add_command(label="Diagnostics", command=self.show_diagnostics)
         menu_bar.add_cascade(label="Help", menu=help_menu)
         self.root.configure(menu=menu_bar)
         self.menu_bar = menu_bar
@@ -166,7 +167,7 @@ class TinkerRunner:
         controls.pack(fill=tk.X)
         ttk.Label(
             controls,
-            text="Move: WASD / arrows    Inventory: I    Interact: Space    Attack: F    Slots: 1–5    Wait: .    Help: H / ?    Quit: Q",
+            text="Move: WASD / arrows    Inventory: I    Attack: F    Slots: 1–5    Wait: .    Help: H / ?    Quit: Q",
         ).pack(side=tk.LEFT)
 
         self.redraw()
@@ -176,15 +177,9 @@ class TinkerRunner:
         intro = self.engine.game.get("intro_message", "")
         if intro:
             self.show_dialog(intro)
-        if any(
-            "enemy_id" in obj.properties or "enemy_data" in obj.properties
-            for area in self.engine.areas.values()
-            for obj in area.objects
-        ):
-            self._append_log(
-                "Enemies act after each turn. F attacks in the last direction pressed; "
-                "press . to wait. Contact with chasing enemies causes damage."
-            )
+        self._append_log("Press H for controls and instructions.")
+        if self.engine.validation_issues:
+            self._append_log("Some game content could not be loaded. Details are available under Help → Diagnostics.")
         self.engine.process_entry_triggers()
         self._after_action()
 
@@ -207,7 +202,7 @@ class TinkerRunner:
             photo = None
             if key not in self.warned_assets:
                 self.warned_assets.add(key)
-                self.engine._report(f"Missing or invalid image: {path}")
+                self.engine._validation_issue(f"Missing or invalid image: {path}")
         self.image_cache[key] = photo
         return photo
 
@@ -407,6 +402,21 @@ class TinkerRunner:
         self._flush_events()
         self.refresh_inventory()
         self.refresh_active_bar()
+        self._offer_restart_after_death()
+
+    def _offer_restart_after_death(self):
+        if self.engine.health > 0 or getattr(self, "_death_prompt_engine", None) is self.engine:
+            return
+        self.engine.ended = True
+        self.engine.end_result = "lose"
+        self._death_prompt_engine = self.engine
+        self.close_inventory()
+        if messagebox.askyesno(
+            "Game Over",
+            "You have fallen. Would you like to restart the adventure from the beginning?",
+            parent=self.root,
+        ):
+            self.restart_game(confirm=False)
 
     def show_dialog(self, message):
         if self.engine.events and self.engine.events[-1] == message:
@@ -414,7 +424,20 @@ class TinkerRunner:
         self._append_log(message)
 
     def _show_dialog(self, message, title):
-        self._append_log(f"{title}: {message}")
+        failures = {
+            "Save Failed": "Your progress could not be saved. Try another name or location.",
+            "Load Failed": "That saved game could not be opened. Try another save.",
+            "Restart Failed": "The adventure could not be restarted.",
+        }
+        if title in failures:
+            self.engine._diagnostic(f"{title}: {message}")
+            self._append_log(failures[title])
+        else:
+            self._append_log(message)
+
+    def show_diagnostics(self):
+        details = list(dict.fromkeys([*self.engine.validation_issues, *self.engine.diagnostics]))
+        messagebox.showinfo("Game Diagnostics", "\n\n".join(details) or "No game issues have been reported.", parent=self.root)
 
     @staticmethod
     def _save_name_from_path(path):
@@ -467,7 +490,7 @@ class TinkerRunner:
         self.engine.save_name = save_name
         self.dirty = False
         self.root.title(f"{self.engine.game.get('name', 'Tinker Runner')} - {save_name}")
-        self._append_log(f"Saved game as {save_name} ({saved_path}).")
+        self._append_log(f"Progress saved as {save_name}.")
 
     def load_game(self):
         saves_directory = self.project_root / "saves"
@@ -515,16 +538,16 @@ class TinkerRunner:
         self.dirty = False
         self.root.title(f"{engine.game.get('name', 'Tinker Runner')} - {self.save_name}")
         self._append_log(f"Loaded saved game: {self.save_name}.")
-        for warning in engine.validation_issues:
-            self._append_log(f"Warning: {warning}")
+        if engine.validation_issues:
+            self._append_log("Some game content could not be loaded. Details are available under Help → Diagnostics.")
         self._after_action()
 
     def show_instructions(self):
         instructions = self.engine.game.get("instructions_message", "")
         self.show_dialog(instructions or "No instructions were provided for this game.")
 
-    def restart_game(self):
-        if self.dirty and not messagebox.askyesno(
+    def restart_game(self, confirm=True):
+        if confirm and self.dirty and not messagebox.askyesno(
             "Restart Game",
             "Restart from the beginning and discard unsaved progress?",
             parent=self.root,
@@ -540,9 +563,7 @@ class TinkerRunner:
             self._show_dialog(str(error), "Restart Failed")
             return
 
-        if self.inventory_window is not None and self.inventory_window.winfo_exists():
-            self.inventory_window.destroy()
-        self.inventory_window = None
+        self.close_inventory()
         self.engine = engine
         self.attack_markers = []
         self.marker_generation = getattr(self, "marker_generation", 0) + 1
@@ -553,15 +574,23 @@ class TinkerRunner:
         self._clear_log()
         self.start_game()
 
+    def close_inventory(self):
+        window = self.inventory_window
+        self.inventory_window = None
+        if window is not None and window.winfo_exists():
+            window.grab_release()
+            window.destroy()
+            self.canvas.focus_set()
+
     def toggle_inventory(self):
         if self.inventory_window is not None and self.inventory_window.winfo_exists():
-            self.inventory_window.destroy()
-            self.inventory_window = None
+            self.close_inventory()
             return
         window = tk.Toplevel(self.root)
         window.title("Inventory")
         window.transient(self.root)
         self.inventory_window = window
+        window.protocol("WM_DELETE_WINDOW", self.close_inventory)
         ttk.Label(
             window,
             text=f"Inventory ({len(self.engine.inventory)} slots)",
@@ -582,6 +611,7 @@ class TinkerRunner:
 
         self.inventory_rows = []
         self.inventory_actions = []
+        self.inventory_drops = []
         for index in range(len(self.engine.inventory)):
             frame = ttk.Frame(window)
             frame.pack(fill=tk.X, padx=12, pady=3)
@@ -589,16 +619,26 @@ class TinkerRunner:
             row.pack(side=tk.LEFT)
             use = ttk.Button(frame, text="Use", command=lambda index=index: self.inventory_action(index, "use"))
             use.pack(side=tk.LEFT, padx=3)
+            drop = ttk.Button(frame, text="Drop", command=lambda index=index: self.inventory_action(index, "drop"))
+            drop.pack(side=tk.LEFT, padx=3)
             self.inventory_rows.append(row)
             self.inventory_actions.append(use)
-        ttk.Label(window, text="Choose equipment above. Select (empty) to unequip. Items stay in inventory.").pack(padx=12, pady=5)
-        ttk.Button(window, text="Close", command=self.toggle_inventory).pack(anchor=tk.E, padx=12, pady=10)
+            self.inventory_drops.append(drop)
+        ttk.Label(window, text="Select (empty) to unequip. Drop takes a turn and needs a clear tile. Walk away and back to recover it.", wraplength=580).pack(padx=12, pady=5)
+        ttk.Button(window, text="Close", command=self.close_inventory).pack(anchor=tk.E, padx=12, pady=10)
         self.refresh_inventory()
+        window.grab_set()
+        window.focus_set()
 
     def inventory_action(self, index, action):
         before = (dict(self.engine.equipment), set(self.engine.active_items), list(self.engine.inventory),
                   self.engine.turn_count, self.engine.health, self.engine.energy)
-        changed = self.engine.equip(index) if action == "equip" else self.engine.use_item(index)
+        if action == "equip":
+            changed = self.engine.equip(index)
+        elif action == "drop":
+            changed = self.engine.drop_item(index)
+        else:
+            changed = self.engine.use_item(index)
         after = (self.engine.equipment, self.engine.active_items, self.engine.inventory,
                  self.engine.turn_count, self.engine.health, self.engine.energy)
         self.dirty = self.dirty or changed or before != after
@@ -615,6 +655,7 @@ class TinkerRunner:
             definition = self.engine._item_definition(item) if item else {}
             ended = self.engine.ended
             self.inventory_actions[index].config(state=tk.NORMAL if item and definition.get("item_type") not in ("object", "openable") and not ended else tk.DISABLED)
+            self.inventory_drops[index].config(state=tk.NORMAL if item and not ended else tk.DISABLED)
 
         for slot, chooser in self.inventory_selectors.items():
             choices = [None] + [index for index, item in enumerate(self.engine.inventory)
@@ -669,6 +710,14 @@ class TinkerRunner:
         return "break"
 
     def on_key_press(self, event):
+        key = event.keysym.lower()
+        inventory = getattr(self, "inventory_window", None)
+        if inventory is not None and inventory.winfo_exists():
+            if key in ("i", "escape"):
+                self.close_inventory()
+                return "break"
+            # Leave navigation and button keys to the dialog, never to the map.
+            return
         if isinstance(event.widget, ttk.Combobox):
             return
         if self.engine.ended and event.keysym.lower() not in ("q", "i", "h", "question"):
@@ -697,11 +746,6 @@ class TinkerRunner:
             self.activate_slot(EQUIPMENT_SLOTS[int(key) - 1])
         elif key == "i":
             self.toggle_inventory()
-        elif key == "space":
-            previous_turn = self.engine.turn_count
-            self.engine.interact()
-            self.dirty = self.dirty or self.engine.turn_count != previous_turn
-            self._after_action()
         elif key in ("h", "question"):
             self.show_instructions()
         elif key == "q":

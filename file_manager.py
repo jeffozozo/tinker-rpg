@@ -63,6 +63,34 @@ class FileManager:
                     return
         self.root.destroy()
 
+    def _confirm_area_switch(self):
+        from data_classes import Area
+        baseline = getattr(self, "_saved_area_state", asdict(Area()))
+        dirty = asdict(self.current_area) != baseline or "trigger" in self.pending_editor_forms()
+        if not dirty:
+            return True
+        answer = messagebox.askyesnocancel(
+            "Unsaved Area Changes",
+            f"Save changes to {self.current_area.name} before switching areas?",
+            parent=getattr(self, "root", None),
+        )
+        if answer is None:
+            return False
+        if answer:
+            return bool(self.save_area())
+        return True
+
+    def _restore_current_area_selection(self):
+        if not hasattr(self, "game_areas_listbox"):
+            return
+        self.game_areas_listbox.selection_clear(0, tk.END)
+        filename = os.path.basename(self.current_area_file) if self.current_area_file else None
+        if filename in self.current_game.areas:
+            index = self.current_game.areas.index(filename)
+            self.game_areas_listbox.selection_set(index)
+            self.game_areas_listbox.activate(index)
+            self.game_areas_listbox.see(index)
+
     def _project_path(self, *parts):
         return os.path.join(project_root(), *parts)
 
@@ -194,7 +222,8 @@ class FileManager:
             return
         area_filename = self.current_game.areas[selection[0]]
         area_path = self._project_path("areas", area_filename)
-        self._load_area_from_file(area_path, show_message=False)
+        if self._load_area_from_file(area_path, show_message=False) is False:
+            self._restore_current_area_selection()
     
     # Game management methods
     def new_game(self):
@@ -501,10 +530,19 @@ class FileManager:
     
     def _load_area_from_file(self, filename, show_message=True):
         try:
-            if (hasattr(self, "save_selected_trigger") and
-                    not self.save_selected_trigger()):
+            if (self.current_area_file and
+                    os.path.realpath(filename) == os.path.realpath(self.current_area_file)):
+                return True
+            # Validate the destination before asking to save or replacing any state.
+            destination = self._read_area_file(filename)
+            if not self._confirm_area_switch():
                 return False
-            self.current_area = self._read_area_file(filename)
+            self.current_area = destination
+            if hasattr(self, "_editor_form_baselines"):
+                self._editor_form_baselines.pop("trigger", None)
+            if hasattr(self, "_trigger_editor_trigger"):
+                self._trigger_editor_trigger = None
+                self._trigger_editor_vars = {}
             if hasattr(self, "sync_enemy_instances"):
                 self.sync_enemy_instances()
             
@@ -520,16 +558,18 @@ class FileManager:
             if show_message:
                 area_name = os.path.splitext(os.path.basename(filename))[0]
                 self.show_load_message(loaded_areas=[area_name])
-                
+            return True
+
         except Exception as e:
             messagebox.showerror("Error", f"Failed to open area: {e}")
+            return False
 
     @staticmethod
     def _read_area_file(filename):
         with open(filename, "r", encoding="utf-8") as area_file:
             area_dict = json.load(area_file)
 
-        from data_classes import Area, Tile, GameObject, Trigger, MAX_AREA_DIMENSION
+        from data_classes import Area, Tile, GameObject, Trigger, MAX_AREA_DIMENSION, ensure_enemy_instance_ids
         width, height = area_dict.get("width"), area_dict.get("height")
         if (type(width) is not int or type(height) is not int or
                 not (1 <= width <= MAX_AREA_DIMENSION and
@@ -552,6 +592,7 @@ class FileManager:
                     area.tiles[y][x] = Tile(**tile_data)
         area.objects = [GameObject(**obj) for obj in area.objects]
         area.triggers = [Trigger(**trigger) for trigger in area.triggers]
+        ensure_enemy_instance_ids(area)
         return area
     
     def add_area_to_game(self):

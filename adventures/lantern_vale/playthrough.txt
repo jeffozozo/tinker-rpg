@@ -1,0 +1,90 @@
+LANTERN VALE: THE BELL OF DAWN
+
+No bell has welcomed the sunrise in a hundred days. You arrive in Dawnmere with empty hands. Mara waits at the north end of the road; walk to her, gather supplies, and begin your journey.
+Press H for controls and instructions.
+Mara: The dawn bell has fallen silent. Visit Briarford for armor and a wand. Defeat the guardian in the northern grove for its green seal, then enter the castle. Bring the heart of the silence back to the throne. Take the supplies along this road.
+You receive the book.
+You receive the sword.
+You ready the sword.
+KEEPER’S FIELD NOTES
+Walk onto people and objects to interact. Equip your sword, helmet and shield in inventory. F attacks in the last direction moved. The wand uses energy. A blue gem restores health and energy. Drop items on clear ground and walk away and back to recover them.
+The grove guardian holds a green seal. The castle bell needs a crimson heart. Return to the throne after the belfry falls silent.
+You receive the torch.
+You ready the torch.
+The torch glows.
+You set down the book.
+You receive the book.
+You enter Lantern Vale.
+Road Slime hits you for 2 damage.
+You attack Road Slime with a sword for 6 damage.
+Road Slime hits you for 2 damage.
+You attack Road Slime with a sword for 6 damage.
+Road Slime falls.
+THE OLD ROAD
+West: Dawnmere. East: Briarford. Northwest: Listening Grove. Northeast: Dawnbell Castle.
+Briar Spider hits you for 3 damage.
+That way is blocked.
+Briar Spider hits you for 3 damage.
+You attack Briar Spider with a sword for 6 damage.
+Briar Spider hits you for 3 damage.
+You attack Briar Spider with a sword for 6 damage.
+Briar Spider falls.
+You enter Briarford Village.
+You receive the shield.
+You receive the helmet.
+You put on the helmet.
+You ready the shield.
+You receive the magic wand.
+You ready the magic wand.
+You receive the blue gem.
+Fen: Ready the wand in your weapon slot and press F to fire along your facing. Armor protects only while equipped. The runic candles hold two recharges; save them for your return.
+A village purse: a gift for your journey.
+You receive $12.
+Your attack misses.
+You regain 1 energy.
+The runestone can restore energy twice. Save a charge for your return.
+Your attack misses.
+You regain 1 energy.
+Your attack misses.
+You enter Lantern Vale.
+Stone grinds ahead. The Moss Guardian carries the seal; it must be defeated.
+You enter The Listening Grove.
+You attack Moss Guardian with a magic wand for 7 damage.
+You attack Moss Guardian with a magic wand for 7 damage.
+The guardian crumbles. A green seal settles into your hand. The castle awaits.
+You attack Moss Guardian with a magic wand for 7 damage.
+Moss Guardian falls.
+You receive the green gem.
+An old keeper’s courage warms your hands.
+You feel stronger. Strength +1.
+The red spring is bitter. The pool beneath it will burn you.
+You lose 4 health.
+You use the blue gem.
+You enter Lantern Vale.
+You enter Dawnbell Castle.
+Keeper: If you can spare $5, step onto the silver paving beside me to help restore the castle. This offering is optional. The green seal opens the inner gate.
+The keeper bows. Your gift will help repair the bell tower.
+You pay $5.
+Green light runs through the stone. The inner gate opens. The throne stands in the northwest hall; the belfry stairs are northeast.
+You no longer carry the green gem.
+Hollow Sentry hits you for 2 damage.
+You attack Hollow Sentry with a magic wand for 8 damage.
+Hollow Sentry hits you for 2 damage.
+You attack Hollow Sentry with a magic wand for 8 damage.
+Hollow Sentry falls.
+A hidden drawer opens. A restoration gem rolls onto the paving.
+You receive the blue gem.
+The bell hangs soundless above you. The Hush waits in the passage. Defeat it to recover the crimson heart.
+You enter The Silent Belfry.
+You attack The Hush with a magic wand for 8 damage.
+You attack The Hush with a magic wand for 8 damage.
+The Hush breaks apart like smoke. Its crimson heart remains. Bring it to the castle throne.
+You attack The Hush with a magic wand for 8 damage.
+The Hush falls.
+You receive the red gem.
+You use the blue gem.
+You enter Dawnbell Castle.
+You set the crimson heart beneath the throne. The spring clears. Above the castle, the dawn bell rings for the first time in a hundred mornings. Both villages answer with lanterns.
+
+THE END — The Bell of Dawn
+You no longer carry the red gem.
