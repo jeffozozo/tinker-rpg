@@ -8,9 +8,12 @@ from tkinter import ttk, filedialog, messagebox
 import json
 import os
 from dataclasses import asdict
+from copy import deepcopy
+from uuid import uuid4
 
 from data_classes import MAX_PLAYER_INVENTORY_SLOTS, PLAYER_STAT_CHANGES, trigger_charges, funds_delta, ensure_enemy_instance_ids
 from project_paths import project_root
+from trigger_library import definitions_for, resolve_trigger, validate_control
 
 class EditorMethods:
     """Mixin class containing all editor interaction methods"""
@@ -21,11 +24,15 @@ class EditorMethods:
         self.trigger_colors = {
             "teleport": "#0066CC",      # Blue
             "funds": "#B8860B",
+            "trigger_control": "#708090",
+            "enemy_placement": "#B22222",
+            "named_trigger": "#406080",
             "player_stats": "#B2498A",
             "inventory": "#009900",     # Green
             "tile_update": "#FFCC00",   # Yellow
             "area_object": "#FF6600",   # Orange
             "game_end": "#9900CC",      # Purple
+            "play_sound": "#8B6F47",
             "show_message": "#00CCCC",   # Cyan
             "custom": "#CC0000"         # Red
         }
@@ -247,7 +254,7 @@ class EditorMethods:
                 self.place_tile()
                 return "break"
             elif key == 'delete' or key == 'backspace':
-                self.remove_tile()
+                self.delete_location()
                 return "break"
             elif key in ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0']:
                 self.select_trigger(10 if key == "0" else int(key))
@@ -333,16 +340,15 @@ class EditorMethods:
                     type=self.selected_tile, x=self.cursor_x, y=self.cursor_y))
         
         elif self.selected_mode == "trigger":
+            if self.selected_tile == "named_trigger":
+                self.place_reusable_trigger()
+                return
             triggers_here = [trig for trig in self.current_area.triggers 
                            if trig.x == self.cursor_x and trig.y == self.cursor_y]
             if self.selected_mode == "trigger" and not self.save_selected_trigger(
                 show_error=True, refresh=False
             ):
                 return
-            if len(triggers_here) >= 10:
-                messagebox.showwarning("Max Triggers", "Maximum 10 triggers allowed per location")
-                return
-            
             from data_classes import Trigger
             new_trigger = Trigger(
                 x=self.cursor_x, 
@@ -356,26 +362,57 @@ class EditorMethods:
         self.draw_area()
         self.update_properties_display()
 
-    def fill_empty_tiles(self):
+    def fill_tiles(self):
+        """Fill matching four-connected tiles with horizontal spans from the cursor."""
         if self.selected_mode != "tile":
-            messagebox.showwarning(
-                "Fill Empty Tiles", "Select Tiles mode before filling the area."
-            )
+            messagebox.showwarning("Fill", "Select Tiles mode before filling the area.")
             return 0
 
         from data_classes import Tile
+        area = self.current_area
+        x, y = self.cursor_x, self.cursor_y
+        if not (0 <= x < area.width and 0 <= y < area.height):
+            return 0
+        replacement = self.selected_tile
+        seeds = [(x, y)]
+        if area.tiles[y][x].type == replacement:
+            # Snapshot all neighboring source types before any region is changed.
+            seeds = [(x + dx, y + dy) for dx, dy in ((1, 0), (0, 1), (-1, 0), (0, -1))
+                     if 0 <= x + dx < area.width and 0 <= y + dy < area.height]
+        pending = [(sx, sy, area.tiles[sy][sx].type) for sx, sy in seeds
+                   if area.tiles[sy][sx].type != replacement]
         filled_count = 0
-        for row in self.current_area.tiles:
-            for x, tile in enumerate(row):
-                if tile.type == "empty":
-                    row[x] = Tile(type=self.selected_tile)
-                    filled_count += 1
-
+        while pending:
+            sx, sy, source = pending.pop()
+            if area.tiles[sy][sx].type != source:
+                continue
+            left = right = sx
+            while left > 0 and area.tiles[sy][left - 1].type == source:
+                left -= 1
+            while right + 1 < area.width and area.tiles[sy][right + 1].type == source:
+                right += 1
+            for column in range(left, right + 1):
+                area.tiles[sy][column] = Tile(type=replacement)
+                filled_count += 1
+            # Only edge-sharing spans connect: never cross diagonal border contacts.
+            for row in (sy - 1, sy + 1):
+                if not 0 <= row < area.height:
+                    continue
+                in_span = False
+                for column in range(left, right + 1):
+                    matches = area.tiles[row][column].type == source
+                    if matches and not in_span:
+                        pending.append((column, row, source))
+                    in_span = matches
         if filled_count:
             self.draw_area()
             self.update_properties_display()
         return filled_count
-    
+
+    def fill_empty_tiles(self):
+        """Compatibility entry point for existing editor automation."""
+        return self.fill_tiles()
+
     def remove_tile(self):
         if self.selected_mode == "tile":
             from data_classes import Tile
@@ -450,6 +487,13 @@ class EditorMethods:
             and "x" in trigger_variables
             and "y" in trigger_variables
         ):
+            area_variable = trigger_variables.get("area")
+            selected_area = area_variable.get() if area_variable is not None else ""
+            current_file = getattr(self, "current_area_file", None) if selected_area not in ("", "Current area") else None
+            current_name = os.path.splitext(os.path.basename(current_file))[0] if current_file else ""
+            if selected_area not in ("", "Current area", current_name):
+                self.canvas.focus_set()
+                return "break"
             if (
                 0 <= grid_x < self.current_area.width
                 and 0 <= grid_y < self.current_area.height
@@ -574,31 +618,140 @@ class EditorMethods:
             self._coordinate_picker_source = None
             self.draw_area()
 
+    def _location_edit_allowed(self):
+        return (getattr(self, "_trigger_position_picker", None) is None
+                and self.selected_mode not in ("messages", "editor_help")
+                and 0 <= self.cursor_x < self.current_area.width
+                and 0 <= self.cursor_y < self.current_area.height)
+
+    def _commit_location_form(self):
+        return self.save_selected_trigger(show_error=True, refresh=False)
+
+    def _refresh_location_edit(self):
+        self._trigger_editor_trigger = None
+        self._trigger_editor_vars = {}
+        self.selected_trigger_index = 0
+        self.refresh_trigger_editor()
+        self.draw_area()
+        self.update_properties_display()
+
+    def copy_location(self):
+        if not self._location_edit_allowed() or not self._commit_location_form():
+            return False
+        x, y = self.cursor_x, self.cursor_y
+        self._location_clipboard = {
+            "tile": deepcopy(self.current_area.tiles[y][x]),
+            "objects": deepcopy([obj for obj in self.current_area.objects if (obj.x, obj.y) == (x, y)]),
+            "triggers": deepcopy([trig for trig in self.current_area.triggers if (trig.x, trig.y) == (x, y)]),
+            "definitions": deepcopy(getattr(getattr(self, "current_game", None), "properties", {}).get("trigger_definitions", {})),
+            "position": (x, y), "area": self.current_area,
+            "area_file": getattr(self, "current_area_file", None), "move": False,
+        }
+        return True
+
+    def _clear_location(self):
+        from data_classes import Tile
+        x, y = self.cursor_x, self.cursor_y
+        self.current_area.tiles[y][x] = Tile(type="empty")
+        self.current_area.objects = [obj for obj in self.current_area.objects if (obj.x, obj.y) != (x, y)]
+        self.current_area.triggers = [trig for trig in self.current_area.triggers if (trig.x, trig.y) != (x, y)]
+
+    def cut_location(self):
+        if not self.copy_location():
+            return False
+        self._location_clipboard["move"] = True
+        self._clear_location()
+        self._refresh_location_edit()
+        return True
+
+    def delete_location(self):
+        if not self._location_edit_allowed() or not self._commit_location_form():
+            return False
+        self._clear_location()
+        self._refresh_location_edit()
+        return True
+
+    def paste_location(self):
+        clipboard = getattr(self, "_location_clipboard", None)
+        if not clipboard or not self._location_edit_allowed() or not self._commit_location_form():
+            return False
+        x, y = self.cursor_x, self.cursor_y
+        objects = deepcopy(clipboard["objects"])
+        triggers = deepcopy(clipboard["triggers"])
+        if hasattr(self, "import_clipboard_triggers"):
+            try:
+                self.import_clipboard_triggers(clipboard, triggers)
+            except ValueError as error:
+                messagebox.showerror("Paste", str(error))
+                return False
+        same_area = clipboard["area"] is self.current_area
+        move = clipboard["move"] and same_area
+        for obj in objects:
+            obj.x, obj.y = x, y
+            if "enemy_id" in obj.properties or "enemy_data" in obj.properties:
+                original = obj.properties.get("enemy_instance_id")
+                identity = original if move and original else f"enemy_instance_{uuid4().hex}"
+                obj.properties["enemy_instance_id"] = identity
+        source_file = clipboard["area_file"]
+        source_stem = os.path.splitext(os.path.basename(source_file))[0] if source_file else None
+        for trigger in triggers:
+            trigger.x, trigger.y = x, y
+            if trigger.definition_id:
+                trigger.remaining_charges = None
+                continue
+            params = trigger.parameters
+            target_area = params.get("area", "")
+            local = not target_area or (source_stem is not None and os.path.splitext(os.path.basename(target_area))[0] == source_stem)
+            # Retarget actions on the copied stack, preserving unrelated destinations.
+            if (trigger.trigger_type in ("area_object", "tile_update", "enemy_placement") and local
+                    and (params.get("x"), params.get("y")) == clipboard["position"]):
+                params["x"], params["y"] = x, y
+                if trigger.trigger_type in ("area_object", "tile_update", "enemy_placement"):
+                    params["area"] = ""
+        self._clear_location()
+        self.current_area.tiles[y][x] = deepcopy(clipboard["tile"])
+        self.current_area.objects.extend(objects)
+        self.current_area.triggers.extend(triggers)
+        clipboard["move"] = False
+        self._refresh_location_edit()
+        return True
+
+    def populate_location_menu(self, menu):
+        enabled = self._location_edit_allowed()
+        for label, command in (("Cut", self.cut_location), ("Copy", self.copy_location),
+                               ("Paste", self.paste_location), ("Delete", self.delete_location)):
+            state = tk.NORMAL if enabled and (label != "Paste" or getattr(self, "_location_clipboard", None)) else tk.DISABLED
+            menu.add_command(label=label, command=command, state=state)
+
+    def refresh_edit_menu(self):
+        self.edit_menu.delete(0, tk.END)
+        self.populate_location_menu(self.edit_menu)
+
     def on_canvas_right_click(self, event):
         if (getattr(self, "_trigger_position_picker", None) is not None or
                 self.selected_mode in ("messages", "editor_help")):
             return "break"
-
-        canvas_x = self.canvas.canvasx(event.x)
-        canvas_y = self.canvas.canvasy(event.y)
-        grid_x = int(canvas_x // self.tile_size)
-        grid_y = int(canvas_y // self.tile_size)
-        if not (0 <= grid_x < self.current_area.width and
-                0 <= grid_y < self.current_area.height):
+        grid_x = int(self.canvas.canvasx(event.x) // self.tile_size)
+        grid_y = int(self.canvas.canvasy(event.y) // self.tile_size)
+        if not (0 <= grid_x < self.current_area.width and 0 <= grid_y < self.current_area.height):
             return "break"
-
-        if self.selected_mode == "trigger" and not self.save_selected_trigger(
-            show_error=True, refresh=False
-        ):
+        if not self._commit_location_form():
             return "break"
         self.canvas.focus_set()
-        self.cursor_x = grid_x
-        self.cursor_y = grid_y
+        self.cursor_x, self.cursor_y = grid_x, grid_y
         self.selected_trigger_index = 0
         self.update_cursor_display()
         self.refresh_trigger_editor()
         self.update_properties_display()
-        self.place_tile()
+        previous = getattr(self, "_location_context_menu", None)
+        if previous is not None:
+            previous.destroy()
+        menu = self._location_context_menu = tk.Menu(self.canvas, tearoff=0)
+        self.populate_location_menu(menu)
+        try:
+            menu.tk_popup(event.x_root, event.y_root)
+        finally:
+            menu.grab_release()
         return "break"
 
     def on_canvas_motion(self, event):
@@ -640,6 +793,40 @@ class EditorMethods:
                 if self.selected_mode == "player":
                     self.get_player_settings()["sprite"] = self.selected_tile
                     self.draw_area()
+            return
+
+        if self.selected_mode in ("tile", "object", "trigger", "messages"):
+            # Canvas item IDs and selection outlines are not hit targets. Use the
+            # scrolled content coordinates to select the displayed grid cell/row.
+            x = self.tile_canvas.canvasx(event.x)
+            y = self.tile_canvas.canvasy(event.y)
+            if self.selected_mode == "tile":
+                column, row = int((x - 10) // 40), int((y - 10) // 40)
+                names = self.tile_manager.get_tile_names()
+                index = row * 5 + column
+                if not (0 <= column < 5 and row >= 0 and 0 <= index < len(names)
+                        and 10 + column * 40 <= x < 42 + column * 40
+                        and 10 + row * 40 <= y < 42 + row * 40):
+                    return
+                self.selected_tile = names[index]
+                self.update_tile_display()
+            elif self.selected_mode == "messages":
+                index = int((y - 15) // 55)
+                if 0 <= index < 3 and 15 + index * 55 <= y < 55 + index * 55:
+                    self.edit_game_message(("intro", "instructions", "game_end")[index])
+            else:
+                index = int((y - 10) // 40)
+                names = (self.tile_manager.get_object_names() or ["item", "lever", "fountain", "chest", "barrel"]
+                         if self.selected_mode == "object" else
+                         ["teleport", "inventory", "player_stats", "funds", "tile_update", "area_object", "game_end", "show_message", "play_sound", "trigger_control", "enemy_placement", "named_trigger"])
+                if not (0 <= index < len(names) and 8 <= x < 220
+                        and 10 + index * 40 <= y < 46 + index * 40):
+                    return
+                self.selected_tile = names[index]
+                self.update_tile_display()
+                if self.selected_mode == "object":
+                    self.load_object_definition_editor()
+                self.update_properties_display()
             return
 
         clicked = self.tile_canvas.find_closest(event.x, event.y)[0]
@@ -749,6 +936,7 @@ class EditorMethods:
                 self.player_setup_frame.pack_forget()
                 self.enemy_properties_frame.pack(fill=tk.X, padx=5, pady=5)
                 self.enemy_controls_frame.pack(fill=tk.X, padx=5, pady=5)
+                self.select_enemy_at_cursor()
                 self.refresh_enemy_editor()
             else:
                 self.enemy_properties_frame.pack_forget()
@@ -899,10 +1087,14 @@ class EditorMethods:
             "inventory": "Adds or removes an item from the player's inventory.",
             "player_stats": "Changes a player stat by a signed amount.",
             "funds": "Adds or removes funds. Removal requires sufficient funds.",
-            "tile_update": "Changes a tile in the current area.",
+            "trigger_control": "Enables or disables all placements of a named trigger.",
+            "enemy_placement": "Places or removes enemies of a chosen type, including all instances.",
+            "named_trigger": "Places an existing named trigger from this game.",
+            "tile_update": "Changes a tile in a selected area.",
             "area_object": "Adds or removes an object on an area map.",
             "game_end": "Ends the game with a win or loss.",
             "show_message": "Displays a message to the player.",
+            "play_sound": "Plays a WAV file once or loops it.",
             "custom": "Legacy custom scripts are not supported by the runner.",
         }
         return descriptions.get(trigger_type, "Unknown trigger type.")
@@ -936,6 +1128,54 @@ class EditorMethods:
 
         ttk.Button(button_frame, text="Save", command=save_message).pack(side=tk.RIGHT, padx=(5, 0))
     
+    def show_area_music(self):
+        from pathlib import Path
+        import wave
+        from project_paths import asset_root
+
+        area = self.current_area
+        dialog = tk.Toplevel(self.root)
+        dialog.title("Area Ambient Music")
+        dialog.transient(self.root)
+        dialog.grab_set()
+        frame = ttk.Frame(dialog, padding=12)
+        frame.pack(fill=tk.BOTH, expand=True)
+        ttk.Label(frame, text=f"Music for {area.name}").pack(anchor=tk.W)
+        library = Path(project_root()) / "music"
+        tracks = sorted({path.name for directory in (library, asset_root() / "music")
+                         for path in directory.glob("*")
+                         if path.is_file() and path.suffix.lower() == ".wav"}
+                        | ({area.ambient_music} if area.ambient_music else set()))
+        selected = tk.StringVar(value=area.ambient_music or "None")
+        selector = ttk.Combobox(frame, textvariable=selected,
+                                values=["None", *tracks], state="readonly", width=45)
+        selector.pack(fill=tk.X, pady=8)
+
+        def import_track():
+            filename = filedialog.askopenfilename(
+                parent=dialog, title="Import Ambient Music",
+                filetypes=[("WAV audio", "*.wav")],
+            )
+            if not filename:
+                return
+            try:
+                from wav_assets import import_wav
+                name = import_wav(filename, library)
+                if name not in tracks:
+                    tracks.append(name)
+                selector.configure(values=["None", *sorted(tracks)])
+                selected.set(name)
+            except (OSError, ValueError, wave.Error, EOFError) as error:
+                messagebox.showerror("Import Music", str(error), parent=dialog)
+
+        def save():
+            area.ambient_music = "" if selected.get() == "None" else selected.get()
+            dialog.destroy()
+
+        ttk.Button(frame, text="Import WAV", command=import_track).pack(side=tk.LEFT)
+        ttk.Button(frame, text="Save", command=save).pack(side=tk.RIGHT)
+        ttk.Button(frame, text="Cancel", command=dialog.destroy).pack(side=tk.RIGHT, padx=6)
+
     def on_area_name_change(self, *_args):
         self.current_area.name = self.area_name_var.get()
 
@@ -1112,6 +1352,8 @@ class EditorMethods:
         self.cursor_label.config(text=f"Cursor: ({self.cursor_x}, {self.cursor_y})")
     
     def update_tile_display(self):
+        if hasattr(self, 'update_named_trigger_picker'):
+            self.update_named_trigger_picker()
         self.tile_canvas.delete("all")
         
         if self.selected_mode == "enemy":
@@ -1202,16 +1444,20 @@ class EditorMethods:
                     self.tile_canvas.create_rectangle(8, y-2, 200, y + 32, outline="red", width=2, tags="selection")
         
         elif self.selected_mode == "trigger":
-            trigger_types = ["teleport", "inventory", "player_stats", "funds", "tile_update", "area_object", "game_end", "show_message"]
+            trigger_types = ["teleport", "inventory", "player_stats", "funds", "tile_update", "area_object", "game_end", "show_message", "play_sound", "trigger_control", "enemy_placement", "named_trigger"]
             trigger_names = {
                 "teleport": "Teleport",
                 "inventory": "Inventory",
                 "player_stats": "Player Stats",
                 "funds": "Funds",
+                "trigger_control": "Trigger Control",
+                "enemy_placement": "Enemy Placement",
+                "named_trigger": "Named Trigger",
                 "tile_update": "Tile Update",
                 "area_object": "Area Object", 
                 "game_end": "Game End",
                 "show_message": "Show Message",
+                "play_sound": "Play Sound",
                 "custom": "Custom Script"
             }
             
@@ -1257,16 +1503,19 @@ class EditorMethods:
             help_text = (
                 "EDITOR HELP\n\n"
                 "Tiles, Objects, and NPCs:\n"
-                "Choose an item, then use Space or right-click to place it at the cursor/map cell.\n\n"
+                "Choose an item, then use Space to place it at the map cursor. "
+                "Right-click or use Edit for Copy, Cut, Paste, and Delete of the entire cell. "
+                "Paste replaces the destination tile and everything stacked there.\n\n"
                 "Enemies:\n"
-                "Add and select enemy types in the left panel, edit their stats on the right, "
-                "then press Space to place the selected enemy at the cursor. "
-                "Use Delete to remove an enemy from the cursor tile.\n\n"
+                "Use Enemies → Manage Enemies… to create or edit types for this game. "
+                "Select a type on the left, then press Space to place it. "
+                "The right pane shows a type summary and this instance’s loot choice. "
+                "Delete clears the tile and all objects and triggers at the cursor.\n\n"
                 "Triggers:\n"
-                "Choose a trigger and use Space or right-click to add it at a map cell. "
+                "Choose a trigger and use Space to add it at the map cursor. "
                 "Select stacked triggers "
                 "in the right panel (or use 1-9 and 0 for the first ten). "
-                "Edit fields in the right panel; Save commits them, and Delete "
+                "Edit fields in the right panel; Save commits them, and the Delete Trigger button "
                 "removes the selected trigger.\n\n"
                 "Map navigation (in editing modes):\n"
                 "Click a map cell or use the arrow keys to move the cursor. "
@@ -1293,6 +1542,12 @@ class EditorMethods:
                 self.selected_tile_label.config(text=f"Selected: {self.selected_tile}")
     
     def update_properties_display(self):
+        if self.selected_mode == "enemy" and hasattr(self, "refresh_enemy_instance_editor"):
+            self.select_enemy_at_cursor()
+            if getattr(self, "_enemy_loaded_id", None) != self.selected_enemy_id:
+                self.refresh_enemy_editor()
+            else:
+                self.refresh_enemy_instance_editor()
         self.properties_text.configure(state='normal')
         self.properties_text.delete(1.0, tk.END)
         
@@ -1402,6 +1657,8 @@ class EditorMethods:
         if not hasattr(self, "trigger_listbox"):
             return
 
+        if hasattr(self, "refresh_reusable_triggers"):
+            self.refresh_reusable_triggers()
         triggers_here = self._triggers_at_cursor()
         self.selected_trigger_index = min(
             self.selected_trigger_index, max(0, len(triggers_here) - 1)
@@ -1410,8 +1667,10 @@ class EditorMethods:
         self.trigger_listbox.delete(0, tk.END)
         for index, trigger in enumerate(triggers_here):
             label = f"{index + 1}. {trigger.name} - {trigger.trigger_type.replace('_', ' ').title()}"
-            if trigger.enemy_attached:
-                label += " [Enemy attached]"
+            if trigger.definition_id:
+                label += " [Named]"
+            if not trigger.enabled:
+                label += " [Disabled]"
             self.trigger_listbox.insert(tk.END, label)
             self.trigger_listbox.itemconfig(
                 index,
@@ -1427,8 +1686,14 @@ class EditorMethods:
             child.destroy()
         self._trigger_editor_vars = {}
         self._trigger_editor_tile_labels = {}
+        if hasattr(self, 'trigger_save_button'):
+            self.trigger_save_button.configure(text='Save')
         if triggers_here:
-            self._build_trigger_editor(triggers_here[self.selected_trigger_index])
+            selected = triggers_here[self.selected_trigger_index]
+            if selected.definition_id and hasattr(self, 'show_named_trigger_summary'):
+                self.show_named_trigger_summary(selected)
+            else:
+                self._build_trigger_editor(selected)
         else:
             ttk.Label(
                 self.trigger_form_frame,
@@ -1460,18 +1725,15 @@ class EditorMethods:
             return
         charge_variable = self._trigger_editor_vars.get("charges")
         charges = charge_variable.get() if charge_variable is not None else trigger_charges(trigger.parameters)
-        attachment_var = self._trigger_editor_vars.get("enemy_attached")
-        attachment = (self._trigger_editor_enemy_labels.get(attachment_var.get(), "")
-                      if attachment_var is not None else trigger.enemy_attached)
         for child in self.trigger_form_frame.winfo_children():
             child.destroy()
         self._trigger_editor_vars = {}
         self._trigger_editor_tile_labels = {}
         self._build_trigger_editor(
-            trigger, trigger_type=trigger_type, parameters={"charges": charges}, name=name, enemy_attached=attachment
+            trigger, trigger_type=trigger_type, parameters={"charges": charges}, name=name
         )
 
-    def _build_trigger_editor(self, trigger, trigger_type=None, parameters=None, name=None, enemy_attached=None):
+    def _build_trigger_editor(self, trigger, trigger_type=None, parameters=None, name=None):
         form = self.trigger_form_frame
         self._trigger_editor_trigger = trigger
         trigger_type = trigger_type or trigger.trigger_type
@@ -1486,6 +1748,9 @@ class EditorMethods:
             "area_object",
             "game_end",
             "show_message",
+            "play_sound",
+            "trigger_control",
+            "enemy_placement",
         )
         self._trigger_editor_type_labels = {
             trigger_type.replace("_", " ").title(): trigger_type
@@ -1518,6 +1783,12 @@ class EditorMethods:
         name_row.pack(fill=tk.X, pady=2)
         ttk.Label(name_row, text="Name:", width=10).pack(side=tk.LEFT)
         ttk.Entry(name_row, textvariable=name_var).pack(side=tk.LEFT, fill=tk.X, expand=True)
+
+        enabled_var = tk.BooleanVar(value=trigger.enabled)
+        self._trigger_editor_vars["enabled"] = enabled_var
+        ttk.Checkbutton(form, text="Initially enabled (all placements)" if trigger.definition_id else "Initially enabled", variable=enabled_var).pack(anchor=tk.W)
+        if trigger.definition_id and not getattr(self, "editing_named_definition", False):
+            ttk.Label(form, text="Named trigger: changes here affect every placement in this game. Delete removes only this placement.", wraplength=245).pack(anchor=tk.W, pady=3)
 
         def add_entry(key, label, value="", width=16):
             row = ttk.Frame(form)
@@ -1557,7 +1828,8 @@ class EditorMethods:
                     else None
                 )
                 self._begin_trigger_position_pick(
-                    x_var, y_var, destination_area
+                    x_var, y_var,
+                    None if destination_area == "Current area" else destination_area
                 )
 
             ttk.Button(form, text="Pick coordinates on map", command=start_pick).pack(
@@ -1573,6 +1845,31 @@ class EditorMethods:
             y_var = add_entry("y", "Target Y:", params.get("y", 0))
             add_coordinate_picker(x_var, y_var, destination_area_var)
             ttk.Label(form, text="Save destination areas before linking teleports.", wraplength=245).pack(anchor=tk.W, pady=3)
+        elif trigger_type == "enemy_placement":
+            definitions = self.current_game.properties.get('enemies', {})
+            labels = {f"{definition['name']} ({index + 1})": identity for index, (identity, definition) in enumerate(definitions.items())}
+            self._enemy_placement_labels = labels
+            selected = next((label for label, identity in labels.items() if identity == params.get('enemy_id')), '')
+            add_combo('enemy_id', 'Enemy type:', tuple(labels), selected)
+            add_combo('action', 'Action:', ('place', 'remove'), params.get('action', 'place'))
+            scopes = {'At coordinates': 'position', 'All in this area': 'area', 'All in this game': 'game'}
+            self._enemy_placement_scopes = scopes
+            scope = next((label for label, value in scopes.items() if value == params.get('scope', 'position')), 'At coordinates')
+            add_combo('scope', 'Scope:', tuple(scopes), scope)
+            areas = [''] + [os.path.splitext(area)[0] for area in self.current_game.areas]
+            destination = add_combo('area', 'Area:', areas, params.get('area', ''))
+            x_var = add_entry('x', 'Target X:', params.get('x', trigger.x))
+            y_var = add_entry('y', 'Target Y:', params.get('y', trigger.y))
+            add_coordinate_picker(x_var, y_var, destination)
+            ttk.Label(form, text='Place uses At coordinates. Remove can affect one location, all of a type in an area, or all in this game. Blank area means the area of this trigger. Removal never drops loot.', wraplength=245).pack(anchor=tk.W, pady=4)
+        elif trigger_type == "trigger_control":
+            labels = {definition['name']: identity for identity, definition in definitions_for(self.current_game).items()}
+            self._trigger_control_labels = labels
+            target = params.get('target', '')
+            selected = next((name for name, identity in labels.items() if identity == target), '')
+            add_combo('target', 'Trigger:', tuple(sorted(labels)), selected)
+            add_combo('action', 'Action:', ('enable', 'disable'), params.get('action', 'enable'))
+            ttk.Label(form, text="Controls every placement of this definition, including other areas. Enabling does not reset charges.", wraplength=245).pack(anchor=tk.W, pady=3)
         elif trigger_type == "funds":
             add_combo("action", "Action:", ("add", "remove"), params.get("action", "add"))
             add_entry("amount", "Amount ($):", params.get("amount", 1))
@@ -1591,8 +1888,15 @@ class EditorMethods:
                                     | {value for key in ("add", "remove") if (value := params.get(key, ""))})
             add_combo("add", "Add item:", items, params.get("add", ""))
             add_combo("remove", "Remove item:", items, params.get("remove", ""))
-            ttk.Label(form, text="Changes inventory only. Use a separate Area Object trigger to add/remove the map object.", wraplength=245).pack(anchor=tk.W, pady=4)
+            ttk.Label(form, text="Gettable objects pick up automatically. For manual pickup, turn Gettable off and pair this with an Area Object trigger.", wraplength=245).pack(anchor=tk.W, pady=4)
         elif trigger_type == "tile_update":
+            area_names = ["Current area"] + [
+                os.path.splitext(os.path.basename(area))[0]
+                for area in self.current_game.areas
+            ]
+            destination = add_combo(
+                "area", "Area:", area_names, params.get("area") or "Current area"
+            )
             x_var = add_entry("x", "Target X:", params.get("x", 0))
             y_var = add_entry("y", "Target Y:", params.get("y", 0))
             tile_name = params.get("tile", "")
@@ -1617,24 +1921,39 @@ class EditorMethods:
                 except ValueError:
                     current_tile_label.config(text="Current tile: invalid coordinates")
                     return
-                if not (0 <= target_x < self.current_area.width and
-                        0 <= target_y < self.current_area.height):
+                target_area = self.current_area
+                if destination.get() != "Current area":
+                    filename = next(
+                        (name for name in self.current_game.areas
+                         if destination.get() in (name, os.path.splitext(os.path.basename(name))[0])),
+                        None,
+                    )
+                    if filename is None:
+                        current_tile_label.config(text="Current tile: choose an area")
+                        return
+                    area_path = self._project_path("areas", filename)
+                    if not (self.current_area_file and
+                            os.path.realpath(self.current_area_file) == os.path.realpath(area_path)):
+                        try:
+                            target_area = self._read_area_file(area_path)
+                        except (OSError, ValueError, KeyError, TypeError):
+                            current_tile_label.config(text="Current tile: area unavailable")
+                            return
+                if not (0 <= target_x < target_area.width and
+                        0 <= target_y < target_area.height):
                     current_tile_label.config(text="Current tile: outside this area")
                     return
-                current_name = self.current_area.tiles[target_y][target_x].type
+                current_name = target_area.tiles[target_y][target_x].type
                 display_name = self.tile_manager.get_tile_info(current_name).get(
                     "display_name", current_name
                 )
                 current_tile_label.config(text=f"Current tile: {display_name}")
 
+            destination.trace_add("write", update_current_tile)
             x_var.trace_add("write", update_current_tile)
             y_var.trace_add("write", update_current_tile)
             update_current_tile()
-            ttk.Label(
-                form,
-                text="Click a map tile to set the target coordinates.",
-                wraplength=245,
-            ).pack(anchor=tk.W, pady=3)
+            add_coordinate_picker(x_var, y_var, destination)
             walkable_var = tk.BooleanVar(value=params.get("walkable", True))
             ttk.Checkbutton(form, text="Walkable", variable=walkable_var).pack(anchor=tk.W)
             self._trigger_editor_vars["walkable"] = walkable_var
@@ -1653,28 +1972,72 @@ class EditorMethods:
         elif trigger_type == "game_end":
             add_combo("win_lose", "Result:", ("win", "lose"), params.get("win_lose", "win"))
             add_text("message", "Message:", params.get("message", ""), height=3)
+        elif trigger_type == "play_sound":
+            from pathlib import Path
+            import wave
+            from project_paths import asset_root
+            from wav_assets import import_wav, wav_path
+            from ambient_music import AmbientMusic
+
+            library = Path(project_root()) / "sounds"
+            files = sorted({path.name for directory in (library, asset_root() / "sounds")
+                            for path in directory.glob("*")
+                            if path.is_file() and path.suffix.lower() == ".wav"}
+                           | ({params["file"]} if params.get("file") else set()))
+            row = ttk.Frame(form)
+            row.pack(fill=tk.X, pady=2)
+            ttk.Label(row, text="WAV file:", width=10).pack(side=tk.LEFT)
+            file_var = tk.StringVar(value=params.get("file", ""))
+            self._trigger_editor_vars["file"] = file_var
+            selector = ttk.Combobox(row, textvariable=file_var, values=files, state="readonly", width=16)
+            selector.pack(side=tk.LEFT, fill=tk.X, expand=True)
+
+            def import_sound():
+                filename = filedialog.askopenfilename(
+                    parent=form.winfo_toplevel(), title="Import Trigger Sound",
+                    filetypes=[("WAV audio", "*.wav")],
+                )
+                if not filename:
+                    return
+                try:
+                    name = import_wav(filename, library)
+                    if name not in files:
+                        files.append(name)
+                    selector.configure(values=sorted(files))
+                    file_var.set(name)
+                except (OSError, ValueError, wave.Error, EOFError) as error:
+                    messagebox.showerror("Import Sound", str(error), parent=form.winfo_toplevel())
+
+            loop_var = tk.BooleanVar(value=params.get("loop", False))
+            self._trigger_editor_vars["loop"] = loop_var
+            controls = ttk.Frame(form)
+            controls.pack(fill=tk.X, pady=3)
+            preview = AmbientMusic(
+                form.winfo_toplevel(),
+                lambda error: messagebox.showerror("Play Sound", error, parent=form.winfo_toplevel()),
+                alias="tinker_preview_" + uuid4().hex,
+            )
+
+            def play_sound():
+                try:
+                    wav_path(project_root(), file_var.get())
+                except (OSError, ValueError) as error:
+                    messagebox.showerror("Play Sound", str(error), parent=form.winfo_toplevel())
+                    return
+                preview.close()
+                preview.update(project_root(), file_var.get(), loop=loop_var.get(), directory="sounds")
+
+            ttk.Button(controls, text="Import WAV", command=import_sound).pack(side=tk.LEFT)
+            ttk.Button(controls, text="Play", width=5, command=play_sound).pack(side=tk.LEFT, padx=3)
+            ttk.Button(controls, text="Stop", command=preview.close).pack(side=tk.LEFT)
+            controls.bind("<Destroy>", lambda _event: preview.close())
+            file_var.trace_add("write", lambda *_args: preview.close())
+            ttk.Checkbutton(form, text="Loop", variable=loop_var).pack(anchor=tk.W)
+            ttk.Label(form, text="Plays once by default. Looping stops when another Play Sound trigger starts or you leave this area.", wraplength=245).pack(anchor=tk.W, pady=3)
         elif trigger_type == "show_message":
             add_text("message", "Message:", params.get("message", ""), height=5)
         elif trigger_type == "custom":
             ttk.Label(form, text="This legacy custom trigger is not supported by the runner. Choose a supported trigger type above or delete it.", wraplength=245).pack(anchor=tk.W, pady=4)
-
-        ensure_enemy_instance_ids(self.current_area)
-        enemy_labels = {"(none — walk onto tile)": ""}
-        definitions = self.current_game.properties.get("enemies", {})
-        for obj in self.current_area.objects:
-            identity = obj.properties.get("enemy_instance_id")
-            if not identity:
-                continue
-            definition = definitions.get(obj.properties.get("enemy_id"), obj.properties.get("enemy_data", {}))
-            label = f"{definition.get('name', obj.type)} at ({obj.x}, {obj.y})"
-            enemy_labels[label] = identity
-        attached = trigger.enemy_attached if enemy_attached is None else enemy_attached
-        if attached and attached not in enemy_labels.values():
-            enemy_labels["Missing enemy — select another"] = attached
-        selected_enemy = next(label for label, identity in enemy_labels.items() if identity == attached)
-        self._trigger_editor_enemy_labels = enemy_labels
-        add_combo("enemy_attached", "Enemy attached:", list(enemy_labels), selected_enemy, label_width=15)
-        ttk.Label(form, text="Attached triggers fire when that enemy is defeated. Their map position stays fixed.", wraplength=245).pack(anchor=tk.W, pady=3)
 
         add_entry("charges", "Charges:", params.get("charges", 1 if params.get("once", False) else 0))
         ttk.Label(form, text="0 = unlimited; 1 = the first successful entry only. Failed actions do not spend charges. Remaining charges are saved with your run.", wraplength=245).pack(anchor=tk.W, pady=3)
@@ -1692,8 +2055,13 @@ class EditorMethods:
             return True
 
         parameters = {}
+        placement_type = self._trigger_editor_type_labels.get(variables['trigger_type'].get())
+        placement_scope = variables['scope'].get() if 'scope' in variables else 'At coordinates'
         for name, variable in variables.items():
-            if name in ("name", "trigger_type", "enemy_attached"):
+            if (placement_type == 'enemy_placement' and name in ('x', 'y')
+                    and placement_scope not in ('At coordinates', 'position')):
+                continue
+            if name in ("name", "trigger_type", "enabled"):
                 continue
             if isinstance(variable, tk.Text):
                 parameters[name] = variable.get("1.0", tk.END).rstrip("\n")
@@ -1724,6 +2092,14 @@ class EditorMethods:
             if show_error:
                 messagebox.showerror("Invalid Trigger Type", "Choose a valid trigger type.")
             return False
+        if trigger_type == "play_sound":
+            from wav_assets import wav_path
+            try:
+                wav_path(project_root(), parameters.get("file"))
+            except (OSError, ValueError) as error:
+                if show_error:
+                    messagebox.showerror("Play Sound", str(error))
+                return False
         if trigger_type == "funds":
             try:
                 funds_delta(parameters)
@@ -1736,6 +2112,8 @@ class EditorMethods:
                 messagebox.showerror("Invalid Stat", "Choose a player stat.")
             return False
         if trigger_type == "tile_update":
+            if parameters.get("area") == "Current area":
+                parameters["area"] = ""
             selected_tile = self._trigger_editor_tile_labels.get(
                 parameters.get("tile", "")
             )
@@ -1746,6 +2124,38 @@ class EditorMethods:
                     )
                 return False
             parameters["tile"] = selected_tile
+
+        if trigger_type == "enemy_placement":
+            definitions = self.current_game.properties.get('enemies', {})
+            selected = parameters.get('enemy_id', '')
+            parameters['enemy_id'] = selected if selected in definitions else getattr(self, '_enemy_placement_labels', {}).get(selected, '')
+            parameters['scope'] = getattr(self, '_enemy_placement_scopes', {}).get(parameters.get('scope'), parameters.get('scope', 'position'))
+            if (parameters['enemy_id'] not in definitions or parameters.get('action') not in ('place', 'remove')
+                    or parameters['scope'] not in ('position', 'area', 'game')
+                    or (parameters['action'] == 'place' and parameters['scope'] != 'position')):
+                if show_error:
+                    messagebox.showerror('Enemy Placement', 'Choose an enemy type and valid scope. Place uses At coordinates.')
+                return False
+
+        if trigger_type == "trigger_control":
+            definitions = definitions_for(self.current_game)
+            selected = parameters.get('target', '')
+            # Resolve against the current library, not only the form's cached
+            # name-to-ID map, which can become stale after refreshes/renames.
+            target = selected if selected in definitions else next(
+                (identity for identity, definition in definitions.items()
+                 if definition['name'] == selected), '')
+            if not target:
+                cached = getattr(self, '_trigger_control_labels', {}).get(selected, '')
+                if cached in definitions:
+                    target = cached
+            parameters['target'] = target
+            try:
+                validate_control(parameters, definitions_for(self.current_game))
+            except ValueError as error:
+                if show_error:
+                    messagebox.showerror('Trigger Control', str(error))
+                return False
 
         try:
             trigger_charges(parameters)
@@ -1759,18 +2169,18 @@ class EditorMethods:
                 messagebox.showerror("Invalid Coordinates", coordinate_error)
             return False
 
-        if "enemy_attached" in variables:
-            attached = self._trigger_editor_enemy_labels.get(variables["enemy_attached"].get())
-            if attached is None:
-                if show_error:
-                    messagebox.showerror("Invalid Enemy", "Choose an attached enemy or no enemy.")
-                return False
-            if attached != trigger.enemy_attached:
-                trigger.enemy_attached = attached
-                trigger.enemy_defeated = trigger.enemy_pending = False
-        trigger.name = variables["name"].get()
+        name = variables["name"].get().strip()
+        if trigger.definition_id and hasattr(self, 'reusable_name_available') and not self.reusable_name_available(name, trigger.definition_id):
+            if show_error:
+                messagebox.showerror('Named Trigger', 'Choose a unique, nonempty name for this game.')
+            return False
+        trigger.name = name
+        if 'enabled' in variables:
+            trigger.enabled = variables['enabled'].get()
         trigger.trigger_type = trigger_type
         trigger.parameters = parameters
+        if hasattr(self, "save_reusable_trigger"):
+            self.save_reusable_trigger(trigger)
         if hasattr(self, "remember_editor_form"):
             self.remember_editor_form("trigger", variables.values())
         if refresh:
@@ -1802,12 +2212,20 @@ class EditorMethods:
         return True
 
     def _trigger_coordinate_error(self, trigger_type, parameters):
-        if trigger_type == "area_object" and not parameters.get("area"):
+        if trigger_type == 'enemy_placement':
+            if parameters.get('scope') == 'game':
+                return None
+            if parameters.get('scope') == 'area':
+                area = parameters.get('area', '')
+                if not area or any(area in (name, os.path.splitext(os.path.basename(name))[0]) for name in self.current_game.areas):
+                    return None
+                return 'Choose an area in this game.'
+        if trigger_type in ("area_object", "tile_update", "enemy_placement") and not parameters.get("area"):
             x, y = parameters["x"], parameters["y"]
             if not (0 <= x < self.current_area.width and 0 <= y < self.current_area.height):
-                return "Object coordinates must be within this area."
+                return "Coordinates must be within this area."
             return None
-        if trigger_type in ("teleport", "area_object"):
+        if trigger_type in ("teleport", "area_object", "tile_update", "enemy_placement"):
             selected_area = parameters.get("area", "")
             area_filename = next(
                 (area for area in self.current_game.areas
@@ -1835,9 +2253,6 @@ class EditorMethods:
                     return "Save the destination area before targeting it with this trigger."
                 except (OSError, KeyError, TypeError, ValueError) as e:
                     return f"Could not read destination area dimensions: {e}"
-        elif trigger_type == "tile_update":
-            destination_width = self.current_area.width
-            destination_height = self.current_area.height
         else:
             return None
         x, y = parameters["x"], parameters["y"]

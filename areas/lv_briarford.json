@@ -794,10 +794,7 @@
       "parameters": {
         "message": "Fen: Ready the wand in your weapon slot and press F to fire along your facing. Armor protects only while equipped. The runic candles hold two recharges; save them for your return.",
         "charges": 1
-      },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
+      }
     },
     {
       "x": 3,
@@ -808,10 +805,7 @@
         "add": "helmet_object",
         "remove": "",
         "charges": 1
-      },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
+      }
     },
     {
       "x": 3,
@@ -825,10 +819,7 @@
         "x": 3,
         "y": 6,
         "charges": 1
-      },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
+      }
     },
     {
       "x": 4,
@@ -839,10 +830,7 @@
         "add": "shield_object",
         "remove": "",
         "charges": 1
-      },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
+      }
     },
     {
       "x": 4,
@@ -856,10 +844,7 @@
         "x": 4,
         "y": 6,
         "charges": 1
-      },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
+      }
     },
     {
       "x": 8,
@@ -870,10 +855,7 @@
         "add": "magic_wand_object",
         "remove": "",
         "charges": 1
-      },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
+      }
     },
     {
       "x": 8,
@@ -887,10 +869,7 @@
         "x": 8,
         "y": 6,
         "charges": 1
-      },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
+      }
     },
     {
       "x": 9,
@@ -901,10 +880,7 @@
         "add": "blue_gem_object",
         "remove": "",
         "charges": 1
-      },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
+      }
     },
     {
       "x": 9,
@@ -918,10 +894,7 @@
         "x": 9,
         "y": 6,
         "charges": 1
-      },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
+      }
     },
     {
       "x": 10,
@@ -932,10 +905,7 @@
         "stat": "energy",
         "amount": 20,
         "charges": 2
-      },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
+      }
     },
     {
       "x": 10,
@@ -945,10 +915,7 @@
       "parameters": {
         "message": "The runestone can restore energy twice. Save a charge for your return.",
         "charges": 1
-      },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
+      }
     },
     {
       "x": 2,
@@ -959,10 +926,7 @@
         "action": "add",
         "amount": 12,
         "charges": 1
-      },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
+      }
     },
     {
       "x": 2,
@@ -976,10 +940,7 @@
         "x": 2,
         "y": 3,
         "charges": 1
-      },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
+      }
     },
     {
       "x": 2,
@@ -989,10 +950,7 @@
       "parameters": {
         "message": "A village purse: a gift for your journey.",
         "charges": 1
-      },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
+      }
     },
     {
       "x": 6,
@@ -1004,10 +962,7 @@
         "x": 13,
         "y": 9,
         "charges": 0
-      },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
+      }
     }
   ]
 }

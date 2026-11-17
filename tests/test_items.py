@@ -93,6 +93,33 @@ class ActiveItemTests(unittest.TestCase):
         self.assertFalse(loot.properties.get("dropped_item", False))
         self.assertFalse(engine.current_area.triggers)
 
+    def test_instance_loot_overrides_type_and_survives_save(self):
+        engine = self.loot_engine("gem_object")
+        enemy = engine.current_area.objects[0]
+        enemy.properties["loot_object_override"] = "helmet_object"
+        path = self.root / "override.save.json"
+        engine.save_to_file(path, "Override")
+        engine = RunnerEngine.load_save(path, project_root=self.root)
+        engine.properties["enemies"]["blob"]["loot_object"] = "rock_object"
+        engine.attack("right")
+        self.assertEqual([o.type for o in engine.current_area.objects], ["helmet_object"])
+
+    def test_instance_none_suppresses_global_loot(self):
+        engine = self.loot_engine()
+        engine.current_area.objects[0].properties["loot_object_override"] = ""
+        engine.attack("right")
+        self.assertFalse(engine.current_area.objects)
+        self.assertFalse(engine.current_area.triggers)
+
+    def test_removing_instance_override_resumes_global_inheritance(self):
+        engine = self.loot_engine()
+        enemy = engine.current_area.objects[0]
+        enemy.properties["loot_object_override"] = "helmet_object"
+        enemy.properties.pop("loot_object_override")
+        engine.properties["enemies"]["blob"]["loot_object"] = "rock_object"
+        engine.attack("right")
+        self.assertEqual([o.type for o in engine.current_area.objects], ["rock_object"])
+
     def test_enemy_without_loot_preserves_old_behavior(self):
         engine = self.loot_engine("")
         engine.attack("right")
@@ -295,6 +322,75 @@ class ActiveItemTests(unittest.TestCase):
         self.assertFalse(engine.equip(7))
         self.assertEqual(engine.inventory[7], "rock_object")
 
+    def test_gettable_object_picks_up_without_triggers_in_one_move(self):
+        self.game.properties["player"]["starting_inventory"][0] = ""
+        self.area.objects.append(GameObject("sword_object", 2, 2))
+        engine = self.engine()
+        self.assertTrue(engine.move("right"))
+        self.assertEqual(engine.inventory.count("sword_object"), 1)
+        self.assertEqual(engine.current_area.objects, [])
+        self.assertEqual(engine.current_area.triggers, [])
+        self.assertEqual(engine.turn_count, 1)
+        engine.move("left"); engine.move("right")
+        self.assertEqual(engine.inventory.count("sword_object"), 1)
+
+    def test_nongettable_object_is_left_for_manual_triggers(self):
+        self.game.object_definitions["sword_object"] = {"gettable": False, "walkable": True}
+        self.area.objects.append(GameObject("sword_object", 2, 2))
+        engine = self.engine(); before = engine.inventory[:]
+        engine.move("right")
+        self.assertEqual(engine.inventory, before)
+        self.assertEqual(len(engine.current_area.objects), 1)
+
+    def test_gettable_overrides_object_blocking_but_not_blocked_floor(self):
+        self.game.object_definitions["sword_object"] = {"gettable": True, "walkable": False}
+        self.area.objects.append(GameObject("sword_object", 2, 2, {"walkable": False}))
+        self.game.properties["player"]["starting_inventory"][0] = ""
+        engine = self.engine(); self.assertTrue(engine.move("right"))
+        self.assertFalse(engine.current_area.objects)
+        self.area.tiles[2][2].walkable_override = False
+        engine = self.engine(); self.assertFalse(engine.move("right"))
+        self.assertEqual(len(engine.current_area.objects), 1)
+
+    def test_stacked_gettable_items_fill_available_slots_and_leave_rest(self):
+        self.game.properties["player"]["starting_inventory"][0] = ""
+        self.area.objects = [GameObject("sword_object", 2, 2), GameObject("helmet_object", 2, 2)]
+        engine = self.engine(); engine.move("right")
+        self.assertEqual(engine.inventory[0], "sword_object")
+        self.assertEqual([o.type for o in engine.current_area.objects], ["helmet_object"])
+        self.assertIn("inventory is full", engine.events[-1])
+        path = self.root / "stack.save.json"; engine.save_to_file(path, "Stack")
+        engine = RunnerEngine.load_save(path, project_root=self.root)
+        engine._remove_inventory_item(0); engine.move("left"); engine.move("right")
+        self.assertFalse(engine.current_area.objects)
+        self.assertEqual(engine.inventory[0], "helmet_object")
+
+    def test_pickup_occurs_at_start_and_both_ends_of_a_teleport(self):
+        self.game.properties["player"]["starting_inventory"] = []
+        self.area.objects = [GameObject("sword_object", 1, 2), GameObject("helmet_object", 2, 2)]
+        self.area.triggers = [Trigger(2, 2, "teleport", "travel", {"area": "second", "x": 1, "y": 1})]
+        second = Area(width=3, height=3)
+        for row in second.tiles:
+            for tile in row: tile.type = "grass"
+        second.objects = [GameObject("torch_object", 1, 1)]
+        self.game.areas.append("second.json")
+        (self.root / "areas/second.json").write_text(json.dumps(asdict(second)))
+        engine = self.engine(); engine.process_entry_triggers()
+        self.assertIn("sword_object", engine.inventory)
+        engine.move("right")
+        self.assertIn("helmet_object", engine.inventory)
+        self.assertIn("torch_object", engine.inventory)
+        self.assertEqual(engine.current_area_filename, "second.json")
+
+    def test_unrelated_failed_trigger_does_not_stop_automatic_pickup(self):
+        self.game.properties["player"]["starting_inventory"] = []
+        self.area.objects = [GameObject("sword_object", 2, 2)]
+        self.area.triggers = [Trigger(2, 2, "inventory", "locked", {"remove": "gem_object"})]
+        engine = self.engine(); engine.move("right")
+        self.assertIn("sword_object", engine.inventory)
+        self.assertFalse(engine.current_area.objects)
+        self.assertEqual(len(engine.current_area.triggers), 1)
+
     def pickup_pair(self):
         self.area.objects.append(GameObject("sword_object", 2, 2))
         self.area.triggers = [
@@ -335,6 +431,7 @@ class ActiveItemTests(unittest.TestCase):
         self.assertEqual(engine.current_area.objects, [])
 
     def test_reverse_pair_removes_equipped_item_and_adds_map_object(self):
+        self.game.object_definitions["sword_object"] = {"gettable": False}
         self.area.triggers = [
             Trigger(2, 2, "inventory", "give_sword", {"remove": "sword_object", "once": True}),
             Trigger(2, 2, "area_object", "show_sword", {"action": "add", "object": "sword_object", "once": True}),
@@ -443,7 +540,7 @@ class ActiveItemTests(unittest.TestCase):
                 engine._apply_stat_trigger(params)
         self.assertEqual(engine.health, 12)
 
-    def test_drop_creates_trigger_pair_and_recovers_item_only_on_reentry(self):
+    def test_drop_recovers_automatically_only_on_reentry_without_triggers(self):
         engine = self.engine()
         engine.equip(0)
         self.assertTrue(engine.drop_item(0))
@@ -451,8 +548,7 @@ class ActiveItemTests(unittest.TestCase):
         self.assertIsNone(engine.equipment["weapon"])
         self.assertEqual(engine.turn_count, 1)
         self.assertEqual(len(engine.current_area.objects), 1)
-        self.assertEqual([trigger.trigger_type for trigger in engine.current_area.triggers], ["inventory", "area_object"])
-        self.assertTrue(all(trigger.parameters["charges"] == 1 for trigger in engine.current_area.triggers))
+        self.assertEqual(engine.current_area.triggers, [])
         engine.move("up")
         engine.move("down")
         self.assertEqual(engine.inventory.count("sword_object"), 1)
@@ -492,14 +588,14 @@ class ActiveItemTests(unittest.TestCase):
                 self.assertEqual(engine.current_area.triggers, triggers)
                 self.assertIn("Move to open ground", engine.events[-1])
 
-    def test_full_inventory_keeps_dropped_item_and_triggers_for_later(self):
+    def test_full_inventory_keeps_dropped_item_for_later(self):
         engine = self.engine()
         engine.drop_item(0)
         engine.inventory[0] = "rock_object"
         engine.move("up")
         engine.move("down")
         self.assertEqual(len(engine.current_area.objects), 1)
-        self.assertEqual(len(engine.current_area.triggers), 2)
+        self.assertEqual(engine.current_area.triggers, [])
         self.assertNotIn("sword_object", engine.inventory)
         engine._remove_inventory_item(7)
         engine.move("up")
@@ -517,7 +613,7 @@ class ActiveItemTests(unittest.TestCase):
         engine.save_to_file(path, "Dropped chest")
         loaded = RunnerEngine.load_save(path, project_root=self.root)
         self.assertEqual(loaded.inventory[0], "")
-        self.assertEqual(len(loaded.current_area.triggers), 2)
+        self.assertEqual(loaded.current_area.triggers, [])
         self.assertTrue(loaded.current_area.objects[0].properties["dropped_item"])
         loaded.move("up")
         self.assertTrue(loaded.move("down"))
@@ -690,146 +786,22 @@ class ActiveItemTests(unittest.TestCase):
         self.assertEqual(len(engine.current_area.triggers), 1)
         self.assertTrue(any("You need $10, but have only $3." in event for event in engine.events))
 
-    def attach_enemy(self, *triggers, identity="warden"):
-        self.add_enemy(x=2, y=2, damage=0)
-        self.game.properties["enemies"]["blob"]["health"] = 1
-        self.area.objects[-1].properties["enemy_instance_id"] = identity
-        for trigger in triggers:
-            trigger.enemy_attached = identity
-        self.area.triggers.extend(triggers)
-
-    def test_enemy_death_fires_trigger_at_fixed_position_without_moving_player(self):
-        self.attach_enemy(Trigger(5, 3, "area_object", "relic", {
-            "object": "gem_object", "action": "add", "charges": 1,
-        }))
-        engine = self.engine()
-        engine.attack("right")
-        self.assertEqual((engine.player_x, engine.player_y), (1, 2))
-        self.assertEqual([(obj.type, obj.x, obj.y) for obj in engine.current_area.objects], [("gem_object", 5, 3)])
-        self.assertEqual(engine.current_area.triggers, [])
-
-    def test_walking_on_attached_trigger_does_not_fire_while_enemy_lives(self):
-        self.attach_enemy(Trigger(1, 1, "funds", "reward", {"action": "add", "amount": 5}))
-        engine = self.engine()
-        engine.move("up")
-        self.assertEqual(engine.stats["gold"], 0)
-        engine.move("down")
-        engine.attack("right")
-        self.assertEqual(engine.stats["gold"], 5)
-        engine.move("up")
-        self.assertEqual(engine.stats["gold"], 5)  # No repeat merely from walking after the event.
-
-    def test_attachment_tracks_a_moving_enemy(self):
-        self.attach_enemy(Trigger(6, 3, "funds", "reward", {"action": "add", "amount": 5, "charges": 1}))
-        self.area.objects[-1].x, self.area.objects[-1].y = 4, 2
-        self.game.properties["enemies"]["blob"]["movement_speed"] = 1
-        engine = self.engine()
-        engine.wait()
-        engine.wait()
-        self.assertEqual(engine.current_area.objects[0].x, 2)
-        engine.attack("right")
-        self.assertEqual(engine.stats["gold"], 5)
-
-    def test_attachment_is_specific_to_one_instance_of_same_enemy_type(self):
-        self.attach_enemy(Trigger(5, 3, "funds", "reward", {"action": "add", "amount": 5, "charges": 1}))
-        self.area.objects[-1].x = 4
-        self.area.objects.append(GameObject("black_blob_npc", 2, 2, {"enemy_id": "blob", "enemy_instance_id": "other"}))
-        engine = self.engine()
+    def test_enemy_defeat_does_not_activate_map_trigger(self):
+        engine = self.loot_engine("")
+        engine.current_area.triggers = [Trigger(5, 3, "funds", "reward", {"action": "add", "amount": 5})]
         engine.attack("right")
         self.assertEqual(engine.stats["gold"], 0)
-        engine.move("right")
-        engine.move("right")
-        engine.attack("right")
-        self.assertEqual(engine.stats["gold"], 5)
-
-    def test_attached_trigger_order_and_charges_are_preserved(self):
-        self.attach_enemy(
-            Trigger(5, 3, "funds", "grant", {"action": "add", "amount": 5, "charges": 2}),
-            Trigger(5, 3, "funds", "take", {"action": "remove", "amount": 3, "charges": 1}),
-        )
-        engine = self.engine()
-        engine.attack("right")
-        self.assertEqual(engine.stats["gold"], 2)
         self.assertEqual(len(engine.current_area.triggers), 1)
-        self.assertEqual(engine.current_area.triggers[0].parameters["charges"], 1)
-        self.assertFalse(engine.current_area.triggers[0].enemy_pending)
 
-    def test_full_inventory_keeps_defeat_action_pending_for_walk_retry(self):
-        self.attach_enemy(
-            Trigger(1, 1, "inventory", "reward", {"add": "sword_object", "charges": 1}),
-            Trigger(1, 1, "area_object", "show_reward", {"object": "gem_object", "charges": 1}),
-        )
+    def test_legacy_attachment_metadata_is_ignored_on_load(self):
+        trigger = Trigger.from_dict({"x": 2, "y": 2, "trigger_type": "funds", "name": "legacy",
+            "parameters": {"action": "add", "amount": 5, "charges": 1},
+            "enemy_attached": "missing_enemy", "enemy_defeated": False, "enemy_pending": False})
+        self.assertNotIn("enemy_attached", asdict(trigger))
+        self.area.triggers = [trigger]
         engine = self.engine()
-        engine.attack("right")
-        self.assertEqual(len(engine.current_area.triggers), 2)
-        self.assertTrue(all(trigger.enemy_pending for trigger in engine.current_area.triggers))
-        self.assertEqual(engine.current_area.objects, [])
-        engine._remove_inventory_item(7)
-        engine.move("up")
-        self.assertEqual(engine.inventory[7], "sword_object")
-        self.assertEqual(engine.current_area.triggers, [])
-        self.assertEqual([(obj.x, obj.y) for obj in engine.current_area.objects], [(1, 1)])
-
-    def test_attachment_and_pending_defeat_actions_survive_save_load(self):
-        self.attach_enemy(Trigger(1, 1, "inventory", "reward", {"add": "sword_object", "charges": 1}))
-        engine = self.engine()
-        path = self.root / "attached.json"
-        engine.save_to_file(path, "Before defeat")
-        loaded = RunnerEngine.load_save(path, project_root=self.root)
-        self.assertEqual(loaded.current_area.triggers[0].enemy_attached, "warden")
-        loaded.attack("right")  # Full inventory; action remains pending.
-        loaded.save_to_file(path, "After defeat")
-        loaded = RunnerEngine.load_save(path, project_root=self.root)
-        self.assertEqual(loaded.validation_issues, [])
-        self.assertTrue(loaded.current_area.triggers[0].enemy_pending)
-        loaded._remove_inventory_item(7)
-        loaded.move("up")
-        self.assertEqual(loaded.inventory[7], "sword_object")
-        self.assertEqual(loaded.current_area.triggers, [])
-
-    def test_enemy_death_can_end_game(self):
-        self.attach_enemy(Trigger(5, 3, "game_end", "win", {"win_lose": "win", "charges": 1}))
-        engine = self.engine()
-        engine.attack("right")
-        self.assertTrue(engine.ended)
-        self.assertEqual(engine.end_result, "win")
-
-    def test_missing_attached_enemy_is_reported_and_does_not_activate_on_walk(self):
-        self.area.triggers = [Trigger(1, 1, "funds", "missing", {"action": "add", "amount": 5}, enemy_attached="absent")]
-        engine = self.engine()
-        self.assertTrue(any("attached enemy is missing" in issue for issue in engine.validation_issues))
-        engine.move("up")
-        self.assertEqual(engine.stats["gold"], 0)
-
-    def test_successful_unlimited_attachment_does_not_fire_again_after_save_load(self):
-        self.attach_enemy(Trigger(1, 1, "funds", "once_per_defeat", {"action": "add", "amount": 5, "charges": 0}))
-        engine = self.engine()
-        enemy = engine.current_area.objects[0]
-        engine.attack("right")
-        engine._activate_enemy_triggers(enemy)  # A duplicate notification must not repeat the reward.
+        engine.move("right")
         self.assertEqual(engine.stats["gold"], 5)
-        path = self.root / "completed_enemy.json"
-        engine.save_to_file(path, "Enemy gone")
-        loaded = RunnerEngine.load_save(path, project_root=self.root)
-        self.assertEqual(loaded.validation_issues, [])
-        loaded.move("up")
-        self.assertEqual(loaded.stats["gold"], 5)
-
-    def test_attached_teleport_uses_player_position_and_consumes_source_charge(self):
-        destination = Area(width=3, height=3)
-        for row in destination.tiles:
-            for tile in row:
-                tile.type = "grass"
-        destination.triggers = [Trigger(1, 1, "funds", "arrival", {"action": "add", "amount": 3})]
-        self.game.areas.append("second.json")
-        (self.root / "areas/second.json").write_text(json.dumps(asdict(destination)))
-        self.attach_enemy(Trigger(5, 3, "teleport", "escape", {"area": "second", "x": 1, "y": 1, "charges": 1}))
-        engine = self.engine()
-        engine.attack("right")
-        self.assertEqual(engine.current_area_filename, "second.json")
-        self.assertEqual((engine.player_x, engine.player_y), (1, 1))
-        self.assertEqual(engine.stats["gold"], 3)
-        self.assertEqual(engine.areas["start.json"].triggers, [])
 
     def test_missing_quest_item_does_not_reveal_its_name_or_trigger(self):
         self.game.properties["player"]["starting_inventory"] = []

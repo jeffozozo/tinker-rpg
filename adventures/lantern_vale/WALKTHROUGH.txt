@@ -1,3 +1,8 @@
+UPDATE — November 16, 2026: Enemy-trigger attachments have been removed.
+Enemy rewards now drop as ordinary loot at the enemy’s death position. Walk
+onto that loot to collect it. The castle armory purse is a separate walk-on
+pickup. References to attached/pending defeat rewards below are historical.
+
 SPOILERS — THE BELL OF DAWN
 
 1. Dawnmere: walk north to Mara. Collect the sword, book and torch along the

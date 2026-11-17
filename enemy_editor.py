@@ -26,24 +26,31 @@ class EnemyEditor:
             wraplength=220,
         ).pack(anchor=tk.W, padx=5, pady=(0, 5))
 
-        buttons = ttk.Frame(self.enemy_controls_frame)
-        buttons.pack(fill=tk.X, padx=5, pady=(0, 5))
-        ttk.Button(
-            buttons, text="Add Enemy", command=self.add_enemy_definition
-        ).pack(side=tk.LEFT, expand=True, fill=tk.X)
-        ttk.Button(
-            buttons, text="Delete Enemy", command=self.delete_enemy_definition
-        ).pack(side=tk.LEFT, expand=True, fill=tk.X)
-        ttk.Button(
-            self.enemy_controls_frame,
-            text="Add Example Enemies",
-            command=self.add_example_enemy_definitions,
-        ).pack(fill=tk.X, padx=5, pady=(0, 5))
+        ttk.Button(self.enemy_controls_frame, text="Manage Enemies…", command=self.open_enemy_manager).pack(fill=tk.X, padx=5, pady=3)
         self.enemy_controls_frame.pack_forget()
 
     def setup_enemy_properties(self, parent):
-        self.enemy_properties_frame = ttk.LabelFrame(parent, text="Enemy Definition")
+        self.enemy_properties_frame = ttk.LabelFrame(parent, text="Enemy at Cursor")
+        self.enemy_summary_label = ttk.Label(self.enemy_properties_frame, wraplength=260, justify=tk.LEFT)
+        self.enemy_summary_label.pack(anchor=tk.W, padx=5, pady=5)
+        ttk.Button(self.enemy_properties_frame, text="Edit Enemy Type…", command=self.edit_selected_enemy_type).pack(anchor=tk.W, padx=5, pady=3)
+        self._enemy_loot_choices()
+        self.enemy_instance_frame = ttk.LabelFrame(self.enemy_properties_frame, text="This instance")
+        self.enemy_instance_frame.pack(fill=tk.X, padx=3, pady=3)
+        self.enemy_instance_label = ttk.Label(self.enemy_instance_frame, text="Select a placed enemy with the map cursor.", wraplength=260)
+        self.enemy_instance_label.pack(anchor=tk.W, padx=5, pady=3)
+        self.enemy_instance_loot_var = tk.StringVar()
+        self.enemy_instance_loot_selector = ttk.Combobox(
+            self.enemy_instance_frame, textvariable=self.enemy_instance_loot_var,
+            state="disabled", width=27)
+        self.enemy_instance_loot_selector.pack(fill=tk.X, padx=5, pady=3)
+        self.enemy_instance_loot_selector.bind("<<ComboboxSelected>>", self.save_enemy_instance_loot)
+        ttk.Label(self.enemy_instance_frame, text="Use This Game to follow type changes. None means this enemy drops nothing. Instance changes are saved with the area.", wraplength=260).pack(anchor=tk.W, padx=5, pady=3)
+        self.enemy_properties_frame.pack_forget()
 
+    def setup_enemy_definition_fields(self, parent):
+        self.enemy_properties_frame = parent
+        self.enemy_global_frame = parent
         self.enemy_name_var = tk.StringVar()
         self.enemy_sprite_var = tk.StringVar()
         self.enemy_health_var = tk.StringVar()
@@ -67,25 +74,18 @@ class EnemyEditor:
             "Loot object:", self.enemy_loot_var, self._enemy_loot_choices()
         )
         ttk.Label(
-            self.enemy_properties_frame,
-            text="Defeated enemies leave this object where they fall. Applies to every instance of this enemy type.",
+            self.enemy_global_frame,
+            text="Defeated enemies leave this object where they fall. Applies to every instance of this enemy type in this game.",
             wraplength=260,
         ).pack(anchor=tk.W, padx=5, pady=2)
-        ttk.Button(
-            self.enemy_properties_frame,
-            text="Save Enemy Changes",
-            command=self.save_enemy_definition,
-        ).pack(anchor=tk.E, padx=5, pady=5)
-        self.enemy_properties_frame.pack_forget()
-
     def _enemy_field(self, label, variable):
-        row = ttk.Frame(self.enemy_properties_frame)
+        row = ttk.Frame(getattr(self, "enemy_global_frame", self.enemy_properties_frame))
         row.pack(fill=tk.X, padx=5, pady=2)
         ttk.Label(row, text=label).pack(side=tk.LEFT)
         ttk.Entry(row, textvariable=variable, width=12).pack(side=tk.RIGHT)
 
     def _enemy_choice(self, label, variable, values):
-        row = ttk.Frame(self.enemy_properties_frame)
+        row = ttk.Frame(getattr(self, "enemy_global_frame", self.enemy_properties_frame))
         row.pack(fill=tk.X, padx=5, pady=2)
         ttk.Label(row, text=label).pack(side=tk.LEFT)
         selector = ttk.Combobox(
@@ -93,6 +93,66 @@ class EnemyEditor:
         )
         selector.pack(side=tk.RIGHT)
         return selector
+
+    def open_enemy_manager(self, enemy_id=None):
+        manager = getattr(self, '_enemy_manager', None)
+        if manager is not None and manager.window.winfo_exists():
+            manager.window.lift()
+            if enemy_id and manager.confirm_draft():
+                manager.load(enemy_id)
+            return
+        from enemy_manager import EnemyManager
+        self._enemy_manager = EnemyManager(self, enemy_id)
+
+    def edit_selected_enemy_type(self):
+        obj = self.enemy_at_cursor()
+        enemy_id = obj.properties.get('enemy_id') if obj else self.selected_enemy_id
+        self.open_enemy_manager(enemy_id)
+
+    def finish_enemy_edit(self):
+        manager = getattr(self, '_enemy_manager', None)
+        return manager.close() if manager is not None and manager.window.winfo_exists() else True
+
+    def refresh_enemy_summary(self):
+        if not hasattr(self, 'enemy_summary_label'):
+            return
+        obj = self.enemy_at_cursor()
+        definition = self.enemy_definition_for_instance(obj) if obj else self._enemy_definition(self.selected_enemy_id)
+        if not definition:
+            self.enemy_summary_label.configure(text='Select an enemy type to place, or select an enemy on the map.')
+            return
+        loot = definition.get('loot_object', '')
+        label = next((label for label, value in self._enemy_loot_labels.items() if value == loot), loot or 'None')
+        self.enemy_summary_label.configure(text=(
+            f"{definition.get('name', 'Enemy')}\n"
+            f"Health: {definition.get('health', 10)}   Damage: {definition.get('contact_damage', 1)}\n"
+            f"Behavior: {definition.get('behavior', 'stationary')}\n"
+            f"Speed: {definition.get('movement_speed', 1)} tiles/turn\n"
+            f"Type loot: {label}\nEdit the type in Enemies → Manage Enemies…"))
+
+    def enemy_definition_usage(self, enemy_id):
+        from dataclasses import asdict
+        current = getattr(self, 'current_area_file', None)
+        sources = [(os.path.basename(current) if current else 'Current area', asdict(self.current_area))]
+        for name in self.current_game.areas:
+            path = self._project_path('areas', name)
+            if current and os.path.realpath(path) == os.path.realpath(current):
+                continue
+            try:
+                with open(path) as file:
+                    sources.append((name, json.load(file)))
+            except (OSError, ValueError):
+                sources.append((name, {'objects': [{'x': '?', 'y': '?', 'properties': {'enemy_id': enemy_id}}]}))
+        usages = [f"{name} ({obj['x']}, {obj['y']})" for name, area in sources
+                  for obj in area.get('objects', []) if obj.get('properties', {}).get('enemy_id') == enemy_id]
+        for name, area in sources:
+            for trigger in area.get('triggers', []):
+                if trigger.get('trigger_type') == 'enemy_placement' and trigger.get('parameters', {}).get('enemy_id') == enemy_id:
+                    usages.append(f"{name}: Enemy Placement trigger")
+        for definition in self.current_game.properties.get('trigger_definitions', {}).values():
+            if definition.get('trigger_type') == 'enemy_placement' and definition.get('parameters', {}).get('enemy_id') == enemy_id:
+                usages.append(f"{definition['name']}: named Enemy Placement trigger")
+        return usages
 
     def _available_enemy_sprites(self):
         return tuple(self.tile_manager.get_npc_names())
@@ -103,6 +163,65 @@ class EnemyEditor:
             label = name.removesuffix("_object").replace("_", " ").title()
             self._enemy_loot_labels[label] = name
         return tuple(self._enemy_loot_labels)
+
+    def enemy_at_cursor(self):
+        return next((obj for obj in self.current_area.objects
+                     if (obj.x, obj.y) == (self.cursor_x, self.cursor_y)
+                     and self.is_enemy_instance(obj)), None)
+
+    def select_enemy_at_cursor(self):
+        if getattr(self, "_selecting_enemy_cursor", False):
+            return
+        obj = self.enemy_at_cursor()
+        if obj is None:
+            return
+        enemy_id = obj.properties.get("enemy_id")
+        if enemy_id == self.selected_enemy_id or enemy_id not in self.get_enemy_definitions():
+            return
+        self._selecting_enemy_cursor = True
+        try:
+            if self.selected_enemy_id and not self.save_enemy_definition(refresh=False):
+                return
+            self.selected_enemy_id = enemy_id
+        finally:
+            self._selecting_enemy_cursor = False
+
+    def refresh_enemy_instance_editor(self):
+        if not hasattr(self, "enemy_instance_loot_selector"):
+            return
+        self._enemy_loot_choices()
+        self.refresh_enemy_summary()
+        obj = self.enemy_at_cursor()
+        if obj is None:
+            self.enemy_instance_label.config(text="Select a placed enemy with the map cursor.")
+            self.enemy_instance_loot_var.set("")
+            self.enemy_instance_loot_selector.config(state="disabled")
+            return
+        definition = self.enemy_definition_for_instance(obj) or {}
+        global_loot = definition.get("loot_object", "")
+        label = next((label for label, value in self._enemy_loot_labels.items() if value == global_loot), global_loot or "None")
+        inherit_label = f"Use This Game ({label})"
+        self._instance_loot_labels = {inherit_label: None, **self._enemy_loot_labels}
+        override = obj.properties.get("loot_object_override")
+        if override is not None and override not in self._instance_loot_labels.values():
+            self._instance_loot_labels[f"Missing: {override}"] = override
+        self.enemy_instance_label.config(text=f"{definition.get('name', obj.type)} at ({obj.x}, {obj.y}) — Loot object:")
+        self.enemy_instance_loot_selector.config(values=tuple(self._instance_loot_labels), state="readonly")
+        self.enemy_instance_loot_var.set(next(label for label, value in self._instance_loot_labels.items() if value == override))
+
+    def save_enemy_instance_loot(self, event=None):
+        obj = self.enemy_at_cursor()
+        if obj is None:
+            return
+        label = self.enemy_instance_loot_var.get()
+        if label not in self._instance_loot_labels:
+            return
+        override = self._instance_loot_labels[label]
+        if override is None:
+            obj.properties.pop("loot_object_override", None)
+        else:
+            obj.properties["loot_object_override"] = override
+        self.refresh_enemy_instance_editor()
 
     def get_enemy_definitions(self):
         definitions = self.current_game.properties.setdefault("enemies", {})
@@ -244,10 +363,12 @@ class EnemyEditor:
                 self.enemy_damage_var.set("")
             if hasattr(self, "enemy_loot_var"):
                 self.enemy_loot_var.set("None")
+        self.refresh_enemy_instance_editor()
         if hasattr(self, "tile_canvas"):
             self.update_tile_display()
 
     def _load_enemy_fields(self, definition):
+        self._enemy_loaded_id = self.selected_enemy_id
         if not hasattr(self, "enemy_name_var"):
             return
         if hasattr(self, "enemy_loot_var"):
@@ -291,6 +412,7 @@ class EnemyEditor:
             self.get_enemy_definitions()[self.selected_enemy_id]
         )
         self.update_tile_display()
+        self.refresh_enemy_instance_editor()
 
     def save_enemy_definition(self, refresh=True):
         enemy_id = getattr(self, "selected_enemy_id", None)

@@ -782,10 +782,7 @@
       "parameters": {
         "message": "Mara: The dawn bell has fallen silent. Visit Briarford for armor and a wand. Defeat the guardian in the northern grove for its green seal, then enter the castle. Bring the heart of the silence back to the throne. Take the supplies along this road.",
         "charges": 1
-      },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
+      }
     },
     {
       "x": 3,
@@ -796,10 +793,7 @@
         "add": "sword_object",
         "remove": "",
         "charges": 1
-      },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
+      }
     },
     {
       "x": 3,
@@ -813,10 +807,7 @@
         "x": 3,
         "y": 5,
         "charges": 1
-      },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
+      }
     },
     {
       "x": 4,
@@ -827,10 +818,7 @@
         "add": "book_object",
         "remove": "",
         "charges": 1
-      },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
+      }
     },
     {
       "x": 4,
@@ -844,10 +832,7 @@
         "x": 4,
         "y": 5,
         "charges": 1
-      },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
+      }
     },
     {
       "x": 8,
@@ -858,10 +843,7 @@
         "add": "torch_object",
         "remove": "",
         "charges": 1
-      },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
+      }
     },
     {
       "x": 8,
@@ -875,10 +857,7 @@
         "x": 8,
         "y": 5,
         "charges": 1
-      },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
+      }
     },
     {
       "x": 10,
@@ -889,10 +868,7 @@
         "stat": "health",
         "amount": 40,
         "charges": 0
-      },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
+      }
     },
     {
       "x": 9,
@@ -902,10 +878,7 @@
       "parameters": {
         "message": "The clear spring restores health whenever you return.",
         "charges": 1
-      },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
+      }
     },
     {
       "x": 6,
@@ -917,10 +890,7 @@
         "x": 3,
         "y": 9,
         "charges": 0
-      },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
+      }
     }
   ]
 }

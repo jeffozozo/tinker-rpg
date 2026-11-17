@@ -23,23 +23,22 @@ assert trigger_charges(t.parameters)==1 and e.energy==10
 e=fresh('lv_grove',6,8);e.inventory=['sword_object']+['rock_object']*7;e.equip(0)
 for _ in range(6):e.wait()
 corpse=next((o.x,o.y) for o in e.current_area.objects if e._enemy_definition(o))
-findings['moved_enemy_reward']={'defeated_at':corpse,'retry_at':[6,4]}
+findings['moved_enemy_reward']={'defeated_at':corpse,'loot_at':corpse}
 for i in range(10):
  if not any(e._enemy_definition(o) for o in e.current_area.objects):break
  e.attack('up')
 assert not any(e._enemy_definition(o) for o in e.current_area.objects)
-pending=[t for t in e.current_area.triggers if t.enemy_pending]
-checks['full_inventory_enemy_reward_is_pending']=len(pending)==2 and 'green_gem_object' not in e.inventory
-findings['reward_retry_message']=' | '.join(e.events[-3:])
+loot = next(o for o in e.current_area.objects if o.type=='green_gem_object')
+checks['full_inventory_enemy_loot_remains_on_map'] = 'green_gem_object' not in e.inventory
+findings['loot_position'] = [loot.x, loot.y]
 with TemporaryDirectory() as d:
- p=Path(d)/'pending.save.json';e.save_to_file(p,'Pending reward');e=RunnerEngine.load_save(p)
- assert len([t for t in e.current_area.triggers if t.enemy_pending])==2
- # Drop on a clear tile; the reward remains at its original authored position.
+ p=Path(d)/'loot.save.json';e.save_to_file(p,'Uncollected loot');e=RunnerEngine.load_save(p)
+ loot = next(o for o in e.current_area.objects if o.type=='green_gem_object')
  e.move('left');assert e.drop_item(1)
  e.move('right')
- while e.player_y>4:e.move('up')
+ while e.player_y>loot.y:e.move('up')
  assert 'green_gem_object' in e.inventory
-checks['pending_reward_survives_save_and_can_be_recovered']=True
+checks['enemy_loot_survives_save_and_can_be_recovered']=True
 # Native runner keyboard, modal inventory, death prompt and fresh restart.
 root=tk.Tk();root.withdraw()
 try:

@@ -93,6 +93,11 @@ def enemy(key,x,y):
  return e.current_area.objects[-1].properties['enemy_instance_id']
 
 def trig(kind,name,tile_x,tile_y,attached='',**params):
+ if attached:
+  if kind=='inventory' and params.get('add'):
+   obj=next(o for o in e.current_area.objects if o.properties.get('enemy_instance_id')==attached)
+   obj.properties['loot_object_override']=params['add']
+  return
  e.selected_mode='trigger';e.selected_tile=kind;e.cursor_x=tile_x;e.cursor_y=tile_y
  e._trigger_editor_trigger=None;e._trigger_editor_vars={}
  e.place_tile()
@@ -101,8 +106,6 @@ def trig(kind,name,tile_x,tile_y,attached='',**params):
  e._trigger_editor_vars['name'].set(name)
  params['charges']=params.pop('charges',1)
  params.pop('once',None)
- if attached:
-  params['enemy_attached']=next(label for label,identity in e._trigger_editor_enemy_labels.items() if identity==attached)
  for key,value in params.items():
   var=e._trigger_editor_vars[key]
   if isinstance(var,tk.Text):var.delete('1.0',tk.END);var.insert('1.0',str(value))

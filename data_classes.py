@@ -75,13 +75,19 @@ class Trigger:
     """Represents a trigger tile that executes actions"""
     x: int = 0
     y: int = 0
-    trigger_type: str = "teleport"  # Action type; activation may be walking or enemy defeat.
+    trigger_type: str = "teleport"  # Action type; triggers activate by walking onto their location.
     name: str = ""  # User-entered name
     parameters: Dict[str, Any] = None  # Type-specific parameters
-    enemy_attached: str = ""
-    enemy_defeated: bool = False  # Runtime activation state, persisted in saves.
-    enemy_pending: bool = False
-    
+    definition_id: str = ""
+    enabled: bool = True
+    remaining_charges: Optional[int] = None
+
+    @classmethod
+    def from_dict(cls, data):
+        # Older areas/saves remain readable; attachment metadata has no effect.
+        return cls(**{key: value for key, value in data.items()
+                      if key not in ("enemy_attached", "enemy_defeated", "enemy_pending")})
+
     def __post_init__(self):
         if self.parameters is None:
             self.parameters = {}
@@ -107,6 +113,10 @@ class Trigger:
             if remove_item:
                 parts.append(f"Remove: {remove_item}")
             return ", ".join(parts) if parts else "Inventory change"
+        elif self.trigger_type == "enemy_placement":
+            return f"{self.parameters.get('action', 'place').title()} enemy ({self.parameters.get('scope', 'position')})"
+        elif self.trigger_type == "trigger_control":
+            return f"{self.parameters.get('action', 'enable').title()} reusable trigger"
         elif self.trigger_type == "funds":
             action = "Remove" if self.parameters.get("action") == "remove" else "Add"
             return f"{action} ${self.parameters.get('amount', 0)}"
@@ -118,7 +128,9 @@ class Trigger:
             tile = self.parameters.get("tile", "")
             x = self.parameters.get("x", 0)
             y = self.parameters.get("y", 0)
-            return f"Change tile at ({x},{y}) to {tile}"
+            area = self.parameters.get("area", "")
+            destination = f" in {area}" if area else ""
+            return f"Change tile at ({x},{y}){destination} to {tile}"
         elif self.trigger_type == "area_object":
             area = self.parameters.get("area", "")
             obj = self.parameters.get("object", "")
@@ -128,6 +140,9 @@ class Trigger:
         elif self.trigger_type == "game_end":
             result = self.parameters.get("win_lose", "win")
             return f"Game {result}"
+        elif self.trigger_type == "play_sound":
+            action = "Loop" if self.parameters.get("loop", False) else "Play"
+            return f"{action} {self.parameters.get('file', '')}"
         elif self.trigger_type == "show_message":
             message = self.parameters.get("message", "")[:30]
             return f"Message: \"{message}...\""
@@ -144,6 +159,7 @@ class Area:
     tiles: List[List[Tile]] = None
     objects: List[GameObject] = None
     triggers: List[Trigger] = None
+    ambient_music: str = ""
     
     def __post_init__(self):
         if self.tiles is None:

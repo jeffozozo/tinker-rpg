@@ -91,9 +91,12 @@ walk(6,10,'lv_vale.json');walk(5,2,'lv_grove.json')
 walk(2,8);walk(9,8);before=e.health;walk(10,8);assert e.health==before-4
 # Use restoration item to free a slot before the enemy reward.
 e.use_item(e.inventory.index('blue_gem_object'));flush()
-walk(6,4);assert 'green_gem_object' in e.inventory
+walk(6,4)
+if 'green_gem_object' not in e.inventory:
+ loot=next(o for o in e.current_area.objects if o.type=='green_gem_object');walk(loot.x,loot.y)
+assert 'green_gem_object' in e.inventory
 assert not any(e._enemy_definition(o) for o in e.current_area.objects)
-checkpoint('Guardian defeated and attached seal awarded')
+checkpoint('Guardian defeated and seal loot collected')
 walk(6,10,'lv_vale.json');walk(12,2,'lv_castle.json')
 walk(5,11);walk(5,10);assert e.stats['gold']==7
 walk(7,8);assert 'green_gem_object' not in e.inventory
@@ -110,9 +113,12 @@ checkpoint('Castle unlocked and save restored')
 walk(11,2,'lv_vault.json');walk(5,11)
 # Restore spent energy before the boss battle.
 e.use_item(e.inventory.index('blue_gem_object'));flush()
-walk(5,4);assert 'red_gem_object' in e.inventory
+walk(5,4)
+if 'red_gem_object' not in e.inventory:
+ loot=next(o for o in e.current_area.objects if o.type=='red_gem_object');walk(loot.x,loot.y)
+assert 'red_gem_object' in e.inventory
 assert not any(e._enemy_definition(o) for o in e.current_area.objects)
-checkpoint('The Hush defeated and attached heart awarded')
+checkpoint('The Hush defeated and heart loot collected')
 walk(5,12,'lv_castle.json');walk(3,2)
 assert e.ended and e.end_result=='win'
 assert any(o.type=='fountain_object' and (o.x,o.y)==(3,3) for o in e.current_area.objects)

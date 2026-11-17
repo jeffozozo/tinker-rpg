@@ -538,7 +538,7 @@
           "starter_key": "example:skeleton",
           "behavior": "chase",
           "contact_damage": 3,
-          "loot_object": "magic_wand_object"
+          "loot_object": "red_gem_object"
         },
         "walkable": false,
         "enemy_instance_id": "enemy_instance_35942a852a2248bc9d87e2429a54ab77"
@@ -565,6 +565,12 @@
         "walkable": false,
         "enemy_instance_id": "a_castle_armory_orc"
       }
+    },
+    {
+      "type": "gold_coins_object",
+      "x": 2,
+      "y": 3,
+      "properties": {}
     }
   ],
   "triggers": [
@@ -578,10 +584,7 @@
         "x": 4,
         "y": 11,
         "charges": 0
-      },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
+      }
     },
     {
       "x": 3,
@@ -589,39 +592,34 @@
       "trigger_type": "show_message",
       "name": "dungeon_warning",
       "parameters": {
-        "message": "The keeper\u2019s armory has fallen to the dead. Skeletons carry wands; the orc carries a shield. Defeat them, then walk onto their fallen equipment.",
+        "message": "Everyone has skeletons in their closet...",
         "charges": 1
-      },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
+      }
+    },
+    {
+      "x": 2,
+      "y": 3,
+      "trigger_type": "area_object",
+      "name": "armory_purse_remove",
+      "parameters": {
+        "area": "",
+        "action": "remove",
+        "object": "gold_coins_object",
+        "x": 2,
+        "y": 3,
+        "charges": 1
+      }
     },
     {
       "x": 2,
       "y": 3,
       "trigger_type": "funds",
-      "name": "armory_orc_bounty",
+      "name": "armory_purse",
       "parameters": {
         "action": "add",
         "amount": 10,
         "charges": 1
-      },
-      "enemy_attached": "a_castle_armory_orc",
-      "enemy_defeated": false,
-      "enemy_pending": false
-    },
-    {
-      "x": 2,
-      "y": 3,
-      "trigger_type": "show_message",
-      "name": "armory_quiet",
-      "parameters": {
-        "message": "The armory falls quiet. You recover the keeper\u2019s lost purse.",
-        "charges": 1
-      },
-      "enemy_attached": "a_castle_armory_orc",
-      "enemy_defeated": false,
-      "enemy_pending": false
+      }
     }
   ]
 }

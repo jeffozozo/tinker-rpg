@@ -1,0 +1,2036 @@
+{
+  "name": "honeywood",
+  "width": 20,
+  "height": 15,
+  "tiles": [
+    [
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "lake_center",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "lake_center",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "lake_center",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "lake_center",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "lake_center",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "lake_center",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ]
+  ],
+  "objects": [
+    {
+      "type": "fountain_red_object",
+      "x": 6,
+      "y": 7,
+      "properties": {}
+    },
+    {
+      "type": "dog_npc",
+      "x": 13,
+      "y": 11,
+      "properties": {}
+    },
+    {
+      "type": "frog_npc",
+      "x": 10,
+      "y": 8,
+      "properties": {}
+    },
+    {
+      "type": "woman_npc",
+      "x": 7,
+      "y": 6,
+      "properties": {}
+    },
+    {
+      "type": "peasant_npc",
+      "x": 16,
+      "y": 2,
+      "properties": {}
+    },
+    {
+      "type": "chest_object",
+      "x": 6,
+      "y": 12,
+      "properties": {}
+    },
+    {
+      "type": "guard_npc",
+      "x": 5,
+      "y": 11,
+      "properties": {}
+    }
+  ],
+  "triggers": [
+    {
+      "x": 6,
+      "y": 6,
+      "trigger_type": "show_message",
+      "name": "trigger_1",
+      "parameters": {
+        "message": "Leilani says: \"our well has been poisoned! You must help us!\"",
+        "charges": 0
+      },
+      "definition_id": "",
+      "enabled": true,
+      "remaining_charges": null
+    },
+    {
+      "x": 10,
+      "y": 8,
+      "trigger_type": "show_message",
+      "name": "trigger_2",
+      "parameters": {
+        "message": "Ribbit!",
+        "charges": 0
+      },
+      "definition_id": "",
+      "enabled": true,
+      "remaining_charges": null
+    },
+    {
+      "x": 16,
+      "y": 3,
+      "trigger_type": "show_message",
+      "name": "trigger_3",
+      "parameters": {
+        "message": "Hail! Are you here to help us solve the problem of the poisoned wells? I heard there is a wise-woman in the mountains who may know how to remove the curse! You must go find her!",
+        "charges": 0
+      },
+      "definition_id": "",
+      "enabled": true,
+      "remaining_charges": null
+    },
+    {
+      "x": 7,
+      "y": 14,
+      "trigger_type": "teleport",
+      "name": "trigger_5",
+      "parameters": {
+        "area": "outside-map",
+        "x": 3,
+        "y": 3,
+        "charges": 0
+      },
+      "definition_id": "",
+      "enabled": true,
+      "remaining_charges": null
+    },
+    {
+      "x": 8,
+      "y": 14,
+      "trigger_type": "teleport",
+      "name": "trigger_6",
+      "parameters": {
+        "area": "outside-map",
+        "x": 3,
+        "y": 3,
+        "charges": 0
+      },
+      "definition_id": "",
+      "enabled": true,
+      "remaining_charges": null
+    },
+    {
+      "x": 6,
+      "y": 7,
+      "trigger_type": "player_stats",
+      "name": "trigger_negate_health",
+      "parameters": {
+        "stat": "health",
+        "amount": -5,
+        "charges": 0
+      },
+      "definition_id": "trigger_9443bbf5c6564e19aae91650c1bcadfc",
+      "enabled": true,
+      "remaining_charges": null
+    },
+    {
+      "x": 6,
+      "y": 7,
+      "trigger_type": "player_stats",
+      "name": "trigger_add_health",
+      "parameters": {
+        "stat": "health",
+        "amount": 5,
+        "charges": 0
+      },
+      "definition_id": "trigger_418f266a4ffd4d5497c5274a1008f07b",
+      "enabled": false,
+      "remaining_charges": null
+    },
+    {
+      "x": 9,
+      "y": 14,
+      "trigger_type": "teleport",
+      "name": "trigger_6",
+      "parameters": {
+        "area": "outside-map",
+        "x": 3,
+        "y": 3,
+        "charges": 0
+      },
+      "definition_id": "",
+      "enabled": true,
+      "remaining_charges": null
+    },
+    {
+      "x": 10,
+      "y": 14,
+      "trigger_type": "teleport",
+      "name": "trigger_6",
+      "parameters": {
+        "area": "outside-map",
+        "x": 3,
+        "y": 3,
+        "charges": 0
+      },
+      "definition_id": "",
+      "enabled": true,
+      "remaining_charges": null
+    },
+    {
+      "x": 11,
+      "y": 14,
+      "trigger_type": "teleport",
+      "name": "trigger_6",
+      "parameters": {
+        "area": "outside-map",
+        "x": 3,
+        "y": 3,
+        "charges": 0
+      },
+      "definition_id": "",
+      "enabled": true,
+      "remaining_charges": null
+    },
+    {
+      "x": 12,
+      "y": 14,
+      "trigger_type": "teleport",
+      "name": "trigger_6",
+      "parameters": {
+        "area": "outside-map",
+        "x": 3,
+        "y": 3,
+        "charges": 0
+      },
+      "definition_id": "",
+      "enabled": true,
+      "remaining_charges": null
+    },
+    {
+      "x": 13,
+      "y": 14,
+      "trigger_type": "teleport",
+      "name": "trigger_6",
+      "parameters": {
+        "area": "outside-map",
+        "x": 3,
+        "y": 3,
+        "charges": 0
+      },
+      "definition_id": "",
+      "enabled": true,
+      "remaining_charges": null
+    },
+    {
+      "x": 14,
+      "y": 14,
+      "trigger_type": "teleport",
+      "name": "trigger_6",
+      "parameters": {
+        "area": "outside-map",
+        "x": 3,
+        "y": 3,
+        "charges": 0
+      },
+      "definition_id": "",
+      "enabled": true,
+      "remaining_charges": null
+    },
+    {
+      "x": 15,
+      "y": 14,
+      "trigger_type": "teleport",
+      "name": "trigger_6",
+      "parameters": {
+        "area": "outside-map",
+        "x": 3,
+        "y": 3,
+        "charges": 0
+      },
+      "definition_id": "",
+      "enabled": true,
+      "remaining_charges": null
+    },
+    {
+      "x": 16,
+      "y": 14,
+      "trigger_type": "teleport",
+      "name": "trigger_6",
+      "parameters": {
+        "area": "outside-map",
+        "x": 3,
+        "y": 3,
+        "charges": 0
+      },
+      "definition_id": "",
+      "enabled": true,
+      "remaining_charges": null
+    },
+    {
+      "x": 17,
+      "y": 14,
+      "trigger_type": "teleport",
+      "name": "trigger_6",
+      "parameters": {
+        "area": "outside-map",
+        "x": 3,
+        "y": 3,
+        "charges": 0
+      },
+      "definition_id": "",
+      "enabled": true,
+      "remaining_charges": null
+    },
+    {
+      "x": 18,
+      "y": 14,
+      "trigger_type": "teleport",
+      "name": "trigger_6",
+      "parameters": {
+        "area": "outside-map",
+        "x": 3,
+        "y": 3,
+        "charges": 0
+      },
+      "definition_id": "",
+      "enabled": true,
+      "remaining_charges": null
+    },
+    {
+      "x": 19,
+      "y": 14,
+      "trigger_type": "teleport",
+      "name": "trigger_6",
+      "parameters": {
+        "area": "outside-map",
+        "x": 3,
+        "y": 3,
+        "charges": 0
+      },
+      "definition_id": "",
+      "enabled": true,
+      "remaining_charges": null
+    },
+    {
+      "x": 19,
+      "y": 13,
+      "trigger_type": "teleport",
+      "name": "trigger_6",
+      "parameters": {
+        "area": "outside-map",
+        "x": 3,
+        "y": 3,
+        "charges": 0
+      },
+      "definition_id": "",
+      "enabled": true,
+      "remaining_charges": null
+    },
+    {
+      "x": 19,
+      "y": 12,
+      "trigger_type": "teleport",
+      "name": "trigger_6",
+      "parameters": {
+        "area": "outside-map",
+        "x": 3,
+        "y": 3,
+        "charges": 0
+      },
+      "definition_id": "",
+      "enabled": true,
+      "remaining_charges": null
+    },
+    {
+      "x": 19,
+      "y": 11,
+      "trigger_type": "teleport",
+      "name": "trigger_6",
+      "parameters": {
+        "area": "outside-map",
+        "x": 3,
+        "y": 3,
+        "charges": 0
+      },
+      "definition_id": "",
+      "enabled": true,
+      "remaining_charges": null
+    },
+    {
+      "x": 0,
+      "y": 4,
+      "trigger_type": "teleport",
+      "name": "trigger_5",
+      "parameters": {
+        "area": "outside-map",
+        "x": 3,
+        "y": 3,
+        "charges": 0
+      },
+      "definition_id": "",
+      "enabled": true,
+      "remaining_charges": null
+    },
+    {
+      "x": 0,
+      "y": 5,
+      "trigger_type": "teleport",
+      "name": "trigger_5",
+      "parameters": {
+        "area": "outside-map",
+        "x": 3,
+        "y": 3,
+        "charges": 0
+      },
+      "definition_id": "",
+      "enabled": true,
+      "remaining_charges": null
+    },
+    {
+      "x": 0,
+      "y": 6,
+      "trigger_type": "teleport",
+      "name": "trigger_5",
+      "parameters": {
+        "area": "outside-map",
+        "x": 3,
+        "y": 3,
+        "charges": 0
+      },
+      "definition_id": "",
+      "enabled": true,
+      "remaining_charges": null
+    },
+    {
+      "x": 0,
+      "y": 7,
+      "trigger_type": "teleport",
+      "name": "trigger_5",
+      "parameters": {
+        "area": "outside-map",
+        "x": 3,
+        "y": 3,
+        "charges": 0
+      },
+      "definition_id": "",
+      "enabled": true,
+      "remaining_charges": null
+    },
+    {
+      "x": 0,
+      "y": 8,
+      "trigger_type": "teleport",
+      "name": "trigger_5",
+      "parameters": {
+        "area": "outside-map",
+        "x": 3,
+        "y": 3,
+        "charges": 0
+      },
+      "definition_id": "",
+      "enabled": true,
+      "remaining_charges": null
+    },
+    {
+      "x": 14,
+      "y": 0,
+      "trigger_type": "teleport",
+      "name": "trigger_5",
+      "parameters": {
+        "area": "outside-map",
+        "x": 3,
+        "y": 3,
+        "charges": 0
+      },
+      "definition_id": "",
+      "enabled": true,
+      "remaining_charges": null
+    },
+    {
+      "x": 5,
+      "y": 10,
+      "trigger_type": "show_message",
+      "name": "trigger_4",
+      "parameters": {
+        "message": "Arrg! I am TAM, the salty sea dog returned from adventuring. You can use my sword and shield! Get them out of the chest!",
+        "charges": 0
+      },
+      "definition_id": "",
+      "enabled": true,
+      "remaining_charges": null
+    },
+    {
+      "x": 6,
+      "y": 12,
+      "trigger_type": "inventory",
+      "name": "trigger_7",
+      "parameters": {
+        "add": "sword_object",
+        "remove": "",
+        "charges": 0
+      },
+      "definition_id": "",
+      "enabled": true,
+      "remaining_charges": null
+    },
+    {
+      "x": 6,
+      "y": 12,
+      "trigger_type": "inventory",
+      "name": "trigger_8",
+      "parameters": {
+        "add": "shield_object",
+        "remove": "",
+        "charges": 0
+      },
+      "definition_id": "",
+      "enabled": true,
+      "remaining_charges": null
+    },
+    {
+      "x": 6,
+      "y": 6,
+      "trigger_type": "game_end",
+      "name": "trigger_9",
+      "parameters": {
+        "win_lose": "win",
+        "message": "Lelani says \"Thank you for saving us!\"",
+        "charges": 0
+      },
+      "definition_id": "trigger_b23d7455cb1c4207934b9667a6ebf4c7",
+      "enabled": false,
+      "remaining_charges": null
+    }
+  ],
+  "ambient_music": "peaceful_meadow.wav"
+}

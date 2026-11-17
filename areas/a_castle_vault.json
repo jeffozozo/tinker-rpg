@@ -510,9 +510,9 @@
         "y": 1,
         "charges": 0
       },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
+      "definition_id": "",
+      "enabled": true,
+      "remaining_charges": null
     },
     {
       "x": 4,
@@ -520,12 +520,12 @@
       "trigger_type": "show_message",
       "name": "dragon_warning",
       "parameters": {
-        "message": "A dragon guards the crimson crown. Use your wand or sword, and keep a space in your pack. Return its red gem to the great hall throne.",
-        "charges": 1
+        "message": "HAHAHAHAHA!  I love that gargoyle! LUNCH TIME!",
+        "charges": 0
       },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
+      "definition_id": "",
+      "enabled": true,
+      "remaining_charges": null
     }
   ]
 }

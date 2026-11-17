@@ -105,8 +105,8 @@ for o in list(e.current_area.objects):
  if o.type in ('magic_wand_object','shield_object'):
   walk(o.x,o.y)
 assert 'magic_wand_object' in e.inventory and 'shield_object' in e.inventory
-assert e.stats['gold']==20
-equip('shield_object');equip('magic_wand_object');checkpoint('Dungeon loot and attached bounty collected')
+walk(2,3);assert e.stats['gold']==20
+equip('shield_object');equip('magic_wand_object');checkpoint('Dungeon loot and walk-on purse collected')
 with TemporaryDirectory() as d:
  save=Path(d)/'castle.save.json';e.save_to_file(save,'Castle expedition')
  e=RunnerEngine.load_save(save,dialog_handler=r.show_dialog);r.engine=e;flush()

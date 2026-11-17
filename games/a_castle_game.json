@@ -7,52 +7,53 @@
     "outside-map.json",
     "cave.json",
     "a_castle_dungeon.json",
-    "a_castle_vault.json"
+    "a_castle_vault.json",
+    "honeywood.json",
+    "test_triggers.json"
   ],
   "used_tiles": [
-    "blue_brick_wall",
-    "brown_brick_wall",
-    "castle",
+    "lake_center",
     "cobblestone_floor",
+    "mountains",
+    "brown_brick_wall",
     "down_stairs",
-    "forest",
-    "grass",
-    "gray_brick_door",
     "gray_brick_open_door",
     "gray_brick_wall",
-    "lake_center",
-    "mountains",
     "swamp",
+    "forest",
+    "castle",
+    "up_stairs",
+    "blue_brick_wall",
+    "gray_brick_door",
     "town",
-    "up_stairs"
+    "grass"
   ],
   "used_npcs": [
-    "black_blob_npc",
-    "dragon_npc",
+    "spider_npc",
+    "frog_npc",
     "gargoyle_npc",
-    "oldwoman_npc",
-    "orc_npc",
     "peasant_npc",
-    "skeleton_npc",
-    "spider_npc"
+    "black_blob_npc",
+    "guard_npc",
+    "oldwoman_npc",
+    "king_npc",
+    "dog_npc",
+    "orc_npc",
+    "dragon_npc",
+    "woman_npc",
+    "skeleton_npc"
   ],
   "used_objects": [
-    "blue_gem_object",
-    "book_object",
-    "candles_object",
-    "fountain_object",
-    "fountain_red_object",
     "gargoyle_object",
-    "gold_coins_object",
-    "green_gem_object",
-    "helmet_object",
-    "lever_object",
-    "magic_wand_object",
+    "chest_object",
+    "candles_object",
     "red_gem_object",
-    "shield_object",
-    "sword_object",
+    "green_gem_object",
     "throne_object",
-    "torch_object"
+    "blue_gem_object",
+    "fountain_red_object",
+    "shield_object",
+    "gold_coins_object"
   ],
   "used_triggers": [
     "trigger"
@@ -117,7 +118,7 @@
         "starter_key": "example:skeleton",
         "behavior": "chase",
         "contact_damage": 3,
-        "loot_object": "magic_wand_object"
+        "loot_object": "red_gem_object"
       },
       "enemy_23a5958435d74387b16db412ccbcbe4d": {
         "id": "enemy_23a5958435d74387b16db412ccbcbe4d",
@@ -156,7 +157,57 @@
     },
     "start_area": "outside-map.json",
     "start_x": 3,
-    "start_y": 3
+    "start_y": 3,
+    "trigger_definitions": {
+      "trigger_9443bbf5c6564e19aae91650c1bcadfc": {
+        "name": "trigger_negate_health",
+        "trigger_type": "player_stats",
+        "parameters": {
+          "stat": "health",
+          "amount": -5,
+          "charges": 0
+        },
+        "enabled": true
+      },
+      "trigger_418f266a4ffd4d5497c5274a1008f07b": {
+        "name": "trigger_add_health",
+        "trigger_type": "player_stats",
+        "parameters": {
+          "stat": "health",
+          "amount": 5,
+          "charges": 0
+        },
+        "enabled": false
+      },
+      "trigger_3bfc05d4d0c04535be1362449a162c11": {
+        "name": "trigger_king_thanks",
+        "trigger_type": "show_message",
+        "parameters": {
+          "message": "Thank you! You have saved us! Go make sure the rest of the fountains are fixed!",
+          "charges": 0
+        },
+        "enabled": false
+      },
+      "trigger_76d75f35001c4311b92969b1ff42b25d": {
+        "name": "trigger_4",
+        "trigger_type": "show_message",
+        "parameters": {
+          "message": "The King says: \"We are in dire need of help. The pure fountains have been poisoned! Seek out the crone in the mountains! She will know what to do!\"",
+          "charges": 0
+        },
+        "enabled": true
+      },
+      "trigger_b23d7455cb1c4207934b9667a6ebf4c7": {
+        "name": "trigger_9",
+        "trigger_type": "game_end",
+        "parameters": {
+          "win_lose": "win",
+          "message": "Lelani says \"Thank you for saving us!\"",
+          "charges": 0
+        },
+        "enabled": false
+      }
+    }
   },
   "object_definitions": {
     "sword_object": {
@@ -374,7 +425,7 @@
       "walkable": false
     }
   },
-  "intro_message": "A CASTLE GAME\n\nThe castle\u2019s throne stands empty. Find the keeper\u2019s supplies beside you, seek the old woman in the southeast cave, and discover what the gargoyle protects. Read the journal before venturing far.",
+  "intro_message": "A CASTLE GAME\n\nThe peaceful kingdom of Lanth has been cursed! All of the pure fountains of water are poisoned. You must find a way to return the water to purity before everyone dies of thirst!",
   "instructions_message": "Move with arrows or WASD. F attacks in the last direction moved. I opens inventory: equip a weapon, helmet and shield; ready a torch or a quick-use item. Click the bottom slots or press 1\u20135 to use them. Walk onto items, people and landmarks to activate triggers. Space is unused. Blue gems restore health and energy. Drop spare items on clear ground and walk away and back to recover them.\n\nCastle skeletons drop magic wands, orcs drop shields, and the dragon drops the crimson crown. Collect loot by walking onto the tile where the enemy died. The old woman wants a wand; her green token opens the gargoyle\u2019s door. Return the dragon\u2019s red gem to the throne. Blue springs heal; red water hurts. The spring chamber\u2019s runestone holds TWO energy recharges. Blocked moves take a turn. Save from the Game menu; death offers a fresh restart.",
-  "game_end_message": "The keeper\u2019s quest is complete."
+  "game_end_message": "You have done it! The waters flow pure and clean once again!"
 }

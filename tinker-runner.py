@@ -13,6 +13,7 @@ from PIL import Image, ImageTk
 from runner_engine import RunnerEngine, RunnerError
 from item_rules import EQUIPMENT_SLOTS, SLOT_LABELS, compatible_slot
 from sound_effects import SoundEffects
+from ambient_music import AmbientMusic
 from project_paths import asset_root, project_root
 
 
@@ -32,6 +33,10 @@ class TinkerRunner:
         self.save_name = self.engine.game.get("name", "Saved Game")
         self.dirty = False
         self.sounds = SoundEffects()
+        self.music = AmbientMusic(root, lambda message: self.engine._diagnostic(message))
+        self.trigger_audio = AmbientMusic(root, lambda message: self.engine._diagnostic(message), alias="tinker_trigger")
+        self.trigger_audio_location = (id(engine), engine.current_area_filename)
+        self.music_enabled = tk.BooleanVar(master=root, value=True)
         self.sound_enabled = tk.BooleanVar(master=root, value=True)
         self.attack_markers = []
         self.marker_generation = 0
@@ -87,7 +92,11 @@ class TinkerRunner:
         game_menu.add_command(label="Restart", command=self.restart_game)
         game_menu.add_checkbutton(
             label="Sound effects", variable=self.sound_enabled,
-            command=lambda: setattr(self.sounds, "enabled", self.sound_enabled.get()),
+            command=self.update_sound_enabled,
+        )
+        game_menu.add_checkbutton(
+            label="Ambient music", variable=self.music_enabled,
+            command=self.update_music,
         )
         game_menu.add_command(label="Quit", command=self.quit_game)
         menu_bar.add_cascade(label="Game", menu=game_menu)
@@ -206,7 +215,25 @@ class TinkerRunner:
         self.image_cache[key] = photo
         return photo
 
+    def update_sound_enabled(self):
+        self.sounds.enabled = self.sound_enabled.get()
+        if not self.sound_enabled.get():
+            self.trigger_audio.close()
+
+    def _sync_trigger_audio(self):
+        location = (id(self.engine), self.engine.current_area_filename)
+        if location != self.trigger_audio_location:
+            self.trigger_audio.close()
+            self.trigger_audio_location = location
+
+    def update_music(self):
+        self._sync_trigger_audio()
+        self.music.enabled = self.music_enabled.get()
+        self.music.update(self.engine.project_root, self.engine.current_area.ambient_music)
+
     def redraw(self):
+        if hasattr(self, "music"):
+            self.update_music()
         area = self.engine.current_area
         origin_x, origin_y = self._map_origin()
         self.canvas.delete("all")
@@ -299,14 +326,9 @@ class TinkerRunner:
                 )
             color = "#ffe16b" if marker["kind"] == "miss" else "#ff5353"
             self.canvas.create_oval(
-                x + 7.6, y + 7.6, x + 24.4, y + 24.4,
-                outline=color, width=3, tags="attack_feedback",
+                x + 12, y + 12, x + 20, y + 20,
+                outline=color, width=2, tags="attack_feedback",
             )
-            if marker["kind"] != "miss":
-                self.canvas.create_text(
-                    x + 16, y + 4, text=f"-{marker['damage']}", fill=color,
-                    font=("TkDefaultFont", 10, "bold"), tags="attack_feedback",
-                )
 
     def _clear_attack_markers(self, generation):
         if generation == self.marker_generation:
@@ -317,6 +339,17 @@ class TinkerRunner:
         feedback, self.engine.feedback = self.engine.feedback, []
         if not feedback:
             return
+        for item in feedback:
+            if item["kind"] == "play_sound" and self.sound_enabled.get():
+                self._sync_trigger_audio()
+                if item["loop"] and item["area"] != self.engine.current_area_filename:
+                    continue
+                self.trigger_audio.close()
+                self.trigger_audio.update(
+                    self.engine.project_root, item["file"],
+                    loop=item["loop"], directory="sounds",
+                )
+        feedback = [item for item in feedback if item["kind"] != "play_sound"]
         # Give this action one cue; a footstep must not queue ahead of combat.
         kinds = {item["kind"] for item in feedback}
         cue = next((kind for kind in ("hit", "miss", "hurt", "step") if kind in kinds), None)
@@ -402,7 +435,24 @@ class TinkerRunner:
         self._flush_events()
         self.refresh_inventory()
         self.refresh_active_bar()
-        self._offer_restart_after_death()
+        self._offer_restart_after_game_end()
+
+    def _offer_restart_after_game_end(self):
+        if not (self.engine.ended and self.engine.end_result == "win"):
+            self._offer_restart_after_death()
+            return
+        if getattr(self, "_completion_prompt_engine", None) is self.engine:
+            return
+        self._completion_prompt_engine = self.engine
+        self.close_inventory()
+        if messagebox.askyesno(
+            "Quest Complete",
+            "Congratulations! You finished the quest! Would you like to play again?",
+            parent=self.root,
+        ):
+            self.restart_game(confirm=False)
+        else:
+            self.quit_game(confirm=False)
 
     def _offer_restart_after_death(self):
         if self.engine.health > 0 or getattr(self, "_death_prompt_engine", None) is self.engine:
@@ -752,13 +802,16 @@ class TinkerRunner:
             self.quit_game()
         return "break"
 
-    def quit_game(self):
-        if self.dirty and not messagebox.askyesno(
+    def quit_game(self, confirm=True):
+        if confirm and self.dirty and not messagebox.askyesno(
             "Quit Game",
             "This run has unsaved progress. Quit the game?",
             parent=self.root,
         ):
             return
+        self.music.close()
+        self.trigger_audio.close()
+        self.sounds.close()
         self.root.destroy()
 
     def _clear_log(self):

@@ -200,6 +200,51 @@ class RunnerEngineTests(unittest.TestCase):
         ])
         toplevel.assert_not_called()
 
+    def test_accepting_completion_restarts_once_without_second_confirmation(self):
+        runner = object.__new__(tinker_runner.TinkerRunner)
+        runner.root = Mock()
+        runner.engine = SimpleNamespace(health=10, ended=True, end_result="win")
+        runner.close_inventory = Mock()
+        runner.restart_game = Mock()
+        runner.quit_game = Mock()
+        with patch.object(tinker_runner.messagebox, "askyesno", return_value=True) as prompt:
+            runner._offer_restart_after_game_end()
+            runner._offer_restart_after_game_end()
+        prompt.assert_called_once_with(
+            "Quest Complete",
+            "Congratulations! You finished the quest! Would you like to play again?",
+            parent=runner.root,
+        )
+        runner.restart_game.assert_called_once_with(confirm=False)
+        runner.quit_game.assert_not_called()
+        runner.close_inventory.assert_called_once()
+
+    def test_declining_completion_closes_audio_and_quits_without_second_prompt(self):
+        runner = object.__new__(tinker_runner.TinkerRunner)
+        runner.root = Mock()
+        runner.engine = SimpleNamespace(health=10, ended=True, end_result="win")
+        runner.dirty = True
+        runner.close_inventory = Mock()
+        runner.restart_game = Mock()
+        runner.music = Mock()
+        runner.trigger_audio = Mock()
+        runner.sounds = Mock()
+        with patch.object(tinker_runner.messagebox, "askyesno", return_value=False) as prompt:
+            runner._offer_restart_after_game_end()
+        prompt.assert_called_once()
+        runner.root.destroy.assert_called_once()
+        runner.music.close.assert_called_once()
+        runner.trigger_audio.close.assert_called_once()
+        runner.sounds.close.assert_called_once()
+        runner.restart_game.assert_not_called()
+
+    def test_unfinished_quest_does_not_show_completion_dialog(self):
+        runner = object.__new__(tinker_runner.TinkerRunner)
+        runner.engine = SimpleNamespace(health=10, ended=False, end_result="")
+        with patch.object(tinker_runner.messagebox, "askyesno") as prompt:
+            runner._offer_restart_after_game_end()
+        prompt.assert_not_called()
+
     def test_death_offers_restart_once_and_leaves_declined_game_over(self):
         runner = tinker_runner.TinkerRunner.__new__(tinker_runner.TinkerRunner)
         runner.root = Mock()
@@ -577,7 +622,7 @@ class RunnerEngineTests(unittest.TestCase):
         runner._flush_events = sequence.log
         runner.refresh_inventory = sequence.inventory
         runner.refresh_active_bar = sequence.bar
-        runner._offer_restart_after_death = sequence.death_check
+        runner._offer_restart_after_game_end = sequence.end_check
         runner._after_action()
         self.assertEqual(sequence.mock_calls[:2], [unittest.mock.call.feedback(), unittest.mock.call.redraw()])
 
@@ -814,6 +859,104 @@ class RunnerEngineTests(unittest.TestCase):
         self.assertEqual(tile.type, "lake_center")
         self.assertIs(tile.walkable_override, True)
 
+    def test_play_sound_trigger_defaults_to_one_play_and_spends_charge(self):
+        (self.root / "sounds").mkdir()
+        (self.root / "sounds" / "bell.wav").write_bytes(b"test")
+        self._replace_triggers([{
+            "x": 2, "y": 1, "name": "bell", "trigger_type": "play_sound",
+            "parameters": {"file": "bell.wav", "charges": 1},
+        }])
+        engine = self.engine()
+        engine.move("right")
+        sounds = [item for item in engine.feedback if item["kind"] == "play_sound"]
+        self.assertEqual(sounds, [{
+            "kind": "play_sound", "file": "bell.wav", "loop": False, "area": "start.json",
+        }])
+        self.assertEqual(engine.current_area.triggers, [])
+        engine.feedback.clear()
+        engine.move("left")
+        engine.move("right")
+        self.assertFalse(any(item["kind"] == "play_sound" for item in engine.feedback))
+
+    def test_named_looping_sound_trigger_survives_save_and_load(self):
+        (self.root / "sounds").mkdir()
+        (self.root / "sounds" / "bell.wav").write_bytes(b"test")
+        self.game["properties"]["trigger_definitions"] = {
+            "bell": {"name": "Bell", "trigger_type": "play_sound",
+                     "parameters": {"file": "bell.wav", "loop": True}},
+        }
+        self._write_json(self.game_path, self.game)
+        self._replace_triggers([{
+            "x": 2, "y": 1, "trigger_type": "play_sound", "definition_id": "bell",
+        }])
+        engine = self.engine()
+        save = self.root / "sound-save.json"
+        engine.save_to_file(save, "Sound test")
+        loaded = RunnerEngine.load_save(save, project_root=self.root)
+        loaded.move("right")
+        sound = next(item for item in loaded.feedback if item["kind"] == "play_sound")
+        self.assertEqual(sound["file"], "bell.wav")
+        self.assertIs(sound["loop"], True)
+
+    def test_sound_trigger_rejects_invalid_settings_and_missing_files(self):
+        engine = self.engine()
+        for parameters in ({"file": "../bell.wav"}, {"file": "bell.wav", "loop": "yes"},
+                           {"file": "missing.wav"}):
+            with self.subTest(parameters=parameters), self.assertRaises(RunnerError):
+                engine._execute_trigger(Trigger(0, 0, "play_sound", "bell", parameters))
+        self.assertFalse(any(item["kind"] == "play_sound" for item in engine.feedback))
+
+    def test_runner_routes_sound_feedback_without_creating_attack_markers(self):
+        runner = object.__new__(tinker_runner.TinkerRunner)
+        runner.engine = SimpleNamespace(
+            project_root=self.root, current_area_filename="start.json",
+            feedback=[{"kind": "play_sound", "file": "bell.wav", "loop": True, "area": "start.json"}],
+        )
+        runner.trigger_audio_location = (id(runner.engine), "start.json")
+        runner.trigger_audio = Mock()
+        runner.sound_enabled = Mock()
+        runner.sound_enabled.get.return_value = True
+        runner.sounds = Mock()
+        runner.canvas = Mock()
+        runner._present_feedback()
+        runner.trigger_audio.update.assert_called_once_with(
+            self.root, "bell.wav", loop=True, directory="sounds",
+        )
+        runner.canvas.delete.assert_not_called()
+        runner.engine.current_area_filename = "remote.json"
+        runner.trigger_audio.reset_mock()
+        runner._sync_trigger_audio()
+        runner.trigger_audio.close.assert_called_once()
+
+    def test_area_ambient_music_survives_save_and_load(self):
+        self.area["ambient_music"] = "forest.wav"
+        self._write_json(self.area_path, self.area)
+        engine = self.engine()
+        self.assertEqual(engine.current_area.ambient_music, "forest.wav")
+        save = self.root / "music-save.json"
+        engine.save_to_file(save, "Music test")
+        loaded = RunnerEngine.load_save(save, project_root=self.root)
+        self.assertEqual(loaded.current_area.ambient_music, "forest.wav")
+
+    def test_tile_update_targets_another_area_with_its_own_dimensions(self):
+        self._write_json(self.root / "areas" / "remote.json", self._area(width=5))
+        self.game["areas"].append("remote.json")
+        self._write_json(self.game_path, self.game)
+        self._replace_triggers([{
+            "x": 2, "y": 1, "name": "remote_bridge", "trigger_type": "tile_update",
+            "parameters": {
+                "area": "remote", "x": 4, "y": 0,
+                "tile": "lake_center", "walkable": True,
+            },
+        }])
+        engine = self.engine()
+        engine.move("right")
+        self.assertEqual(engine.current_area_filename, "start.json")
+        self.assertEqual(engine.current_area.tiles[0][0].type, "grass")
+        tile = engine.areas["remote.json"].tiles[0][4]
+        self.assertEqual(tile.type, "lake_center")
+        self.assertIs(tile.walkable_override, True)
+
     def test_area_object_trigger_adds_once_at_trigger_position(self):
         self._replace_triggers([{
             "x": 2, "y": 1, "name": "spawn", "trigger_type": "area_object",
@@ -868,6 +1011,21 @@ class RunnerEngineTests(unittest.TestCase):
         engine.process_entry_triggers()
 
         self.assertTrue(any("repeating teleport-trigger loop" in event for event in engine.diagnostics))
+
+    def test_large_trigger_stack_survives_save_and_runs_every_action_in_order(self):
+        messages = [f"Stack message {index}" for index in range(100)]
+        self._replace_triggers([
+            {"x": 2, "y": 1, "name": f"message_{index}", "trigger_type": "show_message",
+             "parameters": {"message": message}}
+            for index, message in enumerate(messages)
+        ])
+        engine = self.engine()
+        save = self.root / "stack-save.json"
+        engine.save_to_file(save, "Large trigger stack")
+        loaded = RunnerEngine.load_save(save, project_root=self.root)
+        self.assertEqual(len(loaded.current_area.triggers), 100)
+        loaded.move("right")
+        self.assertEqual([event for event in loaded.events if event.startswith("Stack message")], messages)
 
     def test_game_end_and_custom_triggers_have_clear_runtime_behavior(self):
         self._replace_triggers([{

@@ -771,7 +771,8 @@
           "contact_damage": 4,
           "ranged_attack": "none"
         },
-        "walkable": false
+        "walkable": false,
+        "loot_object_override": "green_gem_object"
       }
     }
   ],
@@ -785,10 +786,7 @@
         "stat": "strength",
         "amount": 1,
         "charges": 1
-      },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
+      }
     },
     {
       "x": 2,
@@ -798,10 +796,7 @@
       "parameters": {
         "message": "An old keeper\u2019s courage warms your hands.",
         "charges": 1
-      },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
+      }
     },
     {
       "x": 9,
@@ -811,10 +806,7 @@
       "parameters": {
         "message": "The red spring is bitter. The pool beneath it will burn you.",
         "charges": 1
-      },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
+      }
     },
     {
       "x": 10,
@@ -825,10 +817,7 @@
         "stat": "health",
         "amount": -4,
         "charges": 0
-      },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
+      }
     },
     {
       "x": 6,
@@ -838,37 +827,7 @@
       "parameters": {
         "message": "Stone grinds ahead. The Moss Guardian carries the seal; it must be defeated.",
         "charges": 1
-      },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
-    },
-    {
-      "x": 6,
-      "y": 4,
-      "trigger_type": "inventory",
-      "name": "guardian_seal",
-      "parameters": {
-        "add": "green_gem_object",
-        "remove": "",
-        "charges": 1
-      },
-      "enemy_attached": "enemy_instance_1461c85df5ff4d20a944e530e359cc6a",
-      "enemy_defeated": false,
-      "enemy_pending": false
-    },
-    {
-      "x": 6,
-      "y": 4,
-      "trigger_type": "show_message",
-      "name": "guardian_reward",
-      "parameters": {
-        "message": "The guardian crumbles. A green seal settles into your hand. The castle awaits.",
-        "charges": 1
-      },
-      "enemy_attached": "enemy_instance_1461c85df5ff4d20a944e530e359cc6a",
-      "enemy_defeated": false,
-      "enemy_pending": false
+      }
     },
     {
       "x": 6,
@@ -880,10 +839,7 @@
         "x": 5,
         "y": 3,
         "charges": 0
-      },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
+      }
     }
   ]
 }

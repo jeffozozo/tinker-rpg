@@ -46,6 +46,10 @@ class FileManager:
         )
 
     def close_editor(self):
+        if hasattr(self, "finish_named_trigger_edit") and not self.finish_named_trigger_edit():
+            return
+        if hasattr(self, "finish_enemy_edit") and not self.finish_enemy_edit():
+            return
         if self.has_unsaved_changes():
             answer = messagebox.askyesnocancel(
                 "Unsaved Changes",
@@ -227,6 +231,10 @@ class FileManager:
     
     # Game management methods
     def new_game(self):
+        if hasattr(self, "finish_named_trigger_edit") and not self.finish_named_trigger_edit():
+            return
+        if hasattr(self, "finish_enemy_edit") and not self.finish_enemy_edit():
+            return
         if messagebox.askyesno("New Game", "Create new game? Unsaved changes will be lost."):
             if hasattr(self, "save_selected_trigger") and not self.save_selected_trigger():
                 return
@@ -275,6 +283,14 @@ class FileManager:
 
     def _save_game_to_file(self, filename, show_message=True):
         try:
+            enemy_manager = getattr(self, '_enemy_manager', None)
+            if enemy_manager is not None and enemy_manager.window.winfo_exists() and enemy_manager.values() != enemy_manager.baseline:
+                if not enemy_manager.save():
+                    return False
+            manager = getattr(self, '_named_trigger_manager', None)
+            if manager is not None and manager.window.winfo_exists() and manager.values() != manager.baseline:
+                if not manager.save():
+                    return False
             if ("object" in self.pending_editor_forms()
                     and not self.save_object_definition_changes()):
                 return False
@@ -296,6 +312,10 @@ class FileManager:
             return False
     
     def open_game(self, filename=None):
+        if hasattr(self, "finish_named_trigger_edit") and not self.finish_named_trigger_edit():
+            return
+        if hasattr(self, "finish_enemy_edit") and not self.finish_enemy_edit():
+            return
         if filename is None:
             filename = filedialog.askopenfilename(
                 initialdir=self._project_path("games"),
@@ -547,6 +567,8 @@ class FileManager:
                 self.sync_enemy_instances()
             
             self.current_area_file = filename
+            if hasattr(self, "refresh_reusable_triggers"):
+                self.refresh_reusable_triggers()
             self._saved_area_state = asdict(self.current_area)
             self.cursor_x = self.cursor_y = 0
             self.area_name_var.set(self.current_area.name)
@@ -591,7 +613,7 @@ class FileManager:
                 if isinstance(tile_data, dict):
                     area.tiles[y][x] = Tile(**tile_data)
         area.objects = [GameObject(**obj) for obj in area.objects]
-        area.triggers = [Trigger(**trigger) for trigger in area.triggers]
+        area.triggers = [Trigger.from_dict(trigger) for trigger in area.triggers]
         ensure_enemy_instance_ids(area)
         return area
     
@@ -625,6 +647,8 @@ class FileManager:
                     used_tiles.add(tile.type)
         
         for obj in self.current_area.objects:
+            if obj.properties.get("loot_object_override"):
+                used_objects.add(obj.properties["loot_object_override"])
             if obj.type in self.tile_manager.get_npc_names():
                 used_npcs.add(obj.type)
             else:
@@ -663,6 +687,9 @@ class FileManager:
                     
                     # Scan objects
                     for obj_data in area_dict.get('objects', []):
+                        loot_override = obj_data.get('properties', {}).get('loot_object_override')
+                        if loot_override:
+                            used_objects.add(loot_override)
                         obj_type = obj_data.get('type', '')
                         if obj_type in self.tile_manager.get_npc_names():
                             used_npcs.add(obj_type)
@@ -676,6 +703,15 @@ class FileManager:
                 except Exception as e:
                     print(f"Error scanning area {area_filename}: {e}")
         
+        # Shared definitions may reference assets not physically placed on a map.
+        for definition in self.current_game.properties.get("trigger_definitions", {}).values():
+            parameters = definition.get("parameters", {})
+            if definition.get("trigger_type") == "tile_update" and parameters.get("tile"):
+                used_tiles.add(parameters["tile"])
+            for key in ("add", "remove", "object"):
+                if parameters.get(key):
+                    used_objects.add(parameters[key])
+
         # Update game asset lists
         self.current_game.used_tiles = list(used_tiles)
         self.current_game.used_objects = list(used_objects)

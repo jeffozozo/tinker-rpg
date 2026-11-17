@@ -205,6 +205,12 @@
       "x": 4,
       "y": 6,
       "properties": {}
+    },
+    {
+      "type": "blue_gem_object",
+      "x": 4,
+      "y": 3,
+      "properties": {}
     }
   ],
   "triggers": [
@@ -219,61 +225,22 @@
         "y": 13,
         "charges": 0
       },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
+      "definition_id": "",
+      "enabled": true,
+      "remaining_charges": null
     },
     {
-      "x": 2,
+      "x": 3,
       "y": 6,
       "trigger_type": "show_message",
       "name": "old_woman_request",
       "parameters": {
-        "message": "The old woman says: \u201cHow did you find me? Never mind. Bring me the scepter of light\u2014a magic wand carried by a skeleton of the castle\u2014and I will give you the answer to the gargoyle\u2019s riddle. Step beside me when you have it.\u201d",
+        "message": "The old woman says: \u201cHow did you find me? Never mind. I sense your quest. You seek to repair the poisoned fountains. Get the blue pill and drop it in the fountain in the castle and it's waters will flow to all others, purifying all the fountains in the land! ",
         "charges": 1
       },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
-    },
-    {
-      "x": 3,
-      "y": 6,
-      "trigger_type": "inventory",
-      "name": "give_scepter",
-      "parameters": {
-        "remove": "magic_wand_object",
-        "charges": 1
-      },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
-    },
-    {
-      "x": 3,
-      "y": 6,
-      "trigger_type": "inventory",
-      "name": "receive_answer_token",
-      "parameters": {
-        "add": "green_gem_object",
-        "charges": 1
-      },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
-    },
-    {
-      "x": 3,
-      "y": 6,
-      "trigger_type": "show_message",
-      "name": "old_woman_answer",
-      "parameters": {
-        "message": "\u201cYour name is Keeper. Your quest is the crimson crown. Your color is green.\u201d She presses a green token into your palm. \u201cShow this to the gargoyle. There is another wand beneath the castle if you need one.\u201d",
-        "charges": 1
-      },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
+      "definition_id": "",
+      "enabled": true,
+      "remaining_charges": null
     }
   ]
 }

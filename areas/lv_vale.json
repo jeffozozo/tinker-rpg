@@ -1188,10 +1188,7 @@
         "x": 6,
         "y": 9,
         "charges": 0
-      },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
+      }
     },
     {
       "x": 13,
@@ -1203,10 +1200,7 @@
         "x": 6,
         "y": 9,
         "charges": 0
-      },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
+      }
     },
     {
       "x": 5,
@@ -1218,10 +1212,7 @@
         "x": 6,
         "y": 9,
         "charges": 0
-      },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
+      }
     },
     {
       "x": 12,
@@ -1233,10 +1224,7 @@
         "x": 7,
         "y": 11,
         "charges": 0
-      },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
+      }
     },
     {
       "x": 5,
@@ -1246,10 +1234,7 @@
       "parameters": {
         "message": "THE OLD ROAD\nWest: Dawnmere. East: Briarford. Northwest: Listening Grove. Northeast: Dawnbell Castle.",
         "charges": 1
-      },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
+      }
     }
   ]
 }

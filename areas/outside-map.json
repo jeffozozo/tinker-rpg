@@ -224,7 +224,7 @@
         "properties": {}
       },
       {
-        "type": "grass",
+        "type": "town",
         "walkable_override": null,
         "properties": {}
       },
@@ -376,7 +376,7 @@
         "properties": {}
       },
       {
-        "type": "town",
+        "type": "grass",
         "walkable_override": null,
         "properties": {}
       },
@@ -1536,12 +1536,6 @@
   ],
   "objects": [
     {
-      "type": "fountain_object",
-      "x": 9,
-      "y": 8,
-      "properties": {}
-    },
-    {
       "type": "spider_npc",
       "x": 2,
       "y": 9,
@@ -1560,7 +1554,8 @@
           "loot_object": "blue_gem_object"
         },
         "walkable": false,
-        "enemy_instance_id": "enemy_instance_b5aaad6007934690a46a63d57b135e1e"
+        "enemy_instance_id": "enemy_instance_b5aaad6007934690a46a63d57b135e1e",
+        "loot_object_override": ""
       }
     },
     {
@@ -1582,32 +1577,9 @@
           "loot_object": "blue_gem_object"
         },
         "walkable": false,
-        "enemy_instance_id": "enemy_instance_33f9f2a5e7e0470ca54dea69881c40b9"
+        "enemy_instance_id": "enemy_instance_33f9f2a5e7e0470ca54dea69881c40b9",
+        "loot_object_override": ""
       }
-    },
-    {
-      "type": "sword_object",
-      "x": 4,
-      "y": 3,
-      "properties": {}
-    },
-    {
-      "type": "helmet_object",
-      "x": 5,
-      "y": 3,
-      "properties": {}
-    },
-    {
-      "type": "torch_object",
-      "x": 4,
-      "y": 4,
-      "properties": {}
-    },
-    {
-      "type": "book_object",
-      "x": 5,
-      "y": 4,
-      "properties": {}
     },
     {
       "type": "skeleton_npc",
@@ -1625,159 +1597,21 @@
           "starter_key": "example:skeleton",
           "behavior": "chase",
           "contact_damage": 3,
-          "loot_object": "magic_wand_object"
+          "loot_object": "red_gem_object"
         },
         "walkable": false,
-        "enemy_instance_id": "enemy_instance_5242daff5514409882f7f45a82a86825"
+        "enemy_instance_id": "enemy_instance_5242daff5514409882f7f45a82a86825",
+        "loot_object_override": ""
       }
     },
     {
-      "type": "gold_coins_object",
-      "x": 12,
-      "y": 3,
-      "properties": {}
-    },
-    {
       "type": "fountain_red_object",
-      "x": 6,
-      "y": 13,
+      "x": 9,
+      "y": 8,
       "properties": {}
     }
   ],
   "triggers": [
-    {
-      "x": 4,
-      "y": 3,
-      "trigger_type": "inventory",
-      "name": "sword_take",
-      "parameters": {
-        "add": "sword_object",
-        "charges": 1
-      },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
-    },
-    {
-      "x": 4,
-      "y": 3,
-      "trigger_type": "area_object",
-      "name": "sword_remove",
-      "parameters": {
-        "action": "remove",
-        "object": "sword_object",
-        "area": "",
-        "x": 4,
-        "y": 3,
-        "charges": 1
-      },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
-    },
-    {
-      "x": 5,
-      "y": 3,
-      "trigger_type": "inventory",
-      "name": "helmet_take",
-      "parameters": {
-        "add": "helmet_object",
-        "charges": 1
-      },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
-    },
-    {
-      "x": 5,
-      "y": 3,
-      "trigger_type": "area_object",
-      "name": "helmet_remove",
-      "parameters": {
-        "action": "remove",
-        "object": "helmet_object",
-        "area": "",
-        "x": 5,
-        "y": 3,
-        "charges": 1
-      },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
-    },
-    {
-      "x": 4,
-      "y": 4,
-      "trigger_type": "inventory",
-      "name": "torch_take",
-      "parameters": {
-        "add": "torch_object",
-        "charges": 1
-      },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
-    },
-    {
-      "x": 4,
-      "y": 4,
-      "trigger_type": "area_object",
-      "name": "torch_remove",
-      "parameters": {
-        "action": "remove",
-        "object": "torch_object",
-        "area": "",
-        "x": 4,
-        "y": 4,
-        "charges": 1
-      },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
-    },
-    {
-      "x": 5,
-      "y": 4,
-      "trigger_type": "inventory",
-      "name": "journal_take",
-      "parameters": {
-        "add": "book_object",
-        "charges": 1
-      },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
-    },
-    {
-      "x": 5,
-      "y": 4,
-      "trigger_type": "area_object",
-      "name": "journal_remove",
-      "parameters": {
-        "action": "remove",
-        "object": "book_object",
-        "area": "",
-        "x": 5,
-        "y": 4,
-        "charges": 1
-      },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
-    },
-    {
-      "x": 3,
-      "y": 4,
-      "trigger_type": "show_message",
-      "name": "supply_sign",
-      "parameters": {
-        "message": "A keeper\u2019s supplies lie beside the road. Ready your sword and helmet before exploring. The castle is north of the blue spring; the old woman lives in the southeast cave.",
-        "charges": 1
-      },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
-    },
     {
       "x": 9,
       "y": 6,
@@ -1789,9 +1623,9 @@
         "y": 11,
         "charges": 0
       },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
+      "definition_id": "",
+      "enabled": true,
+      "remaining_charges": null
     },
     {
       "x": 19,
@@ -1804,23 +1638,9 @@
         "y": 1,
         "charges": 0
       },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
-    },
-    {
-      "x": 9,
-      "y": 8,
-      "trigger_type": "player_stats",
-      "name": "blue_spring",
-      "parameters": {
-        "stat": "health",
-        "amount": 32,
-        "charges": 0
-      },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
+      "definition_id": "",
+      "enabled": true,
+      "remaining_charges": null
     },
     {
       "x": 9,
@@ -1828,12 +1648,12 @@
       "trigger_type": "show_message",
       "name": "spring_sign",
       "parameters": {
-        "message": "Clear water restores your health. The swamp pools to the southwest are poisonous.",
+        "message": "A terrible curse has been placed on the kingdom! All of the wells of fresh water have been poisoned! ",
         "charges": 1
       },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
+      "definition_id": "",
+      "enabled": true,
+      "remaining_charges": null
     },
     {
       "x": 6,
@@ -1845,9 +1665,9 @@
         "amount": -2,
         "charges": 0
       },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
+      "definition_id": "",
+      "enabled": true,
+      "remaining_charges": null
     },
     {
       "x": 4,
@@ -1859,40 +1679,53 @@
         "amount": -2,
         "charges": 0
       },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
+      "definition_id": "",
+      "enabled": true,
+      "remaining_charges": null
     },
     {
-      "x": 12,
-      "y": 3,
-      "trigger_type": "funds",
-      "name": "road_purse",
+      "x": 3,
+      "y": 2,
+      "trigger_type": "teleport",
+      "name": "trigger_2",
       "parameters": {
-        "action": "add",
-        "amount": 15,
-        "charges": 1
+        "area": "honeywood",
+        "x": 2,
+        "y": 2,
+        "charges": 0
       },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
+      "definition_id": "",
+      "enabled": true,
+      "remaining_charges": null
     },
     {
-      "x": 12,
-      "y": 3,
-      "trigger_type": "area_object",
-      "name": "road_purse_remove",
+      "x": 9,
+      "y": 8,
+      "trigger_type": "player_stats",
+      "name": "trigger_negate_health",
       "parameters": {
-        "action": "remove",
-        "object": "gold_coins_object",
-        "area": "",
-        "x": 12,
-        "y": 3,
-        "charges": 1
+        "stat": "health",
+        "amount": -5,
+        "charges": 0
       },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
+      "definition_id": "trigger_9443bbf5c6564e19aae91650c1bcadfc",
+      "enabled": true,
+      "remaining_charges": null
+    },
+    {
+      "x": 9,
+      "y": 8,
+      "trigger_type": "player_stats",
+      "name": "trigger_add_health",
+      "parameters": {
+        "stat": "health",
+        "amount": 5,
+        "charges": 0
+      },
+      "definition_id": "trigger_418f266a4ffd4d5497c5274a1008f07b",
+      "enabled": false,
+      "remaining_charges": null
     }
-  ]
+  ],
+  "ambient_music": "prairie_wind.wav"
 }

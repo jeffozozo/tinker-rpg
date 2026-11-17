@@ -6,6 +6,7 @@ from collections import deque
 import os
 import sys
 import tempfile
+from copy import deepcopy
 from uuid import uuid4
 from dataclasses import asdict
 from pathlib import Path
@@ -29,9 +30,15 @@ from project_paths import asset_root as get_asset_root
 from project_paths import project_root as get_project_root
 from item_rules import EQUIPMENT_SLOTS, compatible_slot, validate_item
 from tile_manager import default_tile_walkable
+from wav_assets import sound_trigger_settings, wav_path
+
+
+from trigger_library import resolve_trigger, validate_definitions, validate_control
 
 
 TRIGGER_TYPES = {
+    "enemy_placement",
+    "trigger_control",
     "teleport",
     "inventory",
     "player_stats",
@@ -40,6 +47,7 @@ TRIGGER_TYPES = {
     "area_object",
     "game_end",
     "show_message",
+    "play_sound",
     "custom",
 }
 DIRECTIONS = {
@@ -177,6 +185,11 @@ class RunnerEngine:
         self.properties = self.game.setdefault("properties", {})
         if not isinstance(self.properties, dict):
             raise RunnerError(f"{self.game_path}: properties must be an object.")
+        self.trigger_definitions = self.properties.setdefault("trigger_definitions", {})
+        try:
+            validate_definitions(self.trigger_definitions, TRIGGER_TYPES)
+        except ValueError as error:
+            raise RunnerError(str(error)) from error
         self.object_definitions = self.game.get("object_definitions", {})
         if not isinstance(self.object_definitions, dict):
             raise RunnerError(
@@ -200,6 +213,12 @@ class RunnerEngine:
                 )
 
     def _finish_game_load(self, set_start=True):
+        for area in self.areas.values():
+            for trigger in area.triggers:
+                try:
+                    resolve_trigger(trigger, self.trigger_definitions)
+                except ValueError as error:
+                    raise RunnerError(str(error)) from error
         self.area_names = self._index_area_names()
         self._load_player()
         if set_start:
@@ -574,7 +593,7 @@ class RunnerEngine:
             if not isinstance(trigger_data, dict):
                 raise RunnerError(f"{path}: trigger {index + 1} must be an object.")
             try:
-                trigger = Trigger(**trigger_data)
+                trigger = Trigger.from_dict(trigger_data)
             except (TypeError, ValueError) as error:
                 raise RunnerError(f"{path}: invalid trigger {index + 1}: {error}") from error
             if (
@@ -592,10 +611,10 @@ class RunnerEngine:
                     f"{path}: trigger {trigger.name!r} has unsupported type "
                     f"{trigger.trigger_type!r}."
                 )
-            if (not isinstance(trigger.enemy_attached, str)
-                    or type(trigger.enemy_defeated) is not bool or type(trigger.enemy_pending) is not bool
-                    or (trigger.enemy_pending and not trigger.enemy_defeated)):
-                raise RunnerError(f"{path}: trigger {trigger.name!r} has invalid enemy attachment state.")
+            if (not isinstance(trigger.definition_id, str) or type(trigger.enabled) is not bool
+                    or (trigger.remaining_charges is not None and
+                        (type(trigger.remaining_charges) is not int or trigger.remaining_charges < 0))):
+                raise RunnerError(f"{path}: invalid trigger placement state.")
             if not isinstance(trigger.name, str):
                 raise RunnerError(f"{path}: trigger {index + 1} name must be text.")
             if not isinstance(trigger.parameters, dict):
@@ -610,6 +629,7 @@ class RunnerEngine:
             tiles=tiles,
             objects=objects,
             triggers=triggers,
+            ambient_music=data.get("ambient_music", ""),
         )
         try:
             ensure_enemy_instance_ids(area)
@@ -770,6 +790,8 @@ class RunnerEngine:
                     return False
                 continue
             definition = self._item_definition(obj.type)
+            if obj.properties.get("gettable", definition["gettable"]):
+                continue
             if definition["item_type"] == "openable":
                 if not obj.properties.get("open", False):
                     return False
@@ -882,7 +904,6 @@ class RunnerEngine:
                 owner = self.current_area
                 owner.objects.remove(enemy)
                 self._drop_enemy_loot(enemy, definition)
-                self._activate_enemy_triggers(enemy)
                 if self.ended or self.current_area is not owner:
                     return
                 continue
@@ -960,7 +981,7 @@ class RunnerEngine:
         self.active_items.discard(index)
 
     def _drop_enemy_loot(self, enemy, definition):
-        loot = definition.get("loot_object", "")
+        loot = enemy.properties.get("loot_object_override", definition.get("loot_object", ""))
         if not isinstance(loot, str) or not loot or loot not in self.object_names:
             return
         if self._item_definition(loot)["gettable"]:
@@ -970,16 +991,29 @@ class RunnerEngine:
 
     def _place_collectible(self, item, x, y):
         area = self.current_area
-        identifier = f"dropped_{uuid4().hex}"
-        # Dropped items must stay walkable even when their authored definition blocks.
-        area.objects.append(GameObject(item, x, y, {"dropped_item": True, "walkable": True}))
-        area.triggers.extend([
-            Trigger(x, y, "inventory", f"{identifier}_pickup", {"add": item, "charges": 1}),
-            Trigger(x, y, "area_object", f"{identifier}_remove", {
-                "area": self.current_area_filename, "action": "remove", "object": item,
-                "x": x, "y": y, "charges": 1,
-            }),
-        ])
+        # Explicit instance pickup keeps player-dropped items recoverable even
+        # when their original scenery definition is not gettable.
+        area.objects.append(GameObject(item, x, y, {"dropped_item": True, "walkable": True, "gettable": True}))
+
+    def _pickup_gettable_objects(self, area, x, y):
+        for obj in list(area.objects):
+            if (obj.x, obj.y) != (x, y) or obj.type not in self.object_names:
+                continue
+            if "enemy_id" in obj.properties or "enemy_data" in obj.properties:
+                continue
+            definition = self._item_definition(obj.type)
+            if not obj.properties.get("gettable", definition["gettable"]):
+                continue
+            try:
+                slot = self.inventory.index("")
+            except ValueError:
+                message = "Your inventory is full. Drop something on open ground, then return to collect this item."
+                if not self.events or self.events[-1] != message:
+                    self._report(message)
+                break
+            self.inventory[slot] = obj.type
+            area.objects.remove(obj)
+            self._report(f"You pick up the {self.item_name(obj.type)}.")
 
     def drop_item(self, index):
         if self.ended or type(index) is not int or not 0 <= index < len(self.inventory) or not self.inventory[index]:
@@ -1113,7 +1147,6 @@ class RunnerEngine:
                 self.current_area.objects.remove(enemy)
                 self._report(f"{definition.get('name') or self.item_name(enemy.type).title()} falls.")
                 self._drop_enemy_loot(enemy, definition)
-                self._activate_enemy_triggers(enemy)
         else:
             self._feedback("miss", *target)
             if ranged:
@@ -1127,36 +1160,25 @@ class RunnerEngine:
 
     def _run_trigger(self, trigger, owner):
         try:
-            charges = trigger_charges(trigger.parameters)
+            resolve_trigger(trigger, self.trigger_definitions)
+            if not trigger.enabled or trigger.remaining_charges == 0:
+                return True
+            charges = (trigger.remaining_charges if trigger.remaining_charges is not None
+                       else trigger_charges(trigger.parameters))
             self._execute_trigger(trigger)
         except (RunnerError, ValueError) as error:
             self._diagnostic(f"Trigger {trigger.name!r}: {error}")
             self._report(error.player_message if isinstance(error, PlayerActionError) else "Nothing happens.")
             return False
-        trigger.enemy_pending = False
         if charges == 1:
             # Retire finite triggers before reaching 0: configured 0 means unlimited.
             owner.triggers.remove(trigger)
         elif charges > 1:
-            trigger.parameters["charges"] = charges - 1
+            if trigger.definition_id:
+                trigger.remaining_charges = charges - 1
+            else:
+                trigger.parameters["charges"] = charges - 1
         return True
-
-    def _activate_enemy_triggers(self, enemy):
-        owner = self.current_area
-        identity = enemy.properties.get("enemy_instance_id")
-        if not identity:
-            return
-        attached = [trigger for trigger in owner.triggers
-                    if trigger.enemy_attached == identity and not trigger.enemy_defeated]
-        for trigger in attached:
-            trigger.enemy_defeated = trigger.enemy_pending = True
-        for trigger in attached:
-            before = (self.current_area_filename, self.player_x, self.player_y)
-            if not self._run_trigger(trigger, owner) or self.ended:
-                return
-            if before != (self.current_area_filename, self.player_x, self.player_y):
-                self.process_entry_triggers()
-                return
 
     def process_entry_triggers(self, visited=None):
         if self.ended:
@@ -1172,16 +1194,17 @@ class RunnerEngine:
                 return
             visited.add(location)
             relocated = False
+            entry_area = self.current_area
+            entry_x, entry_y = self.player_x, self.player_y
             for trigger in list(self.current_area.triggers):
                 if (trigger.x, trigger.y) != (self.player_x, self.player_y):
-                    continue
-                if trigger.enemy_attached and not trigger.enemy_pending:
                     continue
                 old_location = (
                     self.current_area_filename, self.player_x, self.player_y
                 )
                 owner = self.current_area
                 if not self._run_trigger(trigger, owner):
+                    self._pickup_gettable_objects(entry_area, entry_x, entry_y)
                     return
                 if self.ended:
                     return
@@ -1191,6 +1214,7 @@ class RunnerEngine:
                 if new_location != old_location:
                     relocated = True
                     break
+            self._pickup_gettable_objects(entry_area, entry_x, entry_y)
             if not relocated:
                 return
         self._diagnostic("Stopped a teleport-trigger chain after 64 relocations.")
@@ -1201,14 +1225,18 @@ class RunnerEngine:
             for trigger in area.triggers:
                 params = trigger.parameters
                 try:
-                    if (trigger.enemy_attached and not trigger.enemy_defeated
-                            and not any(obj.properties.get("enemy_instance_id") == trigger.enemy_attached for obj in area.objects)):
-                        raise RunnerError("attached enemy is missing from this area.")
                     try:
                         trigger_charges(params)
                     except ValueError as error:
                         raise RunnerError(str(error)) from error
-                    if trigger.trigger_type == "teleport":
+                    if trigger.trigger_type == "enemy_placement":
+                        self._enemy_placement_settings(params, filename)
+                    elif trigger.trigger_type == "trigger_control":
+                        try:
+                            validate_control(params, self.trigger_definitions)
+                        except ValueError as error:
+                            raise RunnerError(str(error)) from error
+                    elif trigger.trigger_type == "teleport":
                         destination = self.area_filename(params.get("area", ""))
                         x, y = params.get("x"), params.get("y")
                         if type(x) is not int or type(y) is not int:
@@ -1234,12 +1262,14 @@ class RunnerEngine:
                                 f"{destination}."
                             )
                     elif trigger.trigger_type == "tile_update":
+                        destination = self.area_filename(params.get("area") or filename)
+                        target = self.areas[destination]
                         x, y = params.get("x"), params.get("y")
                         if type(x) is not int or type(y) is not int:
                             raise RunnerError("tile update coordinates must be integers.")
-                        if not (0 <= x < area.width and 0 <= y < area.height):
+                        if not (0 <= x < target.width and 0 <= y < target.height):
                             raise RunnerError(
-                                f"tile update target ({x},{y}) is outside {filename}."
+                                f"tile update target ({x},{y}) is outside {destination}."
                             )
                         if not isinstance(params.get("tile"), str) or not params["tile"]:
                             raise RunnerError("tile update name is missing.")
@@ -1269,6 +1299,12 @@ class RunnerEngine:
                             for key in ("add", "remove")
                         ):
                             raise RunnerError("inventory item names must be text.")
+                    elif trigger.trigger_type == "play_sound":
+                        try:
+                            name, _loop = sound_trigger_settings(params)
+                            wav_path(self.project_root, name)
+                        except (OSError, ValueError) as error:
+                            raise RunnerError(str(error)) from error
                     elif trigger.trigger_type == "show_message":
                         if not isinstance(params.get("message", ""), str):
                             raise RunnerError("message must be text.")
@@ -1338,6 +1374,8 @@ class RunnerEngine:
                     "enemy_id" in obj.properties
                     or "enemy_data" in obj.properties
                 )
+                if "loot_object_override" in obj.properties and obj.properties["loot_object_override"] != "":
+                    check("objects", obj.properties["loot_object_override"], f"Area {filename!r} enemy loot override")
                 enemy_data = obj.properties.get("enemy_data", {})
                 sprite = (
                     enemy_data.get("sprite", obj.type)
@@ -1354,7 +1392,25 @@ class RunnerEngine:
             trigger_charges(params)
         except ValueError as error:
             raise RunnerError(str(error)) from error
-        if trigger_type == "show_message":
+        if trigger_type == "enemy_placement":
+            self._place_or_remove_enemy(params)
+        elif trigger_type == "trigger_control":
+            try:
+                validate_control(params, self.trigger_definitions)
+            except ValueError as error:
+                raise RunnerError(str(error)) from error
+            self.trigger_definitions[params["target"]]["enabled"] = params["action"] == "enable"
+        elif trigger_type == "play_sound":
+            try:
+                name, loop = sound_trigger_settings(params)
+                wav_path(self.project_root, name)
+            except (OSError, ValueError) as error:
+                raise RunnerError(str(error)) from error
+            self.feedback.append({
+                "kind": "play_sound", "file": name, "loop": loop,
+                "area": self.current_area_filename,
+            })
+        elif trigger_type == "show_message":
             message = params.get("message", "")
             if not isinstance(message, str):
                 raise RunnerError("message must be text.")
@@ -1367,19 +1423,20 @@ class RunnerEngine:
         elif trigger_type == "inventory":
             self._apply_inventory_trigger(params)
         elif trigger_type == "tile_update":
+            destination = self.area_filename(params.get("area") or self.current_area_filename)
+            target = self.areas[destination]
             x, y = params.get("x"), params.get("y")
             if type(x) is not int or type(y) is not int:
                 raise RunnerError("tile update coordinates must be integers.")
-            if not (0 <= x < self.current_area.width and
-                    0 <= y < self.current_area.height):
-                raise RunnerError(f"tile update target ({x},{y}) is outside the area.")
+            if not (0 <= x < target.width and 0 <= y < target.height):
+                raise RunnerError(f"tile update target ({x},{y}) is outside {destination}.")
             tile_type = params.get("tile")
             if not isinstance(tile_type, str) or not tile_type:
                 raise RunnerError("tile update is missing a tile name.")
             walkable = params.get("walkable")
             if walkable is not None and type(walkable) is not bool:
                 raise RunnerError("tile update walkable must be true or false.")
-            self.current_area.tiles[y][x] = Tile(
+            target.tiles[y][x] = Tile(
                 type=tile_type, walkable_override=walkable
             )
         elif trigger_type == "area_object":
@@ -1470,6 +1527,57 @@ class RunnerEngine:
             self._report(f"You no longer carry the {self.item_name(remove_item)}.")
         if add_item:
             self._report(f"You receive the {self.item_name(add_item)}.")
+
+    def _enemy_placement_settings(self, params, origin):
+        action = params.get('action', 'place')
+        scope = params.get('scope', 'position')
+        if action not in ('place', 'remove') or scope not in ('position', 'area', 'game'):
+            raise RunnerError('Choose a valid enemy placement action and scope.')
+        if action == 'place' and scope != 'position':
+            raise RunnerError('Place requires a single target position.')
+        definitions = self.properties.get('enemies', {})
+        enemy_id = params.get('enemy_id')
+        if not isinstance(enemy_id, str) or not isinstance(definitions, dict) or enemy_id not in definitions:
+            raise RunnerError('Choose an enemy type from this game.')
+        definition = definitions[enemy_id]
+        if not isinstance(definition, dict):
+            raise RunnerError('Invalid enemy definition.')
+        if action == 'place':
+            speed = definition.get('movement_speed', 1.0)
+            health = definition.get('health', 10)
+            damage = definition.get('contact_damage', 1)
+            if (type(speed) not in (int, float) or not math.isfinite(speed) or speed < 0
+                    or type(health) is not int or health < 1 or type(damage) is not int or damage < 0
+                    or definition.get('behavior', 'stationary') not in ('stationary', 'chase')
+                    or definition.get('sprite') not in self.npc_names):
+                raise RunnerError('Invalid enemy movement, combat settings, or sprite.')
+        if scope == 'game':
+            return action, scope, enemy_id, definition, None, None, None
+        filename = self.area_filename(params.get('area') or origin)
+        area = self.areas[filename]
+        x, y = params.get('x'), params.get('y')
+        if scope == 'position' and (type(x) is not int or type(y) is not int
+                or not (0 <= x < area.width and 0 <= y < area.height)):
+            raise RunnerError('Enemy coordinates must be within the target area.')
+        return action, scope, enemy_id, definition, area, x, y
+
+    def _place_or_remove_enemy(self, params):
+        action, scope, enemy_id, definition, area, x, y = self._enemy_placement_settings(params, self.current_area_filename)
+        if action == 'place':
+            if (not self._position_is_open(area, x, y)
+                    or (area is self.current_area and (x, y) == (self.player_x, self.player_y))):
+                raise PlayerActionError('Enemy placement target is occupied or blocked.', 'There is no room for an enemy to appear there.')
+            area.objects.append(GameObject(definition['sprite'], x, y, {
+                'enemy_id': enemy_id, 'enemy_data': deepcopy(definition),
+                'enemy_instance_id': 'enemy_instance_' + uuid4().hex, 'walkable': False,
+            }))
+            return
+        targets = self.areas.values() if scope == 'game' else [area]
+        for target in targets:
+            target.objects = [obj for obj in target.objects
+                              if not (obj.properties.get('enemy_id') == enemy_id
+                                      and (scope != 'position' or (obj.x, obj.y) == (x, y)))]
+        # Removal is idempotent; it is not combat and never awards loot.
 
     def _add_area_object(self, trigger, params):
         # The legacy method name is retained for existing callers.

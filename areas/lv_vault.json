@@ -775,7 +775,8 @@
           "contact_damage": 5,
           "ranged_attack": "none"
         },
-        "walkable": false
+        "walkable": false,
+        "loot_object_override": "red_gem_object"
       }
     }
   ],
@@ -788,37 +789,7 @@
       "parameters": {
         "message": "The bell hangs soundless above you. The Hush waits in the passage. Defeat it to recover the crimson heart.",
         "charges": 1
-      },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
-    },
-    {
-      "x": 5,
-      "y": 5,
-      "trigger_type": "inventory",
-      "name": "hush_heart",
-      "parameters": {
-        "add": "red_gem_object",
-        "remove": "",
-        "charges": 1
-      },
-      "enemy_attached": "enemy_instance_ce7a2c42bd244fc1be30fde8c314190a",
-      "enemy_defeated": false,
-      "enemy_pending": false
-    },
-    {
-      "x": 5,
-      "y": 5,
-      "trigger_type": "show_message",
-      "name": "hush_falls",
-      "parameters": {
-        "message": "The Hush breaks apart like smoke. Its crimson heart remains. Bring it to the castle throne.",
-        "charges": 1
-      },
-      "enemy_attached": "enemy_instance_ce7a2c42bd244fc1be30fde8c314190a",
-      "enemy_defeated": false,
-      "enemy_pending": false
+      }
     },
     {
       "x": 5,
@@ -830,10 +801,7 @@
         "x": 11,
         "y": 3,
         "charges": 0
-      },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
+      }
     }
   ]
 }

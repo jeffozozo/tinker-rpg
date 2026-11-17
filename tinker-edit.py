@@ -13,12 +13,13 @@ from data_classes import Tile, GameObject, Trigger, Area, Game
 from tile_manager import TileManager
 from enemy_editor import EnemyEditor
 from editor_methods import EditorMethods
+from reusable_trigger_editor import ReusableTriggerEditor
 from file_manager import FileManager
 from dialog_tools import DialogTools
 from item_rules import ITEM_TYPES
 from project_paths import asset_root, project_root
 
-class TinkerEditor(EnemyEditor, EditorMethods, FileManager, DialogTools):
+class TinkerEditor(ReusableTriggerEditor, EnemyEditor, EditorMethods, FileManager, DialogTools):
     def __init__(self, root):
         self.root = root
         self.root.title("Tinker RPG Editor")
@@ -43,11 +44,15 @@ class TinkerEditor(EnemyEditor, EditorMethods, FileManager, DialogTools):
         self.trigger_colors = {
             "teleport": "#0066CC",      # Blue
             "funds": "#B8860B",
+            "trigger_control": "#708090",
+            "enemy_placement": "#B22222",
+            "named_trigger": "#406080",
             "player_stats": "#B2498A",
             "inventory": "#009900",     # Green
             "tile_update": "#FFCC00",   # Yellow
             "area_object": "#FF6600",   # Orange
             "game_end": "#9900CC",      # Purple
+            "play_sound": "#8B6F47",
             "show_message": "#00CCCC",   # Cyan
             "custom": "#CC0000"         # Red
         }
@@ -104,6 +109,10 @@ class TinkerEditor(EnemyEditor, EditorMethods, FileManager, DialogTools):
         game_menu.add_command(label="Game Properties", command=self.show_game_properties)
         game_menu.add_command(label="Reload Assets", command=self.reload_assets)
         
+        # Whole-location clipboard commands also work from the map context menu.
+        self.edit_menu = tk.Menu(menubar, tearoff=0, postcommand=self.refresh_edit_menu)
+        menubar.add_cascade(label="Edit", menu=self.edit_menu)
+
         # Area menu
         area_menu = tk.Menu(menubar, tearoff=0)
         menubar.add_cascade(label="Area", menu=area_menu)
@@ -113,7 +122,17 @@ class TinkerEditor(EnemyEditor, EditorMethods, FileManager, DialogTools):
         area_menu.add_command(label="Save Area As", command=self.save_area_as)
         area_menu.add_separator()
         area_menu.add_command(label="Add Area to Game", command=self.add_area_to_game)
+        area_menu.add_command(label="Ambient Music", command=self.show_area_music)
         
+        trigger_menu = tk.Menu(menubar, tearoff=0)
+        menubar.add_cascade(label="Triggers", menu=trigger_menu)
+        trigger_menu.add_command(label="Manage Named Triggers…", command=self.open_named_trigger_manager)
+        trigger_menu.add_command(label="Make Selected Local Trigger Named…", command=self.make_trigger_reusable)
+
+        enemy_menu = tk.Menu(menubar, tearoff=0)
+        menubar.add_cascade(label="Enemies", menu=enemy_menu)
+        enemy_menu.add_command(label="Manage Enemies…", command=self.open_enemy_manager)
+
         # Tools menu
         tools_menu = tk.Menu(menubar, tearoff=0)
         menubar.add_cascade(label="Tools", menu=tools_menu)
@@ -168,8 +187,8 @@ class TinkerEditor(EnemyEditor, EditorMethods, FileManager, DialogTools):
 
         ttk.Button(
             self.tile_frame,
-            text="Fill Empty Tiles",
-            command=self.fill_empty_tiles,
+            text="Fill",
+            command=self.fill_tiles,
         ).pack(fill=tk.X, padx=5, pady=(0, 5))
         
         # Tile canvas
@@ -243,6 +262,7 @@ class TinkerEditor(EnemyEditor, EditorMethods, FileManager, DialogTools):
         self.canvas.configure(takefocus=True)
         self.canvas.bind('<Button-1>', self.on_canvas_click)
         self.canvas.bind('<Button-3>', self.on_canvas_right_click)
+        self.canvas.bind('<Button-2>', self.on_canvas_right_click)
         self.canvas.bind('<Motion>', self.on_canvas_motion)
         self.canvas.bind('<Leave>', self.on_canvas_leave)
         
@@ -352,7 +372,7 @@ class TinkerEditor(EnemyEditor, EditorMethods, FileManager, DialogTools):
         self.object_gettable_var = tk.BooleanVar(value=False)
         ttk.Checkbutton(
             self.object_definition_frame,
-            text="Gettable (can be added to inventory)",
+            text="Gettable (pick up when walked on)",
             variable=self.object_gettable_var,
             command=self.on_object_gettable_change,
         ).pack(anchor=tk.W, padx=5, pady=3)
@@ -452,6 +472,7 @@ class TinkerEditor(EnemyEditor, EditorMethods, FileManager, DialogTools):
         self.object_definition_frame.pack_forget()
 
         self.trigger_editor_frame = ttk.LabelFrame(props_frame, text="Triggers at Cursor")
+        self.setup_reusable_triggers()
         trigger_list_frame = ttk.Frame(self.trigger_editor_frame)
         trigger_list_frame.pack(fill=tk.X, padx=5, pady=5)
         self.trigger_listbox = tk.Listbox(trigger_list_frame, height=4, exportselection=False)
@@ -486,11 +507,12 @@ class TinkerEditor(EnemyEditor, EditorMethods, FileManager, DialogTools):
         ttk.Button(
             trigger_actions, text="Delete", command=lambda: self.delete_selected_trigger(confirm=True)
         ).pack(side=tk.LEFT, padx=3)
-        ttk.Button(
+        self.trigger_save_button = ttk.Button(
             trigger_actions,
             text="Save",
             command=self.save_trigger_and_area,
-        ).pack(side=tk.RIGHT)
+        )
+        self.trigger_save_button.pack(side=tk.RIGHT)
         self.trigger_editor_frame.pack_forget()
         
         # Properties text

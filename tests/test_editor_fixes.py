@@ -395,6 +395,12 @@ class ToolboxCanvas:
     def configure(self, **_kwargs):
         pass
 
+    def canvasx(self, x):
+        return x
+
+    def canvasy(self, y):
+        return y
+
     def find_closest(self, *_args):
         return [1]
 
@@ -463,7 +469,7 @@ class EditorFixTests(unittest.TestCase):
         editor = ToolboxDisplayHarness("messages")
         editor.edit_game_message = Mock()
 
-        editor.on_tile_canvas_click(Mock(x=10, y=10))
+        editor.on_tile_canvas_click(Mock(x=10, y=20))
 
         editor.edit_game_message.assert_called_once_with("intro")
 
@@ -740,28 +746,6 @@ class EditorFixTests(unittest.TestCase):
         self.assertEqual(trigger.name, "Updated")
         self.assertEqual(trigger.parameters, {"message": "Door opened"})
 
-    def test_enemy_attachment_is_saved_separately_from_action_parameters(self):
-        trigger = Trigger(4, 5, "show_message", "reward", {"message": "old"})
-        editor = object.__new__(EditorMethods)
-        editor.selected_mode = "trigger"
-        editor._trigger_editor_trigger = trigger
-        editor._trigger_editor_type_labels = {"Show Message": "show_message"}
-        editor._trigger_editor_enemy_labels = {"Warden at (1, 2)": "warden_instance", "(none)": ""}
-        editor._trigger_editor_vars = {
-            "name": Mock(get=Mock(return_value="reward")),
-            "trigger_type": Mock(get=Mock(return_value="Show Message")),
-            "message": Mock(get=Mock(return_value="Victory")),
-            "enemy_attached": Mock(get=Mock(return_value="Warden at (1, 2)")),
-        }
-        editor._trigger_coordinate_error = Mock(return_value=None)
-        self.assertTrue(editor.save_selected_trigger(refresh=False))
-        self.assertEqual(trigger.enemy_attached, "warden_instance")
-        self.assertEqual(trigger.parameters, {"message": "Victory"})
-        self.assertEqual((trigger.x, trigger.y), (4, 5))
-        editor._trigger_editor_vars["enemy_attached"].get.return_value = "(none)"
-        self.assertTrue(editor.save_selected_trigger(refresh=False))
-        self.assertEqual(trigger.enemy_attached, "")
-
     def test_delete_removes_only_the_selected_trigger(self):
         first_trigger = Trigger(x=1, y=1, trigger_type="show_message")
         second_trigger = Trigger(x=1, y=1, trigger_type="show_message")
@@ -849,7 +833,7 @@ class EditorFixTests(unittest.TestCase):
         editor.draw_area.assert_called_once_with()
         editor.update_properties_display.assert_called_once_with()
 
-    def test_tenth_trigger_is_allowed_but_eleventh_is_rejected(self):
+    def test_trigger_placement_allows_more_than_ten_per_location(self):
         triggers = [
             Trigger(x=1, y=1, trigger_type="show_message", name=f"trigger_{index}")
             for index in range(1, 10)
@@ -867,19 +851,21 @@ class EditorFixTests(unittest.TestCase):
         editor.refresh_trigger_editor = Mock()
         editor.save_selected_trigger = Mock(return_value=True)
 
-        editor.place_tile()
-        self.assertEqual(len(editor.current_area.triggers), 10)
-
         with patch("editor_methods.messagebox.showwarning") as showwarning:
-            editor.place_tile()
+            for _ in range(21):
+                editor.place_tile()
 
-        self.assertEqual(len(editor.current_area.triggers), 10)
-        showwarning.assert_called_once()
+        self.assertEqual(len(editor.current_area.triggers), 30)
+        self.assertEqual(editor.selected_trigger_index, 29)
+        self.assertTrue(all((trigger.x, trigger.y) == (1, 1)
+                            for trigger in editor.current_area.triggers))
+        showwarning.assert_not_called()
 
-    def test_fill_empty_tiles_preserves_existing_tiles(self):
+    def test_fill_only_replaces_connected_matching_tiles(self):
         editor = object.__new__(EditorMethods)
         editor.selected_mode = "tile"
         editor.selected_tile = "grass"
+        editor.cursor_x = editor.cursor_y = 0
         editor.current_area = Area(width=3, height=2)
         editor.current_area.tiles[0][1].type = "forest"
         editor.current_area.tiles[1][2].type = "swamp"
@@ -888,13 +874,67 @@ class EditorFixTests(unittest.TestCase):
 
         filled_count = editor.fill_empty_tiles()
 
-        self.assertEqual(filled_count, 4)
+        self.assertEqual(filled_count, 3)
         self.assertEqual(
             [[tile.type for tile in row] for row in editor.current_area.tiles],
-            [["grass", "forest", "grass"], ["grass", "grass", "swamp"]],
+            [["grass", "forest", "empty"], ["grass", "grass", "swamp"]],
         )
         editor.draw_area.assert_called_once_with()
         editor.update_properties_display.assert_called_once_with()
+
+    def fill_editor(self, rows, cursor, selected="grass"):
+        editor = object.__new__(EditorMethods)
+        editor.selected_mode = "tile"
+        editor.selected_tile = selected
+        editor.cursor_x, editor.cursor_y = cursor
+        editor.current_area = Area(width=len(rows[0]), height=len(rows))
+        for y, row in enumerate(rows):
+            for x, name in enumerate(row):
+                editor.current_area.tiles[y][x].type = name
+        editor.draw_area = Mock()
+        editor.update_properties_display = Mock()
+        return editor
+
+    def test_fill_does_not_leak_through_diagonal_border(self):
+        rows = [["forest"] * 11 for _ in range(8)]
+        for y in range(7):
+            rows[y][y + 4] = "grass"  # Includes (6,2), (7,3), (8,4).
+        editor = self.fill_editor(rows, (0, 0))
+        editor.fill_tiles()
+        self.assertEqual(editor.current_area.tiles[7][0].type, "grass")
+        self.assertEqual(editor.current_area.tiles[0][10].type, "forest")
+        self.assertEqual(editor.current_area.tiles[5][10].type, "forest")
+
+    def test_fill_border_cursor_fills_all_edge_touching_regions(self):
+        editor = self.fill_editor([
+            ["forest", "grass", "swamp"],
+            ["forest", "grass", "swamp"],
+            ["forest", "grass", "swamp"],
+        ], (1, 1))
+        self.assertEqual(editor.fill_tiles(), 6)
+        self.assertTrue(all(t.type == "grass" for row in editor.current_area.tiles for t in row))
+
+    def test_fill_border_cursor_does_not_cross_other_tile_types(self):
+        editor = self.fill_editor([
+            ["swamp", "forest", "swamp"],
+            ["forest", "grass", "forest"],
+            ["swamp", "forest", "swamp"],
+        ], (1, 1))
+        self.assertEqual(editor.fill_tiles(), 4)
+        self.assertEqual(editor.current_area.tiles[0][0].type, "swamp")
+
+    def test_fill_uniform_border_is_noop(self):
+        editor = self.fill_editor([["grass"] * 3 for _ in range(3)], (1, 1))
+        self.assertEqual(editor.fill_tiles(), 0)
+        editor.draw_area.assert_not_called()
+
+    def test_fill_large_area_preserves_objects_and_triggers(self):
+        editor = self.fill_editor([["forest"] * 100 for _ in range(100)], (99, 99))
+        editor.current_area.objects = [GameObject("rock_object", 2, 2)]
+        editor.current_area.triggers = [Trigger(x=3, y=3)]
+        self.assertEqual(editor.fill_tiles(), 10000)
+        self.assertEqual(len(editor.current_area.objects), 1)
+        self.assertEqual(len(editor.current_area.triggers), 1)
 
     @patch("editor_methods.messagebox.showwarning")
     def test_fill_empty_tiles_requires_tile_mode(self, showwarning):
@@ -911,22 +951,112 @@ class EditorFixTests(unittest.TestCase):
         editor.draw_area.assert_not_called()
         editor.update_properties_display.assert_not_called()
 
-    def test_right_click_places_selected_tool_at_clicked_cell(self):
+    @patch("editor_methods.tk.Menu")
+    def test_right_click_opens_location_menu_without_placing_tile(self, menu):
         editor = Mock()
         editor._trigger_position_picker = None
+        editor._location_context_menu = None
         editor.selected_mode = "tile"
         editor.canvas.canvasx.return_value = 70
         editor.canvas.canvasy.return_value = 40
         editor.current_area = Area(width=6, height=4)
         editor.tile_size = 32
         editor.on_canvas_right_click = EditorMethods.on_canvas_right_click.__get__(editor)
-
-        result = editor.on_canvas_right_click(Mock(x=70, y=40))
-
+        result = editor.on_canvas_right_click(Mock(x=70, y=40, x_root=200, y_root=100))
         self.assertEqual((editor.cursor_x, editor.cursor_y), (2, 1))
-        editor.canvas.focus_set.assert_called_once_with()
-        editor.place_tile.assert_called_once_with()
+        editor.place_tile.assert_not_called()
+        editor.populate_location_menu.assert_called_once_with(menu.return_value)
+        menu.return_value.tk_popup.assert_called_once_with(200, 100)
         self.assertEqual(result, "break")
+
+    def clipboard_editor(self):
+        editor = object.__new__(EditorMethods)
+        editor.selected_mode = "tile"
+        editor.cursor_x = editor.cursor_y = 1
+        editor.current_area = Area(width=5, height=4)
+        editor.current_area_file = "/project/areas/source.json"
+        editor.current_area.tiles[1][1].type = "grass"
+        editor.current_area.tiles[1][1].walkable_override = False
+        editor.current_area.tiles[1][1].properties = {"nested": [1]}
+        editor.current_area.objects = [
+            GameObject("sword_object", 1, 1),
+            GameObject("orc_npc", 1, 1, {"enemy_id": "orc", "enemy_instance_id": "original", "loot_object_override": "helmet_object"}),
+            GameObject("rock_object", 4, 3),
+        ]
+        editor.current_area.triggers = [
+            Trigger(1, 1, "inventory", "pickup", {"add": "sword_object", "charges": 1}),
+            Trigger(1, 1, "area_object", "remove", {"object": "sword_object", "action": "remove", "area": "source.json", "x": 1, "y": 1}),
+            Trigger(1, 1, "funds", "enemy_reward", {"amount": 3}),
+            Trigger(4, 3, "show_message", "elsewhere", {"message": "Stay"}),
+        ]
+        editor.save_selected_trigger = Mock(return_value=True)
+        editor.refresh_trigger_editor = Mock()
+        editor.draw_area = Mock()
+        editor.update_properties_display = Mock()
+        return editor
+
+    def test_copy_paste_replaces_complete_stack_with_independent_copies(self):
+        editor = self.clipboard_editor()
+        self.assertTrue(editor.copy_location())
+        editor.current_area.objects.append(GameObject("book_object", 2, 2))
+        editor.current_area.triggers.append(Trigger(2, 2, "show_message", "replace_me"))
+        editor.cursor_x = editor.cursor_y = 2
+        self.assertTrue(editor.paste_location())
+        pasted = [o for o in editor.current_area.objects if (o.x, o.y) == (2, 2)]
+        self.assertEqual([o.type for o in pasted], ["sword_object", "orc_npc"])
+        identity = pasted[1].properties["enemy_instance_id"]
+        self.assertNotEqual(identity, "original")
+        triggers = [t for t in editor.current_area.triggers if (t.x, t.y) == (2, 2)]
+        self.assertEqual(len(triggers), 3)
+        self.assertEqual((triggers[1].parameters["x"], triggers[1].parameters["y"]), (2, 2))
+        self.assertEqual(triggers[1].parameters["area"], "")
+        tile = editor.current_area.tiles[2][2]
+        self.assertFalse(tile.walkable_override)
+        tile.properties["nested"].append(2)
+        self.assertEqual(editor.current_area.tiles[1][1].properties["nested"], [1])
+        self.assertEqual(len(editor.current_area.objects), 5)
+
+    def test_cut_moves_enemy_identity_once_then_clones_on_repeated_paste(self):
+        editor = self.clipboard_editor()
+        self.assertTrue(editor.cut_location())
+        self.assertEqual(editor.current_area.tiles[1][1].type, "empty")
+        self.assertEqual(len(editor.current_area.objects), 1)
+        editor.cursor_x = 2
+        editor.paste_location()
+        self.assertEqual(editor.current_area.objects[-1].properties["enemy_instance_id"], "original")
+        editor.cursor_x = 3
+        editor.paste_location()
+        self.assertNotEqual(editor.current_area.objects[-1].properties["enemy_instance_id"], "original")
+
+    def test_delete_clears_all_layers_but_preserves_clipboard_and_other_cells(self):
+        editor = self.clipboard_editor()
+        editor.copy_location()
+        self.assertTrue(editor.delete_location())
+        self.assertEqual(editor.current_area.tiles[1][1].type, "empty")
+        self.assertEqual([o.type for o in editor.current_area.objects], ["rock_object"])
+        self.assertEqual([t.name for t in editor.current_area.triggers], ["elsewhere"])
+        self.assertTrue(editor.paste_location())
+        self.assertEqual(editor.current_area.tiles[1][1].type, "grass")
+
+    def test_clipboard_handles_cross_area_paste_and_preserves_external_targets(self):
+        editor = self.clipboard_editor()
+        editor.current_area.triggers.append(Trigger(1, 1, "teleport", "portal", {"area": "source", "x": 1, "y": 1}))
+        editor.copy_location()
+        editor.current_area = Area(width=4, height=4)
+        editor.current_area_file = "/project/areas/destination.json"
+        editor.cursor_x = editor.cursor_y = 2
+        editor.paste_location()
+        self.assertEqual(editor.current_area.triggers[-1].parameters, {"area": "source", "x": 1, "y": 1})
+        self.assertEqual(editor.current_area.triggers[1].parameters["x"], 2)
+
+    def test_invalid_trigger_form_blocks_cut_paste_and_delete(self):
+        editor = self.clipboard_editor()
+        editor.copy_location()
+        editor.save_selected_trigger.return_value = False
+        self.assertFalse(editor.cut_location())
+        self.assertFalse(editor.delete_location())
+        self.assertFalse(editor.paste_location())
+        self.assertEqual(len(editor.current_area.objects), 3)
 
     @patch("dialog_tools.messagebox.showerror")
     @patch("dialog_tools.messagebox.showinfo")
@@ -1185,6 +1315,30 @@ class EditorFixTests(unittest.TestCase):
         editor.on_game_name_change()
 
         self.assertEqual(editor.current_game.name, "Castle Adventure")
+
+    def test_instance_loot_edit_and_type_sync_preserve_other_instances(self):
+        editor = EnemyEditorHarness()
+        editor.add_enemy_definition()
+        editor.cursor_x, editor.cursor_y = 2, 2
+        editor.place_selected_enemy()
+        editor.cursor_x = 4
+        editor.place_selected_enemy()
+        first, second = editor.current_area.objects
+        editor.cursor_x = 2
+        editor.enemy_instance_loot_var = Mock(get=Mock(return_value="Helmet"))
+        editor._instance_loot_labels = {"Use This Game": None, "Helmet": "helmet_object", "None": ""}
+        editor.refresh_enemy_instance_editor = Mock()
+        editor.save_enemy_instance_loot()
+        editor.get_enemy_definitions()[editor.selected_enemy_id]["loot_object"] = "shield_object"
+        editor.sync_enemy_instances()
+        self.assertEqual(first.properties["loot_object_override"], "helmet_object")
+        self.assertNotIn("loot_object_override", second.properties)
+        editor.enemy_instance_loot_var.get.return_value = "None"
+        editor.save_enemy_instance_loot()
+        self.assertEqual(first.properties["loot_object_override"], "")
+        editor.enemy_instance_loot_var.get.return_value = "Use This Game"
+        editor.save_enemy_instance_loot()
+        self.assertNotIn("loot_object_override", first.properties)
 
     def test_enemy_definitions_have_defaults_and_can_place_multiple_instances(self):
         editor = EnemyEditorHarness()
@@ -2199,6 +2353,40 @@ class EditorFixTests(unittest.TestCase):
             editor.rendered_text.index("Trigger type:"),
             editor.rendered_text.index("Position:"),
         )
+
+    def test_scrolled_palette_click_ignores_offscreen_selection(self):
+        for mode in ("tile", "object", "trigger"):
+            with self.subTest(mode=mode):
+                editor = object.__new__(EditorMethods)
+                editor.selected_mode = mode
+                editor.selected_tile = "old_offscreen_selection"
+                editor.tile_canvas = Mock()
+                editor.tile_canvas.canvasx.return_value = 15
+                editor.tile_canvas.canvasy.return_value = 95
+                editor.tile_manager = Mock()
+                editor.tile_manager.get_tile_names.return_value = [f"tile{i}" for i in range(20)]
+                editor.tile_manager.get_object_names.return_value = [f"object{i}" for i in range(20)]
+                editor.update_tile_display = Mock()
+                editor.update_properties_display = Mock()
+                editor.load_object_definition_editor = Mock()
+                editor.on_tile_canvas_click(Mock(x=15, y=15))
+                self.assertEqual(editor.selected_tile, {"tile": "tile10", "object": "object2", "trigger": "player_stats"}[mode])
+                editor.tile_canvas.find_closest.assert_not_called()
+                editor.update_tile_display.assert_called_once()
+
+    def test_palette_gap_click_does_not_choose_another_tile(self):
+        editor = object.__new__(EditorMethods)
+        editor.selected_mode = "tile"
+        editor.selected_tile = "original"
+        editor.tile_canvas = Mock()
+        editor.tile_canvas.canvasx.return_value = 46
+        editor.tile_canvas.canvasy.return_value = 15
+        editor.tile_manager = Mock()
+        editor.tile_manager.get_tile_names.return_value = ["grass", "forest"]
+        editor.update_tile_display = Mock()
+        editor.on_tile_canvas_click(Mock(x=46, y=15))
+        self.assertEqual(editor.selected_tile, "original")
+        editor.update_tile_display.assert_not_called()
 
     def test_clicking_toolbox_trigger_refreshes_details(self):
         editor = Mock()

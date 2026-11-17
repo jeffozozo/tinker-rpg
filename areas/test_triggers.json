@@ -1,0 +1,1568 @@
+{
+  "name": "test_triggers",
+  "width": 20,
+  "height": 15,
+  "tiles": [
+    [
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "empty",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ]
+  ],
+  "objects": [],
+  "triggers": [
+    {
+      "x": 3,
+      "y": 3,
+      "trigger_type": "player_stats",
+      "name": "trigger_negate_health",
+      "parameters": {
+        "stat": "health",
+        "amount": -5,
+        "charges": 0
+      },
+      "definition_id": "trigger_9443bbf5c6564e19aae91650c1bcadfc",
+      "enabled": true,
+      "remaining_charges": null
+    },
+    {
+      "x": 3,
+      "y": 4,
+      "trigger_type": "player_stats",
+      "name": "trigger_add_health",
+      "parameters": {
+        "stat": "health",
+        "amount": 5,
+        "charges": 0
+      },
+      "definition_id": "trigger_418f266a4ffd4d5497c5274a1008f07b",
+      "enabled": true,
+      "remaining_charges": null
+    }
+  ]
+}

@@ -12,7 +12,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-ASSET_DIRECTORIES = ("tiles", "npcs", "objects", "triggers", "sounds")
+ASSET_DIRECTORIES = ("tiles", "npcs", "objects", "triggers", "sounds", "music")
 APPLICATIONS = (
     ("Tinker Editor", "tinker-edit.py"),
     ("Tinker Runner", "tinker-runner.py"),

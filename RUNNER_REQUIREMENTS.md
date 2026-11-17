@@ -227,6 +227,59 @@ invalid actions. The `show_dialog` legacy alias should behave as `show_message`.
   unsupported with a clear runtime message until a deliberately constrained and
   safe scripting model is designed.
 
+### Reusable named triggers and Trigger Control
+
+- A reusable definition belongs to this game and has a unique, case-insensitive
+  name. Multiple map placements refer to the same definition. Editing its type,
+  parameters, name, or initial enabled state affects every placement, including
+  those in other areas. Existing local triggers remain supported.
+- **Triggers → Manage Named Triggers…** opens a separate game-scoped manager
+  with New, Duplicate, Rename, Delete, and Save Named Trigger. Its form edits
+  definitions, not placements. It lists where a definition is used. Deleting an
+  in-use definition is blocked until its placements and control references are
+  removed. Draft changes prompt Save/Discard/Cancel on switching or closing.
+- The left trigger palette includes **Named Trigger**. Select a definition in
+  its dropdown, then press Space or Add to place it at the cursor. The area
+  pane shows only a read-only summary and **Edit Named Trigger…**, alongside
+  placement ordering/removal controls. Other palette choices create local
+  triggers with editable fields. The Triggers menu can convert a selected local
+  trigger to a named definition.
+- **Save Named Trigger** applies edits to the current game in memory; use
+  **Save All** to persist both game definitions and area placements.
+- Each definition has **Initially enabled**. Disabled triggers are skipped
+  without spending charges or stopping the rest of the stack.
+- **Trigger Control** selects a reusable trigger by name and enables or disables
+  every placement in the game. Stable internal IDs preserve references on rename.
+  Controls are ordinary triggers and may themselves be reused.
+- Charges remain per placement. Disabling and re-enabling never reset charges;
+  an exhausted placement stays retired. Definition enabled states and placement
+  charges persist through saved runs.
+- Deleting a placement does not delete the definition or its other placements.
+  Copy/paste keeps reusable links; copying to another game brings the required
+  definitions and control targets along, without overwriting existing definitions.
+- Fountain example: place `fountain_poison` (-5 health, initially enabled) and
+  `fountain_healing` (+5 health, initially disabled) at each fountain. At the
+  offering location, place an Inventory removal followed by two Trigger Control
+  actions: disable poison, enable healing. A missing item stops the sequence.
+
+### Enemy Placement trigger
+
+- **Enemy Placement** is available as a local trigger or a named definition.
+  Choose an enemy type from this game and Place or Remove.
+- Place uses **At coordinates**, with area and X/Y. Blank area means the area
+  containing this placement. It creates a new, uniquely identified instance
+  using current type stats, behavior, and loot. Blocked/occupied targets and the
+  player's tile fail without spending charges or running later stacked actions.
+- Remove supports **At coordinates**, **All in this area**, and **All in this
+  game**. Only instances of the selected enemy type are affected. Coordinates
+  are ignored for whole-area removal; area/coordinates are ignored for game-wide
+  removal. Other enemy types and decorative NPCs are preserved.
+- Removal is not defeat: no loot or combat reward is produced. Removing an
+  already absent enemy is a successful no-op. Normal charge and enabled rules
+  apply. Spawned instances and removals persist in saved runs.
+- Enemy types referenced by these triggers cannot be deleted in the manager
+  until their trigger references and placements are removed.
+
 ### Choice, conditions, and action sequences
 
 Current triggers do not provide yes/no choices, conditional branches, or an
@@ -270,6 +323,19 @@ avoids a race where one trigger charges but another fails to grant the item.
 
 ## 8. Inventory, items, and player stats
 
+- **Gettable** means automatic walk-on pickup: move the object into the first
+  free inventory slot and remove that map instance as one operation. No pickup
+  triggers are required. Full inventory leaves the item on the ground. Pickup
+  adds no extra turn, handles stacked items in placement order, and persists in
+  saved games. Gettable objects do not block walking on otherwise walkable ground.
+- Set **Gettable** off for manual interactions using Inventory and Area Object
+  triggers. Existing complete pickup pairs run before automatic pickup, so they
+  continue to grant exactly one item. Unrelated failed triggers do not prevent
+  automatic pickup; use Gettable off when trigger conditions must govern it.
+- Enemy loot and player-dropped items use the same pickup behavior, without
+  generating extra triggers. Player-dropped items remain recoverable even when
+  their original scenery definition was not gettable.
+
 - Inventory is game state, not just a list of decorative objects. In the first
   runner, each of the eight slots holds one object ID or is empty; duplicate IDs
   occupy separate slots. An inventory trigger removes the first matching item
@@ -292,12 +358,32 @@ avoids a race where one trigger charges but another fails to grant the item.
 
 ## 9. Enemies and combat
 
+- **Enemies → Manage Enemies…** opens the separate, game-scoped enemy-type
+  manager. Create, duplicate, rename, delete, or edit health, sprite, movement,
+  contact damage, and type loot there. It lists where each type is placed.
+  In-use types cannot be deleted. Save/Discard/Cancel protects drafts when
+  selecting another type or closing; invalid values do not change the type.
+- The left Enemies palette selects existing types for Space placement and has
+  a Manage Enemies shortcut. The area editor's right pane shows a read-only
+  type summary with **Edit Enemy Type…**, plus **This instance** loot settings.
+  It does not edit the game-wide enemy definition.
+- Saving type changes synchronizes placed copies while preserving instance
+  loot overrides. Save All persists the game and current area. Enemy types are
+  scoped to this game, not a library shared across games.
+
+
 - Each enemy type may select one **Loot object**, or **None**, in the enemy
-  editor. Every defeated instance leaves that object at its actual death tile.
-- Collectible loot uses walk-on pickup triggers and remains on the map when
-  inventory is full. Other loot uses the object's normal properties. Loot and
-  pending pickup triggers persist in saved runs. Existing enemy-attached
-  triggers continue to work independently of this type-level loot setting.
+  editor's **This game** section. In Enemy mode, moving the cursor onto a placed
+  enemy shows its type and a **This instance** section. Instance loot defaults
+  to **Use This Game**, which follows later type edits. A specific object overrides
+  the game-wide choice; **None** explicitly suppresses loot for that instance.
+  **Use This Game** removes the override. Overrides save with the area and survive
+  type synchronization and saved runs. Loot appears at the actual death tile.
+- Gettable loot is picked up automatically on entry and remains on the map when
+  inventory is full. Other loot uses the object's normal properties. Uncollected
+  loot persists in saved runs. Triggers activate by walking onto their
+  map locations; enemy-trigger attachments are not supported. Enemy defeat only
+  produces configured loot.
 
 The editor's initial enemy definitions/instances provide a display name, live
 sprite, health, movement speed, and ranged-attack type. Defeated enemies

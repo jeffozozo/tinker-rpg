@@ -474,8 +474,8 @@
         "properties": {}
       },
       {
-        "type": "down_stairs",
-        "walkable_override": true,
+        "type": "cobblestone_floor",
+        "walkable_override": null,
         "properties": {}
       },
       {
@@ -588,6 +588,12 @@
       "x": 5,
       "y": 11,
       "properties": {}
+    },
+    {
+      "type": "king_npc",
+      "x": 3,
+      "y": 3,
+      "properties": {}
     }
   ],
   "triggers": [
@@ -602,9 +608,9 @@
         "y": 2,
         "charges": 0
       },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
+      "definition_id": "",
+      "enabled": true,
+      "remaining_charges": null
     },
     {
       "x": 4,
@@ -617,9 +623,9 @@
         "y": 2,
         "charges": 0
       },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
+      "definition_id": "",
+      "enabled": true,
+      "remaining_charges": null
     },
     {
       "x": 3,
@@ -632,104 +638,80 @@
         "y": 7,
         "charges": 0
       },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
+      "definition_id": "",
+      "enabled": true,
+      "remaining_charges": null
     },
     {
       "x": 5,
       "y": 12,
+      "trigger_type": "show_message",
+      "name": "trigger_1",
+      "parameters": {
+        "message": "You search the wall and find a secret opening!",
+        "charges": 0
+      },
+      "definition_id": "",
+      "enabled": true,
+      "remaining_charges": null
+    },
+    {
+      "x": 5,
+      "y": 12,
+      "trigger_type": "tile_update",
+      "name": "trigger_2",
+      "parameters": {
+        "x": 6,
+        "y": 12,
+        "tile": "down_stairs",
+        "walkable": true,
+        "charges": 0
+      },
+      "definition_id": "",
+      "enabled": true,
+      "remaining_charges": null
+    },
+    {
+      "x": 6,
+      "y": 12,
       "trigger_type": "teleport",
-      "name": "dungeon_stairs",
+      "name": "trigger_3",
       "parameters": {
         "area": "a_castle_dungeon",
         "x": 3,
         "y": 8,
         "charges": 0
       },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
+      "definition_id": "",
+      "enabled": true,
+      "remaining_charges": null
     },
     {
       "x": 3,
-      "y": 3,
+      "y": 4,
       "trigger_type": "show_message",
-      "name": "throne_history",
+      "name": "trigger_4",
       "parameters": {
-        "message": "An empty throne waits for its crimson crown. The keeper\u2019s journal records how to find it. The east stairs lead beneath the castle.",
-        "charges": 1
+        "message": "The King says: \"We are in dire need of help. The pure fountains have been poisoned! Seek out the crone in the mountains! She will know what to do!\"",
+        "charges": 0
       },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
+      "definition_id": "trigger_76d75f35001c4311b92969b1ff42b25d",
+      "enabled": true,
+      "remaining_charges": null
     },
     {
       "x": 3,
-      "y": 2,
-      "trigger_type": "inventory",
-      "name": "return_crimson_crown",
-      "parameters": {
-        "remove": "red_gem_object",
-        "charges": 1
-      },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
-    },
-    {
-      "x": 3,
-      "y": 2,
-      "trigger_type": "game_end",
-      "name": "castle_restored",
-      "parameters": {
-        "win_lose": "win",
-        "message": "You lay the crimson crown upon the throne. Light returns to the castle windows, and the gargoyle lowers its stone wings in salute. Your quest is complete.\n\nTHE END",
-        "charges": 1
-      },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
-    },
-    {
-      "x": 2,
-      "y": 10,
+      "y": 4,
       "trigger_type": "show_message",
-      "name": "donation_notice",
+      "name": "trigger_king_thanks",
       "parameters": {
-        "message": "The candles beside the west wall mark an optional $5 offering. Step toward them to support the castle\u2019s restoration.",
-        "charges": 1
+        "message": "Thank you! You have saved us! Go make sure the rest of the fountains are fixed!",
+        "charges": 0
       },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
-    },
-    {
-      "x": 1,
-      "y": 10,
-      "trigger_type": "funds",
-      "name": "restoration_offering",
-      "parameters": {
-        "action": "remove",
-        "amount": 5,
-        "charges": 1
-      },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
-    },
-    {
-      "x": 1,
-      "y": 10,
-      "trigger_type": "show_message",
-      "name": "offering_thanks",
-      "parameters": {
-        "message": "Your gift will keep the hall\u2019s candles burning.",
-        "charges": 1
-      },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
+      "definition_id": "trigger_3bfc05d4d0c04535be1362449a162c11",
+      "enabled": false,
+      "remaining_charges": null
     }
-  ]
+  ],
+  "ambient_music": "great_hall_harp.wav"
 }

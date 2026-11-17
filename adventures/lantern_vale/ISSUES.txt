@@ -1,3 +1,8 @@
+UPDATE — November 16, 2026: Enemy-trigger attachments have been removed.
+Enemy rewards now drop as ordinary loot at the enemy’s death position. Walk
+onto that loot to collect it. The castle armory purse is a separate walk-on
+pickup. References to attached/pending defeat rewards below are historical.
+
 BELL OF DAWN — NEW PLAYTEST ISSUES
 November 13, 2026
 

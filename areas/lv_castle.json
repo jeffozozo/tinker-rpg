@@ -1060,10 +1060,7 @@
       "parameters": {
         "message": "Keeper: If you can spare $5, step onto the silver paving beside me to help restore the castle. This offering is optional. The green seal opens the inner gate.",
         "charges": 1
-      },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
+      }
     },
     {
       "x": 5,
@@ -1074,10 +1071,7 @@
         "action": "remove",
         "amount": 5,
         "charges": 1
-      },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
+      }
     },
     {
       "x": 5,
@@ -1087,10 +1081,7 @@
       "parameters": {
         "message": "The keeper bows. Your gift will help repair the bell tower.",
         "charges": 1
-      },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
+      }
     },
     {
       "x": 7,
@@ -1101,10 +1092,7 @@
         "add": "",
         "remove": "green_gem_object",
         "charges": 1
-      },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
+      }
     },
     {
       "x": 7,
@@ -1117,10 +1105,7 @@
         "tile": "gray_brick_open_door",
         "walkable": true,
         "charges": 1
-      },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
+      }
     },
     {
       "x": 7,
@@ -1130,10 +1115,7 @@
       "parameters": {
         "message": "Green light runs through the stone. The inner gate opens. The throne stands in the northwest hall; the belfry stairs are northeast.",
         "charges": 1
-      },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
+      }
     },
     {
       "x": 3,
@@ -1144,10 +1126,7 @@
         "add": "",
         "remove": "red_gem_object",
         "charges": 1
-      },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
+      }
     },
     {
       "x": 3,
@@ -1161,10 +1140,7 @@
         "x": 3,
         "y": 3,
         "charges": 1
-      },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
+      }
     },
     {
       "x": 3,
@@ -1178,10 +1154,7 @@
         "x": 3,
         "y": 3,
         "charges": 1
-      },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
+      }
     },
     {
       "x": 3,
@@ -1192,10 +1165,7 @@
         "win_lose": "win",
         "message": "You set the crimson heart beneath the throne. The spring clears. Above the castle, the dawn bell rings for the first time in a hundred mornings. Both villages answer with lanterns.\n\nTHE END \u2014 The Bell of Dawn",
         "charges": 1
-      },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
+      }
     },
     {
       "x": 3,
@@ -1209,10 +1179,7 @@
         "x": 4,
         "y": 5,
         "charges": 1
-      },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
+      }
     },
     {
       "x": 3,
@@ -1222,10 +1189,7 @@
       "parameters": {
         "message": "A hidden drawer opens. A restoration gem rolls onto the paving.",
         "charges": 1
-      },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
+      }
     },
     {
       "x": 4,
@@ -1236,10 +1200,7 @@
         "add": "blue_gem_object",
         "remove": "",
         "charges": 1
-      },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
+      }
     },
     {
       "x": 4,
@@ -1253,10 +1214,7 @@
         "x": 4,
         "y": 5,
         "charges": 1
-      },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
+      }
     },
     {
       "x": 11,
@@ -1268,10 +1226,7 @@
         "x": 5,
         "y": 10,
         "charges": 0
-      },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
+      }
     },
     {
       "x": 7,
@@ -1283,10 +1238,7 @@
         "x": 12,
         "y": 3,
         "charges": 0
-      },
-      "enemy_attached": "",
-      "enemy_defeated": false,
-      "enemy_pending": false
+      }
     }
   ]
 }
