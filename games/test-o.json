@@ -1,0 +1,123 @@
+{
+  "name": "test-o",
+  "areas": [
+    "main_map_c.json",
+    "town.json"
+  ],
+  "used_tiles": [
+    "castle",
+    "forest",
+    "cobblestone_floor",
+    "lake_center",
+    "mountains",
+    "town",
+    "brown_brick_wall",
+    "grass"
+  ],
+  "used_npcs": [
+    "gargoyle_npc",
+    "black_blob_npc",
+    "man_npc",
+    "spider_npc",
+    "orc_npc",
+    "skeleton_npc",
+    "dragon_npc"
+  ],
+  "used_objects": [
+    "fountain_object"
+  ],
+  "used_triggers": [
+    "trigger"
+  ],
+  "properties": {
+    "enemies": {
+      "enemy_39ae8980e084447e811cce4cd888db66": {
+        "id": "enemy_39ae8980e084447e811cce4cd888db66",
+        "name": "Gargoyle",
+        "sprite": "gargoyle_npc",
+        "health": 24,
+        "movement_speed": 0.5,
+        "ranged_attack": "none",
+        "starter_key": "example:gargoyle"
+      },
+      "enemy_9291973c974e4e088cbdcb876c0ad3eb": {
+        "id": "enemy_9291973c974e4e088cbdcb876c0ad3eb",
+        "name": "Orc",
+        "sprite": "orc_npc",
+        "health": 16,
+        "movement_speed": 1.0,
+        "ranged_attack": "none",
+        "starter_key": "example:orc"
+      },
+      "enemy_0bc21d98f2ed47c4844bb6a27d0c3b9a": {
+        "id": "enemy_0bc21d98f2ed47c4844bb6a27d0c3b9a",
+        "name": "Dragon",
+        "sprite": "dragon_npc",
+        "health": 50,
+        "movement_speed": 0.5,
+        "ranged_attack": "flame",
+        "starter_key": "example:dragon"
+      },
+      "enemy_50433bf5d9ed47cba27d77e3e7a2750b": {
+        "id": "enemy_50433bf5d9ed47cba27d77e3e7a2750b",
+        "name": "Spider",
+        "sprite": "spider_npc",
+        "health": 8,
+        "movement_speed": 1.5,
+        "ranged_attack": "none",
+        "starter_key": "example:spider",
+        "behavior": "chase",
+        "contact_damage": 1,
+        "loot_object": ""
+      },
+      "enemy_506e37cfe5044dafb6a508a094ee2ea8": {
+        "id": "enemy_506e37cfe5044dafb6a508a094ee2ea8",
+        "name": "Skeleton",
+        "sprite": "skeleton_npc",
+        "health": 12,
+        "movement_speed": 1.0,
+        "ranged_attack": "none",
+        "starter_key": "example:skeleton"
+      },
+      "enemy_df9b44a42d6b46c488df583867cc4953": {
+        "id": "enemy_df9b44a42d6b46c488df583867cc4953",
+        "name": "Black Blob",
+        "sprite": "black_blob_npc",
+        "health": 10,
+        "movement_speed": 0.75,
+        "ranged_attack": "none",
+        "starter_key": "example:black_blob"
+      }
+    },
+    "player": {
+      "sprite": "king_npc",
+      "starting_inventory": [
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        ""
+      ],
+      "stats": {
+        "starting_health": 5,
+        "max_health": 20,
+        "starting_energy": 0,
+        "max_energy": 0,
+        "strength": 1,
+        "intelligence": 1,
+        "gold": 0
+      }
+    },
+    "start_area": "main_map_c.json",
+    "start_x": 6,
+    "start_y": 13,
+    "trigger_definitions": {}
+  },
+  "object_definitions": {},
+  "intro_message": "",
+  "instructions_message": "",
+  "game_end_message": ""
+}

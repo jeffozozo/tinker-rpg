@@ -1,0 +1,1263 @@
+{
+  "name": "town",
+  "width": 18,
+  "height": 13,
+  "tiles": [
+    [
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "forest",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "grass",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ]
+  ],
+  "objects": [
+    {
+      "type": "fountain_object",
+      "x": 8,
+      "y": 6,
+      "properties": {}
+    },
+    {
+      "type": "man_npc",
+      "x": 8,
+      "y": 7,
+      "properties": {}
+    },
+    {
+      "type": "spider_npc",
+      "x": 16,
+      "y": 2,
+      "properties": {}
+    },
+    {
+      "type": "spider_npc",
+      "x": 16,
+      "y": 3,
+      "properties": {
+        "enemy_id": "enemy_50433bf5d9ed47cba27d77e3e7a2750b",
+        "enemy_instance_id": "enemy_instance_5f3a43461be04910808899f19c64a4fc",
+        "enemy_data": {
+          "id": "enemy_50433bf5d9ed47cba27d77e3e7a2750b",
+          "name": "Spider",
+          "sprite": "spider_npc",
+          "health": 8,
+          "movement_speed": 1.5,
+          "ranged_attack": "none",
+          "starter_key": "example:spider",
+          "behavior": "chase",
+          "contact_damage": 1,
+          "loot_object": ""
+        },
+        "walkable": false
+      }
+    }
+  ],
+  "triggers": [
+    {
+      "x": 4,
+      "y": 0,
+      "trigger_type": "teleport",
+      "name": "trigger_1",
+      "parameters": {
+        "area": "main_map_c",
+        "x": 8,
+        "y": 8,
+        "charges": 0
+      },
+      "definition_id": "",
+      "enabled": true,
+      "remaining_charges": null
+    }
+  ],
+  "ambient_music": ""
+}

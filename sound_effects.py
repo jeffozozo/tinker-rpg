@@ -7,7 +7,8 @@ import shutil
 import subprocess
 import sys
 
-from project_paths import asset_root
+from project_paths import asset_root, project_root
+from wav_assets import read_sound_defaults, wav_path
 
 SOUND_NAMES = ("step", "hit", "miss", "hurt", "step_hurt")
 
@@ -143,15 +144,40 @@ class _LinuxSounds:
 
 
 class SoundEffects:
-    def __init__(self):
+    def __init__(self, root=None, report=None):
         self.enabled = True
         self.backend = None
         paths = {name: asset_root() / "sounds" / f"{name}.wav" for name in SOUND_NAMES}
+        root = root if root is not None else project_root()
+        report = report if report is not None else lambda message: None
+        try:
+            settings = read_sound_defaults(root)
+        except (OSError, ValueError) as error:
+            report(f"Sound defaults: {error}")
+            settings = {}
+        self.attack_sound = ""
+        overrides = {}
+        for cue in (*SOUND_NAMES, "attack"):
+            if cue in settings:
+                try:
+                    overrides[cue] = wav_path(root, settings[cue])
+                except (OSError, ValueError) as error:
+                    report(f"Sound default for {cue}: {error}")
+        if "attack" in overrides:
+            self.attack_sound = settings["attack"]
+            del overrides["attack"]
+        if "step_hurt" not in overrides and ("step" in overrides or "hurt" in overrides):
+            overrides["step_hurt"] = overrides.get("hurt", paths["hurt"])
         backend = _MacSounds if sys.platform == "darwin" else _WindowsSounds if sys.platform == "win32" else _LinuxSounds
         try:
-            self.backend = backend(paths)
-        except (OSError, RuntimeError):
-            pass
+            self.backend = backend({**paths, **overrides})
+        except (OSError, RuntimeError) as error:
+            if overrides:
+                report(f"Could not load custom sound defaults: {error}")
+                try:
+                    self.backend = backend(paths)
+                except (OSError, RuntimeError):
+                    pass
         atexit.register(self.close)
 
     def play(self, name):

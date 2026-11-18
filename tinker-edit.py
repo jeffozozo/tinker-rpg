@@ -18,8 +18,9 @@ from file_manager import FileManager
 from dialog_tools import DialogTools
 from item_rules import ITEM_TYPES
 from project_paths import asset_root, project_root
+from sound_editor import SoundEditor
 
-class TinkerEditor(ReusableTriggerEditor, EnemyEditor, EditorMethods, FileManager, DialogTools):
+class TinkerEditor(SoundEditor, ReusableTriggerEditor, EnemyEditor, EditorMethods, FileManager, DialogTools):
     def __init__(self, root):
         self.root = root
         self.root.title("Tinker RPG Editor")
@@ -122,7 +123,9 @@ class TinkerEditor(ReusableTriggerEditor, EnemyEditor, EditorMethods, FileManage
         area_menu.add_command(label="Save Area As", command=self.save_area_as)
         area_menu.add_separator()
         area_menu.add_command(label="Add Area to Game", command=self.add_area_to_game)
-        area_menu.add_command(label="Ambient Music", command=self.show_area_music)
+        sounds_menu = tk.Menu(menubar, tearoff=0)
+        menubar.add_cascade(label="Sounds", menu=sounds_menu)
+        sounds_menu.add_command(label="Manage Sounds & Music…", command=self.open_sound_editor)
         
         trigger_menu = tk.Menu(menubar, tearoff=0)
         menubar.add_cascade(label="Triggers", menu=trigger_menu)
@@ -299,6 +302,8 @@ class TinkerEditor(ReusableTriggerEditor, EnemyEditor, EditorMethods, FileManage
         self.game_areas_listbox.bind(
             "<<ListboxSelect>>", self.load_selected_game_area
         )
+
+        self.setup_area_ambience(props_frame)
 
         self.setup_enemy_properties(props_frame)
 

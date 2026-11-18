@@ -4,7 +4,7 @@ Updated editor_methods.py with enhanced trigger system
 """
 
 import tkinter as tk
-from tkinter import ttk, filedialog, messagebox
+from tkinter import ttk, messagebox
 import json
 import os
 from dataclasses import asdict
@@ -14,6 +14,7 @@ from uuid import uuid4
 from data_classes import MAX_PLAYER_INVENTORY_SLOTS, PLAYER_STAT_CHANGES, trigger_charges, funds_delta, ensure_enemy_instance_ids
 from project_paths import project_root
 from trigger_library import definitions_for, resolve_trigger, validate_control
+from wav_assets import sound_library, wav_path
 
 class EditorMethods:
     """Mixin class containing all editor interaction methods"""
@@ -1128,54 +1129,6 @@ class EditorMethods:
 
         ttk.Button(button_frame, text="Save", command=save_message).pack(side=tk.RIGHT, padx=(5, 0))
     
-    def show_area_music(self):
-        from pathlib import Path
-        import wave
-        from project_paths import asset_root
-
-        area = self.current_area
-        dialog = tk.Toplevel(self.root)
-        dialog.title("Area Ambient Music")
-        dialog.transient(self.root)
-        dialog.grab_set()
-        frame = ttk.Frame(dialog, padding=12)
-        frame.pack(fill=tk.BOTH, expand=True)
-        ttk.Label(frame, text=f"Music for {area.name}").pack(anchor=tk.W)
-        library = Path(project_root()) / "music"
-        tracks = sorted({path.name for directory in (library, asset_root() / "music")
-                         for path in directory.glob("*")
-                         if path.is_file() and path.suffix.lower() == ".wav"}
-                        | ({area.ambient_music} if area.ambient_music else set()))
-        selected = tk.StringVar(value=area.ambient_music or "None")
-        selector = ttk.Combobox(frame, textvariable=selected,
-                                values=["None", *tracks], state="readonly", width=45)
-        selector.pack(fill=tk.X, pady=8)
-
-        def import_track():
-            filename = filedialog.askopenfilename(
-                parent=dialog, title="Import Ambient Music",
-                filetypes=[("WAV audio", "*.wav")],
-            )
-            if not filename:
-                return
-            try:
-                from wav_assets import import_wav
-                name = import_wav(filename, library)
-                if name not in tracks:
-                    tracks.append(name)
-                selector.configure(values=["None", *sorted(tracks)])
-                selected.set(name)
-            except (OSError, ValueError, wave.Error, EOFError) as error:
-                messagebox.showerror("Import Music", str(error), parent=dialog)
-
-        def save():
-            area.ambient_music = "" if selected.get() == "None" else selected.get()
-            dialog.destroy()
-
-        ttk.Button(frame, text="Import WAV", command=import_track).pack(side=tk.LEFT)
-        ttk.Button(frame, text="Save", command=save).pack(side=tk.RIGHT)
-        ttk.Button(frame, text="Cancel", command=dialog.destroy).pack(side=tk.RIGHT, padx=6)
-
     def on_area_name_change(self, *_args):
         self.current_area.name = self.area_name_var.get()
 
@@ -1216,6 +1169,8 @@ class EditorMethods:
         return False
     
     def draw_area(self):
+        if hasattr(self, "area_ambience_selector"):
+            self.sync_area_ambience()
         self.canvas.delete("all")
         
         for y in range(self.current_area.height):
@@ -1801,14 +1756,17 @@ class EditorMethods:
             self._trigger_editor_vars[key] = variable
             return variable
 
-        def add_combo(key, label, values, value="", state="readonly", label_width=10):
+        def add_combo(key, label, values, value="", state="readonly", label_width=10, choices=None):
             row = ttk.Frame(form)
             row.pack(fill=tk.X, pady=2)
             ttk.Label(row, text=label, width=label_width).pack(side=tk.LEFT)
             variable = tk.StringVar(value=value)
-            ttk.Combobox(
+            selector = ttk.Combobox(
                 row, textvariable=variable, values=values, state=state, width=16
-            ).pack(side=tk.LEFT, fill=tk.X, expand=True)
+            )
+            if choices is not None:
+                selector.configure(postcommand=lambda: selector.configure(values=choices()))
+            selector.pack(side=tk.LEFT, fill=tk.X, expand=True)
             self._trigger_editor_vars[key] = variable
             return variable
 
@@ -1973,67 +1931,14 @@ class EditorMethods:
             add_combo("win_lose", "Result:", ("win", "lose"), params.get("win_lose", "win"))
             add_text("message", "Message:", params.get("message", ""), height=3)
         elif trigger_type == "play_sound":
-            from pathlib import Path
-            import wave
-            from project_paths import asset_root
-            from wav_assets import import_wav, wav_path
-            from ambient_music import AmbientMusic
+            selected = params.get("file", "")
+            def library_choices():
+                return sound_library(project_root())
 
-            library = Path(project_root()) / "sounds"
-            files = sorted({path.name for directory in (library, asset_root() / "sounds")
-                            for path in directory.glob("*")
-                            if path.is_file() and path.suffix.lower() == ".wav"}
-                           | ({params["file"]} if params.get("file") else set()))
-            row = ttk.Frame(form)
-            row.pack(fill=tk.X, pady=2)
-            ttk.Label(row, text="WAV file:", width=10).pack(side=tk.LEFT)
-            file_var = tk.StringVar(value=params.get("file", ""))
-            self._trigger_editor_vars["file"] = file_var
-            selector = ttk.Combobox(row, textvariable=file_var, values=files, state="readonly", width=16)
-            selector.pack(side=tk.LEFT, fill=tk.X, expand=True)
-
-            def import_sound():
-                filename = filedialog.askopenfilename(
-                    parent=form.winfo_toplevel(), title="Import Trigger Sound",
-                    filetypes=[("WAV audio", "*.wav")],
-                )
-                if not filename:
-                    return
-                try:
-                    name = import_wav(filename, library)
-                    if name not in files:
-                        files.append(name)
-                    selector.configure(values=sorted(files))
-                    file_var.set(name)
-                except (OSError, ValueError, wave.Error, EOFError) as error:
-                    messagebox.showerror("Import Sound", str(error), parent=form.winfo_toplevel())
-
+            add_combo("file", "Sound:", library_choices(), selected, choices=library_choices)
             loop_var = tk.BooleanVar(value=params.get("loop", False))
             self._trigger_editor_vars["loop"] = loop_var
-            controls = ttk.Frame(form)
-            controls.pack(fill=tk.X, pady=3)
-            preview = AmbientMusic(
-                form.winfo_toplevel(),
-                lambda error: messagebox.showerror("Play Sound", error, parent=form.winfo_toplevel()),
-                alias="tinker_preview_" + uuid4().hex,
-            )
-
-            def play_sound():
-                try:
-                    wav_path(project_root(), file_var.get())
-                except (OSError, ValueError) as error:
-                    messagebox.showerror("Play Sound", str(error), parent=form.winfo_toplevel())
-                    return
-                preview.close()
-                preview.update(project_root(), file_var.get(), loop=loop_var.get(), directory="sounds")
-
-            ttk.Button(controls, text="Import WAV", command=import_sound).pack(side=tk.LEFT)
-            ttk.Button(controls, text="Play", width=5, command=play_sound).pack(side=tk.LEFT, padx=3)
-            ttk.Button(controls, text="Stop", command=preview.close).pack(side=tk.LEFT)
-            controls.bind("<Destroy>", lambda _event: preview.close())
-            file_var.trace_add("write", lambda *_args: preview.close())
             ttk.Checkbutton(form, text="Loop", variable=loop_var).pack(anchor=tk.W)
-            ttk.Label(form, text="Plays once by default. Looping stops when another Play Sound trigger starts or you leave this area.", wraplength=245).pack(anchor=tk.W, pady=3)
         elif trigger_type == "show_message":
             add_text("message", "Message:", params.get("message", ""), height=5)
         elif trigger_type == "custom":
@@ -2093,7 +1998,6 @@ class EditorMethods:
                 messagebox.showerror("Invalid Trigger Type", "Choose a valid trigger type.")
             return False
         if trigger_type == "play_sound":
-            from wav_assets import wav_path
             try:
                 wav_path(project_root(), parameters.get("file"))
             except (OSError, ValueError) as error:

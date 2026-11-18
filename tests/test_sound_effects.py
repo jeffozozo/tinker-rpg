@@ -1,7 +1,10 @@
+from pathlib import Path
+import tempfile
 import unittest
 from unittest.mock import Mock, patch
 
 from sound_effects import SoundEffects, _MacSounds
+from wav_assets import save_sound_defaults
 
 
 class SoundPlaybackTests(unittest.TestCase):
@@ -20,7 +23,6 @@ class SoundPlaybackTests(unittest.TestCase):
             voice.close.assert_called_once()
 
     def test_walking_sample_matches_reference_and_combined_cue(self):
-        from pathlib import Path
         import wave
         directory = Path(__file__).resolve().parents[1] / "sounds"
         self.assertEqual((directory / "step.wav").read_bytes(),
@@ -28,6 +30,31 @@ class SoundPlaybackTests(unittest.TestCase):
         with wave.open(str(directory / "step.wav")) as step, wave.open(str(directory / "step_hurt.wav")) as combined:
             self.assertEqual(step.getframerate(), combined.getframerate())
             self.assertEqual(step.readframes(step.getnframes()), combined.readframes(step.getnframes()))
+
+    @patch("sound_effects.atexit.register")
+    @patch("sound_effects._MacSounds")
+    @patch("sound_effects.sys.platform", "darwin")
+    def test_project_defaults_choose_assets_and_keep_missing_cue_fallbacks(self, backend, register):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "sounds").mkdir()
+            (root / "music").mkdir()
+            step = root / "sounds" / "custom-step.wav"
+            attack = root / "music" / "swing.wav"
+            step.touch()
+            attack.touch()
+            save_sound_defaults(root, {
+                "step": step.name, "attack": "music/swing.wav", "miss": "unknown.wav",
+            })
+            report = Mock()
+            sounds = SoundEffects(root, report)
+            paths = backend.call_args.args[0]
+            self.assertEqual(paths["step"], step)
+            self.assertEqual(paths["miss"].name, "miss.wav")
+            self.assertEqual(paths["step_hurt"], paths["hurt"])
+            self.assertEqual(sounds.attack_sound, "music/swing.wav")
+            report.assert_called_once()
+            sounds.close()
 
     @patch("sound_effects.atexit.register")
     @patch("sound_effects._MacSounds")

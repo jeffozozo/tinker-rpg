@@ -352,7 +352,7 @@
       "x": 3,
       "y": 1,
       "trigger_type": "play_sound",
-      "name": "trigger_9",
+      "name": "trigger_play_triumph",
       "parameters": {
         "file": "triumph-3201eafe2922.wav",
         "loop": false,

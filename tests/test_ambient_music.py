@@ -94,6 +94,23 @@ class AmbientMusicTests(unittest.TestCase):
                     root.after.assert_not_called()
                     self.assertEqual(music.selection, ('bell.wav', loop))
 
+    def test_shared_library_preserves_existing_music_and_sound_references(self):
+        from wav_assets import sound_library, wav_path
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "music").mkdir()
+            (root / "sounds").mkdir()
+            track = root / "music" / "shared.wav"
+            effect = root / "sounds" / "shared.wav"
+            track.touch()
+            effect.touch()
+            self.assertIn("shared.wav", sound_library(root))
+            self.assertIn("music/shared.wav", sound_library(root))
+            self.assertEqual(music_path(root, "shared.wav"), track)
+            self.assertEqual(music_path(root, "sounds/shared.wav"), effect)
+            self.assertEqual(wav_path(root, "shared.wav"), effect)
+            self.assertEqual(wav_path(root, "music/shared.wav"), track)
+
     def test_import_wav_copies_valid_audio_and_reuses_identical_import(self):
         import wave
         from wav_assets import import_wav

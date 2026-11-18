@@ -228,6 +228,7 @@ class RunnerEngineTests(unittest.TestCase):
         runner.restart_game = Mock()
         runner.music = Mock()
         runner.trigger_audio = Mock()
+        runner.attack_audio = Mock()
         runner.sounds = Mock()
         with patch.object(tinker_runner.messagebox, "askyesno", return_value=False) as prompt:
             runner._offer_restart_after_game_end()
@@ -235,6 +236,7 @@ class RunnerEngineTests(unittest.TestCase):
         runner.root.destroy.assert_called_once()
         runner.music.close.assert_called_once()
         runner.trigger_audio.close.assert_called_once()
+        runner.attack_audio.close.assert_called_once()
         runner.sounds.close.assert_called_once()
         runner.restart_game.assert_not_called()
 
@@ -927,6 +929,25 @@ class RunnerEngineTests(unittest.TestCase):
         runner.trigger_audio.reset_mock()
         runner._sync_trigger_audio()
         runner.trigger_audio.close.assert_called_once()
+
+    def test_configured_attack_sound_plays_alongside_hit_cue(self):
+        runner = object.__new__(tinker_runner.TinkerRunner)
+        runner.root = Mock()
+        runner.canvas = Mock()
+        runner.engine = SimpleNamespace(
+            project_root=self.root, current_area_filename="start.json",
+            feedback=[{"kind": "hit", "x": 1, "y": 0, "damage": 2}],
+        )
+        runner.trigger_audio_location = (id(runner.engine), "start.json")
+        runner.sounds = Mock(enabled=True, attack_sound="swing.wav")
+        runner.attack_audio = Mock()
+        runner._draw_attack_markers = Mock()
+        runner._present_feedback()
+        runner.sounds.play.assert_called_once_with("hit")
+        runner.attack_audio.update.assert_called_once_with(
+            self.root, "swing.wav", loop=False, directory="sounds",
+        )
+        self.assertEqual([marker["kind"] for marker in runner.attack_markers], ["hit"])
 
     def test_area_ambient_music_survives_save_and_load(self):
         self.area["ambient_music"] = "forest.wav"

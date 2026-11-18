@@ -32,7 +32,8 @@ class TinkerRunner:
         self.save_path = None
         self.save_name = self.engine.game.get("name", "Saved Game")
         self.dirty = False
-        self.sounds = SoundEffects()
+        self.sounds = SoundEffects(engine.project_root, engine._diagnostic)
+        self.attack_audio = AmbientMusic(root, lambda message: self.engine._diagnostic(message), alias="tinker_attack")
         self.music = AmbientMusic(root, lambda message: self.engine._diagnostic(message))
         self.trigger_audio = AmbientMusic(root, lambda message: self.engine._diagnostic(message), alias="tinker_trigger")
         self.trigger_audio_location = (id(engine), engine.current_area_filename)
@@ -219,6 +220,7 @@ class TinkerRunner:
         self.sounds.enabled = self.sound_enabled.get()
         if not self.sound_enabled.get():
             self.trigger_audio.close()
+            self.attack_audio.close()
 
     def _sync_trigger_audio(self):
         location = (id(self.engine), self.engine.current_area_filename)
@@ -357,6 +359,12 @@ class TinkerRunner:
             cue = "step_hurt"
         if cue:
             self.sounds.play(cue)
+        if (cue in ("hit", "miss") and hasattr(self, "attack_audio")
+                and self.sounds.enabled and self.sounds.attack_sound):
+            self.attack_audio.close()
+            self.attack_audio.update(
+                self.engine.project_root, self.sounds.attack_sound, loop=False, directory="sounds",
+            )
         markers = [item for item in feedback if item["kind"] != "step"]
         if markers:
             self.attack_markers = markers
@@ -811,6 +819,7 @@ class TinkerRunner:
             return
         self.music.close()
         self.trigger_audio.close()
+        self.attack_audio.close()
         self.sounds.close()
         self.root.destroy()
 
