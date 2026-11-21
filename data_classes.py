@@ -123,7 +123,12 @@ class Trigger:
         elif self.trigger_type == "player_stats":
             stat = self.parameters.get("stat", "health").replace("_", " ").title()
             amount = self.parameters.get("amount", 0)
-            return f"{stat}: {amount:+d}" if type(amount) is int else f"{stat}: {amount}"
+            change = f"{stat}: {amount:+d}" if type(amount) is int else f"{stat}: {amount}"
+            sprite = self.parameters.get("sprite")
+            if sprite:
+                icon = f"Player icon: {sprite}"
+                return f"{change}, {icon}" if amount else icon
+            return change
         elif self.trigger_type == "tile_update":
             tile = self.parameters.get("tile", "")
             x = self.parameters.get("x", 0)

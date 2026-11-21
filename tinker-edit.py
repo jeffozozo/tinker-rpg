@@ -7,7 +7,10 @@ import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
 import json
 import os
+import subprocess
+import sys
 from dataclasses import asdict
+from pathlib import Path
 
 from data_classes import Tile, GameObject, Trigger, Area, Game
 from tile_manager import TileManager
@@ -106,6 +109,7 @@ class TinkerEditor(SoundEditor, ReusableTriggerEditor, EnemyEditor, EditorMethod
         game_menu.add_command(label="Save Game As", command=self.save_game_as)
         game_menu.add_separator()
         game_menu.add_command(label="Save All", command=self.save_all)
+        game_menu.add_command(label="Run Game", command=self.run_game)
         game_menu.add_separator()
         game_menu.add_command(label="Game Properties", command=self.show_game_properties)
         game_menu.add_command(label="Reload Assets", command=self.reload_assets)
@@ -160,6 +164,41 @@ class TinkerEditor(SoundEditor, ReusableTriggerEditor, EnemyEditor, EditorMethod
         self.refresh_game_areas_list()
         self.refresh_trigger_editor()
         self.update_properties_display()
+
+    def run_game(self):
+        if not self.current_game_file:
+            if not messagebox.askokcancel(
+                "Run Game", "Save this game and area before running?", parent=self.root
+            ) or not self.save_all(show_success=False):
+                return
+        elif self.has_unsaved_changes():
+            save_first = messagebox.askyesnocancel(
+                "Run Game",
+                "Save changes before running? Choose No to run the last saved version.",
+                parent=self.root,
+            )
+            if save_first is None or (save_first and not self.save_all(show_success=False)):
+                return
+
+        executable = Path(sys.executable).resolve()
+        environment = None
+        if getattr(sys, "frozen", False):
+            app_bundle = next((path for path in executable.parents if path.suffix == ".app"), None)
+            if app_bundle is not None:
+                command = [str(app_bundle.with_name("Tinker Runner.app") /
+                               "Contents" / "MacOS" / "Tinker Runner")]
+            else:
+                command = [str(executable.parent.parent / "Tinker Runner" / "Tinker Runner.exe")]
+            environment = dict(os.environ, PYINSTALLER_RESET_ENVIRONMENT="1")
+        else:
+            command = [sys.executable, str(Path(__file__).with_name("tinker-runner.py").resolve())]
+        try:
+            subprocess.Popen(
+                [*command, "--launched-from-editor", str(Path(self.current_game_file).resolve())],
+                env=environment,
+            )
+        except OSError as error:
+            messagebox.showerror("Run Game", f"Could not open the runner.\n{error}", parent=self.root)
 
     def setup_tile_panel(self, parent):
         self.tile_frame = ttk.LabelFrame(parent, text="Toolbox", width=250)
@@ -237,6 +276,9 @@ class TinkerEditor(SoundEditor, ReusableTriggerEditor, EnemyEditor, EditorMethod
         
         coordinate_frame = ttk.Frame(info_frame)
         coordinate_frame.pack(side=tk.RIGHT)
+        ttk.Button(info_frame, text="Run Game", command=self.run_game).pack(
+            side=tk.RIGHT, padx=5
+        )
         self.cursor_label = ttk.Label(
             coordinate_frame, text=f"Cursor: ({self.cursor_x}, {self.cursor_y})"
         )

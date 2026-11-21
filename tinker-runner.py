@@ -52,6 +52,13 @@ class TinkerRunner:
         self.root.after(100, self.canvas.focus_set)
         self.root.after(50, self.start_game)
 
+    def bring_to_foreground(self):
+        self.root.deiconify()
+        self.root.attributes("-topmost", True)
+        self.root.lift()
+        self.canvas.focus_force()
+        self.root.after(250, lambda: self.root.attributes("-topmost", False))
+
     def _size_window_to_start_area(self):
         self.root.update_idletasks()
         area = self.engine.current_area
@@ -284,9 +291,7 @@ class TinkerRunner:
             if obj.properties.get("open"):
                 self.canvas.create_text(x1 + 16, y1 + 28, text="OPEN", fill="#ffe16b", font=("TkDefaultFont", 7, "bold"))
 
-        player = self.engine.player_settings
-        sprite = player.get("sprite", "fighter_npc")
-        image = self._get_image("npcs", sprite)
+        image = self._get_image("npcs", self.engine.player_sprite)
         x1 = origin_x + self.engine.player_x * TILE_SIZE
         y1 = origin_y + self.engine.player_y * TILE_SIZE
         if image is not None:
@@ -843,6 +848,7 @@ def main(argv=None):
         action="store_true",
         help="validate the game and report errors without starting it",
     )
+    parser.add_argument("--launched-from-editor", action="store_true", help=argparse.SUPPRESS)
     args = parser.parse_args(argv)
     if args.game is None:
         chooser = tk.Tk()
@@ -863,7 +869,13 @@ def main(argv=None):
     try:
         engine = RunnerEngine(args.game)
     except RunnerError as error:
-        print(f"Error: {error}", file=sys.stderr)
+        if args.launched_from_editor:
+            root = tk.Tk()
+            root.withdraw()
+            messagebox.showerror("Run Game", str(error), parent=root)
+            root.destroy()
+        else:
+            print(f"Error: {error}", file=sys.stderr)
         return 2
 
     if args.check:
@@ -877,7 +889,9 @@ def main(argv=None):
         return 0
 
     root = tk.Tk()
-    TinkerRunner(root, engine)
+    runner = TinkerRunner(root, engine)
+    if args.launched_from_editor:
+        root.after_idle(runner.bring_to_foreground)
     root.mainloop()
     return 0
 

@@ -1,0 +1,270 @@
+{
+  "name": "blocked",
+  "width": 9,
+  "height": 5,
+  "tiles": [
+    [
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "gray_brick_door",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "cobblestone_floor",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ],
+    [
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      },
+      {
+        "type": "brown_brick_wall",
+        "walkable_override": null,
+        "properties": {}
+      }
+    ]
+  ],
+  "objects": [
+    {
+      "type": "lever_object",
+      "x": 1,
+      "y": 3,
+      "properties": {}
+    }
+  ],
+  "triggers": [
+    {
+      "x": 1,
+      "y": 3,
+      "trigger_type": "tile_update",
+      "name": "trigger_unlock_door",
+      "parameters": {
+        "area": "",
+        "x": 5,
+        "y": 2,
+        "tile": "gray_brick_open_door",
+        "walkable": true,
+        "charges": 0
+      },
+      "definition_id": "",
+      "enabled": true,
+      "remaining_charges": null
+    }
+  ],
+  "ambient_music": ""
+}

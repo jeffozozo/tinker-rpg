@@ -833,6 +833,37 @@ class RunnerEngineTests(unittest.TestCase):
         self.assertEqual(messages, ["Welcome."])
         self.assertEqual(engine.turn_count, 1)
 
+    def test_player_stats_trigger_swaps_icon_and_preserves_it_in_saves(self):
+        Image.new("RGBA", (32, 32)).save(self.root / "npcs" / "frog_npc.png")
+        self._replace_triggers([
+            {
+                "x": 2, "y": 1, "name": "transform", "trigger_type": "player_stats",
+                "parameters": {"sprite": "frog_npc", "charges": 1},
+            },
+            {
+                "x": 0, "y": 1, "name": "restore", "trigger_type": "player_stats",
+                "parameters": {"sprite": "hero", "stat": "health", "amount": 2},
+            },
+        ])
+        engine = self.engine()
+        self.assertEqual(engine.player_sprite, "hero")
+        self.assertTrue(engine.move("right"))
+        self.assertEqual(engine.player_sprite, "frog_npc")
+        self.assertEqual(engine.health, 12)
+        self.assertEqual(engine.player_settings["sprite"], "hero")
+
+        save_path = self.root / "transformed.json"
+        engine.save_to_file(save_path, "Transformed")
+        loaded = RunnerEngine.load_save(save_path, project_root=self.root)
+        self.assertEqual(loaded.player_sprite, "frog_npc")
+        self.assertTrue(loaded.move("left"))
+        self.assertTrue(loaded.move("left"))
+        self.assertEqual(loaded.player_sprite, "hero")
+        self.assertEqual(loaded.health, 14)
+        self.assertTrue(loaded.move("right"))
+        self.assertTrue(loaded.move("right"))
+        self.assertEqual(loaded.player_sprite, "hero")
+
     def test_inventory_trigger_adds_and_removes_slots_atomically(self):
         self._replace_triggers([{
             "x": 2, "y": 1, "name": "reward", "trigger_type": "inventory",

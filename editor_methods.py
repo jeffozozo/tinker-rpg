@@ -1086,7 +1086,7 @@ class EditorMethods:
         descriptions = {
             "teleport": "Moves the player to another area.",
             "inventory": "Adds or removes an item from the player's inventory.",
-            "player_stats": "Changes a player stat by a signed amount.",
+            "player_stats": "Changes a player stat or swaps the player icon.",
             "funds": "Adds or removes funds. Removal requires sufficient funds.",
             "trigger_control": "Enables or disables all placements of a named trigger.",
             "enemy_placement": "Places or removes enemies of a chosen type, including all instances.",
@@ -1839,6 +1839,27 @@ class EditorMethods:
             add_combo("stat", "Stat:", stats, params.get("stat", "health"))
             add_entry("amount", "Change (+/-):", params.get("amount", 0))
             ttk.Label(form, text="Use +5 to increase or -5 to decrease. Health and energy stay within their maximums. Zero health ends the game.", wraplength=245).pack(anchor=tk.W, pady=4)
+            starting_sprite = self.get_player_settings()["sprite"]
+            icons = [""] + sorted(set(self.tile_manager.get_npc_names())
+                                  | ({params["sprite"]} if params.get("sprite") else set()))
+            current_icon = ttk.Label(
+                form, text=f"Starting icon: {starting_sprite}", compound=tk.LEFT,
+                image=self.tile_manager.get_npc_info(starting_sprite).get("image", ""),
+            )
+            current_icon.pack(anchor=tk.W, pady=2)
+            sprite_var = add_combo("sprite", "New icon:", icons, params.get("sprite", ""))
+            icon_preview = ttk.Label(form, compound=tk.LEFT)
+            icon_preview.pack(anchor=tk.W, pady=2)
+
+            def update_icon_preview(*_args):
+                sprite = sprite_var.get()
+                icon_preview.configure(
+                    text="" if sprite else "Blank keeps the current icon.",
+                    image=self.tile_manager.get_npc_info(sprite).get("image", ""),
+                )
+
+            sprite_var.trace_add("write", update_icon_preview)
+            update_icon_preview()
         elif trigger_type == "inventory":
             items = [""] + sorted(set(self.tile_manager.get_object_names())
                                     | set(self.current_game.used_objects)
@@ -2015,6 +2036,8 @@ class EditorMethods:
             if show_error:
                 messagebox.showerror("Invalid Stat", "Choose a player stat.")
             return False
+        if trigger_type == "player_stats" and not parameters.get("sprite"):
+            parameters.pop("sprite", None)
         if trigger_type == "tile_update":
             if parameters.get("area") == "Current area":
                 parameters["area"] = ""

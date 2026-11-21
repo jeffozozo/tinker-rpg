@@ -374,7 +374,7 @@ class FileManager:
             except Exception as e:
                 messagebox.showerror("Error", f"Failed to open game: {e}")
     
-    def save_all(self):
+    def save_all(self, show_success=True):
         """Save both the current area and the current game"""
         saved_items = []
         errors = []
@@ -456,14 +456,16 @@ class FileManager:
                 errors.append(f"Failed to save game: {e}")
         
         # Show results to user
-        if saved_items and not errors:
-            messagebox.showinfo("Save All", f"Successfully saved:\n" + "\n".join(f"• {item}" for item in saved_items))
+        if not errors:
+            if show_success:
+                messagebox.showinfo("Save All", f"Successfully saved:\n" + "\n".join(f"• {item}" for item in saved_items))
         elif saved_items and errors:
             messagebox.showwarning("Save All", 
                 f"Partially successful:\n\nSaved:\n" + "\n".join(f"• {item}" for item in saved_items) +
                 f"\n\nErrors:\n" + "\n".join(f"• {error}" for error in errors))
         else:
             messagebox.showerror("Save All", f"Save failed:\n" + "\n".join(f"• {error}" for error in errors))
+        return not errors
     
     # Area management methods
     def new_area(self):
@@ -656,6 +658,8 @@ class FileManager:
         
         for trigger in self.current_area.triggers:
             used_triggers.add("trigger")  # Generic trigger type
+            if trigger.trigger_type == "player_stats" and trigger.parameters.get("sprite"):
+                used_npcs.add(trigger.parameters["sprite"])
 
         enemy_definitions = self.current_game.properties.get("enemies", {})
         if isinstance(enemy_definitions, dict):
@@ -697,8 +701,11 @@ class FileManager:
                             used_objects.add(obj_type)
                     
                     # Scan triggers
-                    if area_dict.get('triggers', []):
+                    for trigger_data in area_dict.get('triggers', []):
                         used_triggers.add("trigger")
+                        sprite = trigger_data.get("parameters", {}).get("sprite")
+                        if trigger_data.get("trigger_type") == "player_stats" and sprite:
+                            used_npcs.add(sprite)
                         
                 except Exception as e:
                     print(f"Error scanning area {area_filename}: {e}")
@@ -708,6 +715,8 @@ class FileManager:
             parameters = definition.get("parameters", {})
             if definition.get("trigger_type") == "tile_update" and parameters.get("tile"):
                 used_tiles.add(parameters["tile"])
+            if definition.get("trigger_type") == "player_stats" and parameters.get("sprite"):
+                used_npcs.add(parameters["sprite"])
             for key in ("add", "remove", "object"):
                 if parameters.get(key):
                     used_objects.add(parameters[key])

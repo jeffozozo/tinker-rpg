@@ -263,6 +263,7 @@ class RunnerEngine:
                 "y": self.player_y,
                 "health": self.health,
                 "energy": self.energy,
+                "sprite": self.player_sprite,
                 "gold": self.stats["gold"],
                 "stats": {key: self.stats[key] for key in ("max_health", "max_energy", "strength", "intelligence")},
                 "inventory": self.inventory,
@@ -384,6 +385,10 @@ class RunnerEngine:
             if type(value) is not int or value < (1 if key == "max_health" else 0):
                 raise RunnerError(f"{save_path}: invalid saved player stat {key}.")
         engine.stats.update(runtime_stats)
+        sprite = player_state.get("sprite", engine.player_sprite)
+        if not isinstance(sprite, str):
+            raise RunnerError(f"{save_path}: saved player sprite must be text.")
+        engine.player_sprite = sprite
 
         for field, minimum, maximum in (
             ("health", 0, engine.stats["max_health"]),
@@ -663,7 +668,8 @@ class RunnerEngine:
         if not isinstance(player, dict):
             raise RunnerError(f"{self.game_path}: properties.player must be an object.")
         self.player_settings = player
-        if not isinstance(player.get("sprite", "fighter_npc"), str):
+        self.player_sprite = player.get("sprite", "fighter_npc")
+        if not isinstance(self.player_sprite, str):
             raise RunnerError(f"{self.game_path}: player.sprite must be text.")
         raw_stats = player.get("stats", {})
         if not isinstance(raw_stats, dict):
@@ -1293,6 +1299,7 @@ class RunnerEngine:
                             raise RunnerError("choose a valid player stat.")
                         if type(params.get("amount", 0)) is not int:
                             raise RunnerError("stat change must be a whole number.")
+                        self._stat_trigger_sprite(params)
                     elif trigger.trigger_type == "inventory":
                         if any(
                             not isinstance(params.get(key, ""), str)
@@ -1365,6 +1372,9 @@ class RunnerEngine:
                 )
 
         for filename, area in self.areas.items():
+            for trigger in area.triggers:
+                if trigger.trigger_type == "player_stats" and trigger.parameters.get("sprite"):
+                    check("npcs", trigger.parameters["sprite"], f"Trigger {trigger.name!r} in {filename}")
             for row in area.tiles:
                 for tile in row:
                     if tile.type != "empty":
@@ -1467,13 +1477,26 @@ class RunnerEngine:
         self.stats["gold"] = balance + delta
         self._report(f"You receive ${delta}." if delta > 0 else f"You pay ${-delta}.")
 
+    def _stat_trigger_sprite(self, params):
+        sprite = params.get("sprite", "")
+        if not isinstance(sprite, str) or (sprite and sprite not in self.npc_names):
+            raise RunnerError("Choose an existing NPC icon for the player.")
+        return sprite
+
     def _apply_stat_trigger(self, params):
         stat, amount = params.get("stat", "health"), params.get("amount", 0)
         if stat not in PLAYER_STAT_CHANGES or type(amount) is not int:
             raise RunnerError("Choose a valid player stat and a whole-number change.")
+        sprite = self._stat_trigger_sprite(params)
         if stat == "gold" and amount:
             # Legacy money stat triggers use the same affordability rules.
             self._apply_funds_trigger({"action": "add" if amount > 0 else "remove", "amount": abs(amount)})
+            if sprite:
+                self.player_sprite = sprite
+            return
+        if sprite:
+            self.player_sprite = sprite
+        if sprite and not amount:
             return
         old = getattr(self, stat) if stat in ("health", "energy") else self.stats[stat]
         if stat in ("health", "energy"):
